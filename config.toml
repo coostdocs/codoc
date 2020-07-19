@@ -1,0 +1,52 @@
+baseURL = "https://idealvin.github.io/"
+languageCode = "en-us"
+title = "Alvin's blog"
+theme = "hugo-ivy"
+googleAnalytics = "UA-124185726-1"
+disqusShortname = ""
+ignoreFiles = ["\\.Rmd$", "_files$", "_cache$"]
+preserveTaxonomyNames = true
+footnotereturnlinkcontents = "↩"
+disableLiveReload = false
+enableEmoji = true
+
+#paginate = 10
+#paginatePath = "page"
+
+#[permalinks]
+    #post = "/post/:section/:slug/"
+    #post = "/post/:year/:month/:day/:slug/"
+
+[[menu.main]]
+    name = "主页"
+    url = "/"
+    weight = 1
+[[menu.main]]
+    name = "关于"
+    url = "/about/"
+    weight = 2
+#[[menu.main]]
+#    name = ""
+#    url = ""
+#    weight = 3
+[[menu.main]]
+    name = "编程"
+    url = "/coding/"
+    weight = 5
+[[menu.main]]
+    name = "随笔"
+    url = "/essay/"
+    weight = 7
+
+#[[menu.main]]
+#    name = "Subscribe"
+#    url = "/index.xml"
+
+[params]
+    description = ""
+    footer = "&copy;2018-{year} [Alvin Yih](/) | [Github](https://github.com/idealvin)"
+
+  highlightjsVersion = "9.12.0"
+  highlightjsCDN = "//cdn.bootcss.com"
+  highlightjsLang = ["cpp", "bash"]
+  highlightjsTheme = "github"

@@ -1,0 +1,17 @@
+<nav class="menu">
+  <input id="menu-check" type="checkbox" />
+  <label id="menu-label" for="menu-check" class="unselectable">
+    <span class="icon close-icon">✕</span>
+    <span class="icon open-icon">☰</span>
+    <span class="text">Menu</span>
+  </label>
+  <ul>
+  {{ $curURL := .URL }}
+  {{ range (default .Site.Menus.main (index .Site.Menus ($.Scratch.Get "section"))) }}
+  <li{{ if or (eq .URL $curURL) (and (and (ne .URL "/") (ne .URL "")) (hasPrefix $curURL .URL)) }} class="active"{{ end }}>
+    {{ if .URL }}<a href="{{ .URL }}">{{ .Name }}</a>{{ end }}
+  </li>
+  {{ end }}
+  {{ partial "menu_extra.html" . }}
+  </ul>
+</nav>

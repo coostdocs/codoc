@@ -1,0 +1,13 @@
+body {
+  font-family: Palatino,"Palatino Linotype","Palatino LT STD",Georgia,source-han-serif-sc,'Source Han Serif SC','Source Han Serif CN','Source Han Serif TC','Source Han Serif TW','Source Han Serif','Songti SC','Microsoft YaHei',NSimSun,serif;
+}
+code {
+  font-family: "Source Code Pro",Consolas,monospace,Courier,'Microsoft YaHei',STKaiti,'华文楷体',SimKai,KaiTi,'楷体',DFKai-SB,NSimSun;
+}
+pre code {
+  font-family: "Source Code Pro",Consolas,monospace,Courier,'Microsoft YaHei',STKaiti,'华文楷体',SimKai,KaiTi,'楷体',DFKai-SB,NSimSun;
+}
+
+.cn blockquote,.home blockquote,.essay blockquote {
+    font-family: 'Palatino Linotype','Book Antiqua',Palatino,STKaiti,'华文楷体',SimKai,KaiTi,'楷体',DFKai-SB,NSimSun,serif;
+}

@@ -1,5 +1,5 @@
 ---
-title: git简记
+title: git 简记
 date: 2018-08-17T22:54:44+08:00
 author: Alvin
 keywords: git,ssh

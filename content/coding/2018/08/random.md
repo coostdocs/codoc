@@ -5,15 +5,6 @@ author: Alvin
 mathjax: true
 keywords: random,random number,random number generator,随机数,随机数生成算法,费马小定理,素数
 ---
-<font face="Arial" size=3>
-<center>
-Alvin &nbsp;2019/01/23
-</center>
-<center>
-idealvin@qq.com
-</center>
-</font>
-<hr>
 
 这篇文章将介绍一种快速、高效的随机数生成算法，它从一个给定的整数开始，无重复的生成 $1$ 到 $2^{31}-2$ 之间的整数，这些数全部遍历完后，才会进入周期性循环。google 的 [leveldb](https://github.com/google/leveldb/blob/master/util/random.h) 中有这个算法，有兴趣可以去看看 leveldb 的源码。
 

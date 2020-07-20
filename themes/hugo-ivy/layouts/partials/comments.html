@@ -1,11 +1,19 @@
 {{ if not .Params.no_comment }}
-{{ if or .NextInSection .PrevInSection }}
-<script>
-  var idcomments_acct = 'eb123fffff47fedfab486cba0aa7bd10';
-  var idcomments_post_id;
-  var idcomments_post_url;
+<link rel="stylesheet" href="//cdn.bootcss.com/gitalk/1.6.2/gitalk.min.css">
+<script src="//cdn.bootcss.com/gitalk/1.6.2/gitalk.min.js"></script>
+<div id="gitalk-container"></div>     
+<script type="text/javascript">
+  var gitalk = new Gitalk({
+    clientID: '78371628e00f43aff18e',
+    clientSecret: '6905d0b807b7008ea04b420bb9fd9a7f390ec400',
+    repo: 'gitalk',
+    owner: 'idealvin',
+    admin: ['idealvin'],
+    id: location.pathname,
+    language: 'zh-CN',
+    distractionFreeMode: false
+  })
+  
+  gitalk.render('gitalk-container');
 </script>
-<span id="IDCommentsPostTitle" style="display:none"></span>
-<script type='text/javascript' src='https://www.intensedebate.com/js/genericCommentWrapperV2.js'></script>
-{{ end }}
 {{ end }}

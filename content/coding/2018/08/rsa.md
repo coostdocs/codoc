@@ -5,15 +5,6 @@ author: Alvin
 mathjax: true
 keyword: RSA,RSA algorithm,加密,非对称加密算法
 ---
-<font face="Arial" size=3>
-<center>
-Alvin &nbsp;2019/01/23
-</center>
-<center>
-idealvin@qq.com
-</center>
-</font>
-<hr>
 
 [RSA](https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29) 是一种[非对称加密算法](https://en.wikipedia.org/wiki/Public-key_cryptography)，这里只介绍数学原理，不涉及任何其他细节。RSA 的数学基础是费马小定理及欧拉定理，可以参考另一篇文章《[费马小定理及其欧拉推广](../fermat-theorem/)》。
 

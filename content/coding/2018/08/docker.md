@@ -1,5 +1,5 @@
 ---
-title: docker常用命令及配置 
+title: docker 简记
 date: 2018-08-13T11:29:55+08:00
 author: Alvin
 keywords: docker

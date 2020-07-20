@@ -22,4 +22,4 @@ noads: true
 
 ## 致谢
 
-本站是用 [Hugo](https://gohugo.io) 搭建的，主题借用了[谢益辉](https://yihui.name)的 [hugo-ivy](https://github.com/yihui/hugo-ivy)，在此表示感谢！
+本站是用 [Hugo](https://gohugo.io) 搭建的，主题借用了[谢益辉](https://yihui.name)的 [hugo-ivy](https://github.com/yihui/hugo-ivy)，评论系统用的是 [gitalk](https://github.com/gitalk/gitalk)，在此表示感谢！

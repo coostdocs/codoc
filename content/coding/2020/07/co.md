@@ -113,7 +113,7 @@ draft: false
         - [17.3.3 rpc 代码生成器](#1733-rpc-代码生成器)
         - [17.3.4 实现 rpc server](#1734-实现-rpc-server)
         - [17.3.5 rpc client](#1735-rpc-client)
-        - [17.3.6  配置项](#1736-配置项)
+        - [17.3.6  配置项](#1736--配置项)
 - [18. hash 库(hash)](#18-hash-库hash)
 - [19. path 库(path)](#19-path-库path)
 - [20. 文件系统操作(fs)](#20-文件系统操作fs)
@@ -122,6 +122,8 @@ draft: false
     - [20.3 文件流(fs::fstream)](#203-文件流fsfstream)
 - [21. 系统操作(os)](#21-系统操作os)
 - [22. 编译](#22-编译)
+    - [xmake](#xmake)
+    - [cmake](#cmake)
 - [23. 结束语](#23-结束语)
 
 

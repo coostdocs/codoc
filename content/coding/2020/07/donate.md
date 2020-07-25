@@ -2,8 +2,8 @@
 title: "Donate"
 date: 2020-07-25T15:46:40+08:00
 author: Alvin
-keywords:
-draft: true
+keywords: donate,alipay,wechat,paypal,co
+draft: false
 ---
 
 ### Donate

@@ -11,14 +11,6 @@ noads: true
   - 小码农一枚，主要写 C/C++，也会写一些 Shell、Python、Golang.
   - 目前已实现 C++ 协程库 [CO](https://github.com/idealvin/co)，维护中.
 
-- **爱好**
-
-  - 三国，文言.
-  - 小品，笑话.
-  - 龙珠，火影.
-
-> 你已经中了我的幻术！
-
 
 ## 致谢
 

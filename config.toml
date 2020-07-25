@@ -25,10 +25,6 @@ enableEmoji = true
     name = "关于"
     url = "/about/"
     weight = 2
-#[[menu.main]]
-#    name = ""
-#    url = ""
-#    weight = 3
 [[menu.main]]
     name = "编程"
     url = "/coding/"
@@ -37,6 +33,11 @@ enableEmoji = true
     name = "随笔"
     url = "/essay/"
     weight = 7
+[[menu.main]]
+    name = "捐赠"
+    url = "/donate/"
+    weight = 23
+
 
 #[[menu.main]]
 #    name = "Subscribe"

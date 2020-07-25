@@ -8,6 +8,8 @@ draft: false
 
 ### Donate
 
+> 苟富贵，勿相忘。🙏
+
 - wechat
 
   ![wechat](/images/wx.png "wechat")

@@ -1181,7 +1181,7 @@ json 字符串支持包含 `"` 与 `\`，也支持 `\r, \n, \t` 等转义字符�
 ```cpp
 Json x = "hello\r\n\t";      // ok, 字符串中包含转义字符
 Json x = "hello\"world";     // ok, 字符串中包含 "
-Json x = "hello\\world";     // ok, 字符串中包含 \
+Json x = "hello\\world";     // ok, 字符串中包含 \ 
 ```
 
 

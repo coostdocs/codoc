@@ -11,6 +11,8 @@ draft: false
 - [中文文档](https://idealvin.github.io/coding/2020/07/co/)
 - [英文文档](https://idealvin.github.io/coding/2020/07/co_en/)
 
-另外，因没有找到完美的既保证质量、又能快速生成书签的 pdf 制作方法，今后不再提供 pdf 版本的参考文档。如果大家有意见，可以在此提出来。
+另外，因没有找到完美的既保证质量、又能快速生成书签的 pdf 制作方法，今后可能不再提供 pdf 版本的参考文档。如果大家有好的建议，可以在此提出来。这里附上 1.2 版本的 pdf 下载地址：
 
-最后，为了提高本站中文文档的阅读体验，建议各位安装[思源宋体](https://github.com/adobe-fonts/source-han-serif/tree/release)，可以去我的 [网盘](https://pan.baidu.com/s/1O6e7jp_IaLv_C-BtL3Bq1g#list/path=%2F) 下载。
+- [co_v1.2.pdf](https://pan.baidu.com/s/1Qzsap0xGSylt3huD5X0C-Q) 提取码: `pin5`
+
+最后，为了提高本站中文文档的阅读体验，建议大家安装[思源宋体](https://github.com/adobe-fonts/source-han-serif/tree/release)。如果 github 下载太慢，可以去我的 [网盘](https://pan.baidu.com/s/1O6e7jp_IaLv_C-BtL3Bq1g#list/path=%2F) 下载。

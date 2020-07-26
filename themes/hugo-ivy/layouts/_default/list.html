@@ -2,11 +2,17 @@
 
 {{ .Content }}
 
+{{ if .IsHome }}
+{{ $.Scratch.Set "pages" .Site.RegularPages }}
+{{ else }}
+{{ $.Scratch.Set "pages" .Pages }}
+{{ end }}
+
 <ul class="article-list">
-  {{ range (where .Data.Pages "Section" "!=" "") }}
+  {{ range (where ($.Scratch.Get "pages") "Section" "!=" "") }}
   <li class="article-item">
     <span class="date">{{ .Date.Format "2006/01/02" }}&emsp;</span>
-    <a href="{{ .URL }}">{{ .Title }}</a>
+    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
   </li>
   {{ end }}
 </ul>

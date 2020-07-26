@@ -9,20 +9,14 @@
 
     .masthead {
         position: sticky;
-        top: 0
+        top: 0;
+        min-height: 100vh;
+        border-right: 3px solid #ddd
     }
 }
 
 .copyright a,.menu li:not([class]) a,a:hover {
     border-bottom: none
-}
-
-.main {
-    hyphens: auto
-}
-
-.main,.masthead {
-    padding: 1em 40px
 }
 
 .en .main header~p:first-of-type::first-line {
@@ -38,38 +32,10 @@
     line-height: 1em
 }
 
-code {
-    hyphens: none
-}
-
 iframe,twitterwidget,video {
     max-width: 100%;
     display: block;
     margin: auto
-}
-
-#TableOfContents {
-    background-color: #f8f8f8;
-    padding: .5em;
-    margin-bottom: 2em;
-}
-
-table {
-    min-width: 50%;
-    max-width: 100%;
-    margin: auto
-}
-
-pre .nohighlight {
-    background-color: transparent
-}
-
-.hljs-comment {
-    font-style: inherit
-}
-
-.hljs {
-    padding: 1em
 }
 
 header hr {
@@ -78,12 +44,6 @@ header hr {
 
 footer hr {
     margin: 50px auto 1em
-}
-
-.masthead img {
-    max-width: 72px;
-    margin-left: 0;
-    transform: none;
 }
 
 img[src$="#border"] {

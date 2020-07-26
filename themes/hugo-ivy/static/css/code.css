@@ -1,9 +1,13 @@
 .hljs {
   display: block;
   overflow-x: auto;
-  padding: 0.5em;
+  padding: 1em;
   background: #f8f8f8;
   color: #333;
+}
+
+.hljs-comment {
+    font-style: inherit;
 }
 
 .hljs-comment,

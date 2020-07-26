@@ -2674,8 +2674,6 @@ make install
 
 - 赞助、商务合作请联系 `idealvin@qq.com`.
 
-- 支持作者请扫码:
+- [支持作者请扫码](https://idealvin.github.io/donate/)
 
-<font face="Arial" size=3>
-<img src="https://github.com/idealvin/docs/raw/master/img/wxzfb.png" alt="" align="center" width="668">
-</font>
+  ![wechat & alipay](/images/wxzfb.png "wechat & alipay")

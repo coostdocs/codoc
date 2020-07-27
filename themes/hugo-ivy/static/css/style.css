@@ -124,7 +124,6 @@ li {
 
 a {
     color: #0366d6;
-    /* color: #4f81bd; */
     margin: 0;
     padding: 0;
     vertical-align: baseline;
@@ -133,7 +132,7 @@ a {
 
 a:hover {
     text-decoration: none;
-    color: #ff6600;
+    color: #daa520;
 }
 
 .active a {
@@ -206,6 +205,21 @@ body {
     width: 960px;
     margin: 0 auto;
     padding: 0;
+}
+
+.toc::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.toc::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: transparent;
+}
+
+.toc:hover::-webkit-scrollbar-thumb {
+    border-radius: 4px;
+    background: #ccc;
 }
 
 .hide_scroll_bar::-webkit-scrollbar {

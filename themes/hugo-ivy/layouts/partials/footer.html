@@ -8,6 +8,7 @@
   </footer>
   </article>
   {{ if .Params.mathjax }} {{ partial "mathjax.html" . }} {{ end }}
-  {{ if .Params.goole_analytics }} {{ template "_internal/google_analytics.html" . }} {{ end }}
+  {{ if and .Site.Params.goole_analytics (or .NextInSection .PrevInSection) }} {{ template "_internal/google_analytics.html" . }} {{ end }}
+  {{ if and .Site.Params.cnzz (or .NextInSection .PrevInSection) }} {{ partial "cnzz.html" . }} {{ end }}
   </body>
 </html>

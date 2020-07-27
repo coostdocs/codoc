@@ -1,6 +1,7 @@
 ---
 title: About
 noads: true
+hide_scroll_bar: true
 ---
 
 

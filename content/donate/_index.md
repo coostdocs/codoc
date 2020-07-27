@@ -1,6 +1,7 @@
 ---
 title: Donate
 noads: true
+hide_scroll_bar: true
 ---
 
 ### Donate

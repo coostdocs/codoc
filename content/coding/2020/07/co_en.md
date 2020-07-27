@@ -239,7 +239,7 @@ u32toh  u64toh  u32toa  u64toa  i32toa  i64toa  dtoa
 
 `xtoa`-family converts an integer into an ASCII decimal string. It caches the results corresponding to the first 10000 numbers (4-bytes). Testing across platforms suggested it is 10-25 times faster than `snprintf`.
 
-`dtoa` uses the implementation by [Milo Yip] (https://github.com/miloyip), see [miloyip/dtoa-benchmark](https://github.com/miloyip/dtoa-benchmark) for details. The early implementation based on `LruMap` was deprecated.
+`dtoa` uses the implementation by [Milo Yip](https://github.com/miloyip), see [miloyip/dtoa-benchmark](https://github.com/miloyip/dtoa-benchmark) for details. The early implementation based on `LruMap` was deprecated.
 
 - Examples
 
@@ -1333,7 +1333,7 @@ Thread(f).detach();
 
 ### 15.4 Get the id of the current thread
 
-`current_thread_id ()` is used to get the id of the current thread. The thread library uses [TLS] (https://wiki.osdev.org/Thread_Local_Storage) to save the thread id. Each thread only needs one system call.
+`current_thread_id ()` is used to get the id of the current thread. The thread library uses [TLS](https://wiki.osdev.org/Thread_Local_Storage) to save the thread id. Each thread only needs one system call.
 
 - Notes
 

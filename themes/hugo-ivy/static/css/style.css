@@ -368,6 +368,13 @@ thead, tfoot, tr:nth-child(even) {
     user-select: none;
 }
 
+.cnzz {
+    text-align: center;
+    margin-top: -12px;
+    padding-bottom: 12px;
+    font-size: 12px;
+}
+
 @media screen and (min-width: 1024px) {
     .toc {
         height: 100%;

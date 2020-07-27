@@ -6,9 +6,9 @@
   <div class="copyright">{{ replace . "{year}" now.Year | markdownify }}</div>
   {{ end }}
   </footer>
-  </article>
-  {{ if .Params.mathjax }} {{ partial "mathjax.html" . }} {{ end }}
   {{ if and .Site.Params.goole_analytics (or .NextInSection .PrevInSection) }} {{ template "_internal/google_analytics.html" . }} {{ end }}
   {{ if and .Site.Params.cnzz (or .NextInSection .PrevInSection) }} {{ partial "cnzz.html" . }} {{ end }}
+  </article>
+  {{ if .Params.mathjax }} {{ partial "mathjax.html" . }} {{ end }}
   </body>
 </html>

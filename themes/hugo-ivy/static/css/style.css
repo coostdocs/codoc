@@ -160,7 +160,7 @@ hr {
     border-top: 1px solid;
     margin: 50px auto;
     padding: 0;
-    max-width: 300px;
+    max-width: 368px;
 }
 
 .copyright {
@@ -278,7 +278,7 @@ body {
 }
 
 .article-list {
-    padding-left: 0;
+    padding-left: 40px;
 }
 
 .article-list .article-item {
@@ -301,6 +301,11 @@ body {
 
 .menu a:hover {
     border-bottom: 1px solid;
+}
+
+.menu .active a:hover {
+    border-bottom: 1px solid;
+    color: #daa520;
 }
 
 #menu-check {

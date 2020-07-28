@@ -8,7 +8,9 @@
   <ul>
   {{ $curPage := . }}
   {{ range (default .Site.Menus.main (index .Site.Menus ($.Scratch.Get "section"))) }}
-  <li{{ if eq .URL $curPage.RelPermalink }} class="active"{{ end }}><a href="{{ .URL }}">{{ .Name }}</a></li>
+  <li{{ if or (eq .URL $curPage.RelPermalink) (and (and (ne .URL "/") (ne .URL "")) (hasPrefix $curPage.RelPermalink .URL)) }} class="active"{{ end }}>
+    <a href="{{ .URL }}">{{ .Name }}</a>
+  </li>
   {{ end }}
   {{ partial "menu_extra.html" . }}
   </ul>

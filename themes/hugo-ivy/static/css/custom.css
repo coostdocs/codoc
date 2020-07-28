@@ -15,10 +15,6 @@
     }
 }
 
-.copyright a,.menu li:not([class]) a,a:hover {
-    border-bottom: none
-}
-
 .en .main header~p:first-of-type::first-line {
     font-variant: small-caps;
     letter-spacing: .05em;

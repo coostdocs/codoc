@@ -53,7 +53,7 @@
   </head>
 
   {{ $.Scratch.Set "section" (replaceRE "^/([^/]+)/.*" "$1" .RelPermalink) }}
-  <body class="{{ if .IsHome }}home{{ else }}{{ $.Scratch.Get "section" }}{{ end }}{{ if .Params.hide_scroll_bar }} hide_scroll_bar{{ end }}">
+  <body class="{{ if .IsHome }}home{{ else }}{{ $.Scratch.Get "section" }}{{ end }}{{ if or .Params.hide_scroll_bar .Params.hidsb }} hide_scroll_bar{{ end }}">
     <header class="masthead">
       {{ partial "tagline.html" . }}
       {{ partial "menu.html" . }}

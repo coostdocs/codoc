@@ -6,21 +6,19 @@
   <ul>
     {{ if $prev }} 
     <li>
-      <span class="date">&rtrif; {{ $prev.Date.Format "2006/01/02" }}&emsp;</span>
+      <span class="post-nav-prev">&rtrif; {{ .Site.Params.prev }} &emsp;</span>
       <a href="{{ $prev.RelPermalink }}">{{ $prev.Title }}</a>
     </li>
     {{ end }}
-    <li class="active">
-      <span class="date">&rtrif; {{ .Date.Format "2006/01/02" }}&emsp;</span>
-      <a href="{{ .RelPermalink }}">{{ .Title }}</a>     
-    </li>
     {{ if $next }}
     <li>
-      <span class="date">&rtrif; {{ $next.Date.Format "2006/01/02" }}&emsp;</span>
+      <span class="post-nav-next">&rtrif; {{ .Site.Params.next }} &emsp;</span>
       <a href="{{ $next.RelPermalink }}">{{ $next.Title }}</a>
     </li>
     {{ end }}
   </ul>
 </nav>
+{{ if and .Site.Params.comments (and (not .Params.nocom) (not .Params.no_comment)) }}
 {{ partial "comments.html" . }}
+{{ end }}
 {{ end }}

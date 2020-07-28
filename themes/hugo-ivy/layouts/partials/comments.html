@@ -1,7 +1,8 @@
-{{ if not .Params.no_comment }}
-<link rel="stylesheet" href="//cdn.bootcss.com/gitalk/1.6.2/gitalk.min.css">
-<script src="//cdn.bootcss.com/gitalk/1.6.2/gitalk.min.js"></script>
-<div id="gitalk-container"></div>     
+{{ $cdn := .Site.Params.cdn }}
+{{ $ver := .Site.Params.gitalkVersion }}
+<link rel="stylesheet" href="{{ $cdn }}/gitalk/{{ $ver }}/gitalk.min.css">
+<script src="{{ $cdn }}/gitalk/{{ $ver }}/gitalk.min.js"></script>
+<div id="gitalk-container"></div>
 <script type="text/javascript">
   var gitalk = new Gitalk({
     clientID: '78371628e00f43aff18e',
@@ -16,4 +17,3 @@
   
   gitalk.render('gitalk-container');
 </script>
-{{ end }}

@@ -2,8 +2,8 @@
 title: 从 C 到 C++
 date: 2018-08-26T21:09:09+08:00
 author: Alvin
-toc: true
 keywords: C,C++,C/C++,类型检查,内联函数,类,对象,访问修饰符,构造函数,析构函数,函数重载,操作符重载,引用,拷贝构造函数,赋值操作,继承,虚函数,模板,命名空间,STL,new,delete,inline,function overloading,operator overloading,reference,const reference,inheritance,virtual function,template,namespace
+toc: true
 ---
 
 C 语言是一门灵活、高效、可移植性好的编程语言。C++ 继承了 C 的优点，除了极少数情况外，几乎完全兼容C。同时针对 C 的各种缺陷，C++ 也引入了一些新特性。这篇文章只是一个入门性的介绍，若有不当之处，敬请指正。

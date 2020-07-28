@@ -2,9 +2,8 @@
 title: "C++ 基础库 CO 参考文档 v1.2"
 date: 2020-07-23T12:53:12+08:00
 author: Alvin
-keywords: C++,coroutine,log,logging,flag,config,json,unit-test,rpc,http,libco,co,go-style,协程,日志库,命令行,配置文件,基础库
+keywords: idealvin,co,libco,coroutine,golang,C++,log,logging,flag,config,json,unit-test,rpc,http,go-style,golang风格,协程,协程库,日志库,命令行,配置文件,基础库
 toc: true
-draft: false
 ---
 
   

@@ -11,8 +11,12 @@
     <title>{{ .Title }}{{ with .Params.subtitle }} - {{ . }} {{ end }} - {{ .Site.Title }}</title>
     <meta property="og:title" content="{{ .Title }} - {{ .Site.Title }}">
     {{ end }}
-    <meta name="twitter:card" content="summary">
 
+    {{ if .Keywords }}
+    <meta property="keywords" content ="{{ delimit .Keywords ", " }}">
+    {{ end }}
+
+    <meta name="twitter:card" content="summary">
     {{ with .Description }}
       {{ $.Scratch.Set "summary" (markdownify .) }}
     {{ else }}
@@ -23,7 +27,6 @@
     <meta property="description" content="{{ .Site.Params.description }}">
     {{ else }}
       {{ with ($.Scratch.Get "summary") }}
-      <meta property="description" content="{{ . }}">
       <meta property="og:description" content="{{ . }}">
       {{ end }}
     {{ end }}
@@ -36,10 +39,6 @@
     {{ if not ($.Scratch.Get "autoImage") }}
     <meta name="twitter:image" content="{{ absURL . }}">
     {{ end }}
-    {{ end }}
-
-    {{ if .Keywords }}
-    <meta property="keywords" content ="{{ delimit .Keywords ", " }}">
     {{ end }}
 
     {{ with .OutputFormats.Get "RSS" }}

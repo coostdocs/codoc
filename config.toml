@@ -46,9 +46,14 @@ enableEmoji = true
 [params]
     description = ""
     footer = "&copy;2018-{year} [Alvin Yih](/) | [Github](https://github.com/idealvin)"
-    highlightjsVersion = "9.12.0"
+    prev = "上一篇"
+    next = "下一篇"
+    cdn = "//cdn.bootcss.com"
     highlightjsCDN = "//cdn.bootcss.com"
+    highlightjsVersion = "10.1.2"
     highlightjsLang = ["cpp", "bash"]
     highlightjsTheme = "github"
+    comments = true
+    gitalkVersion = "1.6.2"
     goole_analytics = false
     cnzz = true

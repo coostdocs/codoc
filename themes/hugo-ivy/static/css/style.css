@@ -16,12 +16,6 @@ body {
     overflow-x: hidden;
 }
 
-/*
-body::-webkit-scrollbar {
-    display:none;
-}
-*/
-
 button, input, select, textarea, label {
     margin: 0;
     padding: 0;
@@ -239,7 +233,6 @@ body {
     margin-left: 240px;
     border-left: none;
     min-height: calc(100vh - 60px);
-    hyphens: auto;
 }
 
 .masthead h1 {

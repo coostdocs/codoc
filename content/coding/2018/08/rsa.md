@@ -2,8 +2,8 @@
 title: "RSA 加密算法的数学原理"
 date: 2018-08-03T21:16:25+08:00
 author: Alvin
+keyword: RSA,RSA algorithm,加密,非对称加密算法,RSA加密算法
 mathjax: true
-keyword: RSA,RSA algorithm,加密,非对称加密算法
 ---
 
 [RSA](https://en.wikipedia.org/wiki/RSA_%28cryptosystem%29) 是一种[非对称加密算法](https://en.wikipedia.org/wiki/Public-key_cryptography)，这里只介绍数学原理，不涉及任何其他细节。RSA 的数学基础是费马小定理及欧拉定理，可以参考另一篇文章《[费马小定理及其欧拉推广](../fermat-theorem/)》。

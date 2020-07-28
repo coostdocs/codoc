@@ -2,8 +2,7 @@
 title: "关于更新 CO 参考文档的说明"
 date: 2020-07-27T04:12:55+08:00
 author: Alvin
-keywords: updating,co,libco,documents,更新文档
-draft: false
+keywords: idealvin,co,libco,coroutine,updating,documents,更新文档
 hide_scroll_bar: true
 ---
 

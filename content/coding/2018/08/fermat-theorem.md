@@ -2,8 +2,8 @@
 title: 费马小定理及其欧拉推广
 date: 2018-08-02T08:18:18+08:00
 author: Alvin
-mathjax: true
 keywords: 费马小定理,费马,欧拉,欧拉定理,Fermat,Euler,同余,素数
+mathjax: true
 ---
 
 [费马小定理](https://en.wikipedia.org/wiki/Fermat%27s_little_theorem)是[数论](https://en.wikipedia.org/wiki/Number_theory)中的一个定理，最早由17世纪的法国“业余”数学家[费马(Fermat)](https://en.wikipedia.org/wiki/Pierre_de_Fermat)发现，从而得名。这个定理是说：

@@ -18,6 +18,8 @@
     {{ end }}
   </ul>
 </nav>
+{{ end }}
+{{ if not .Pages }}
 {{ if and .Site.Params.comments (and (not .Params.nocom) (not .Params.no_comment)) }}
 {{ partial "comments.html" . }}
 {{ end }}

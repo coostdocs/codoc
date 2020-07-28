@@ -1,6 +1,6 @@
 baseURL = "https://idealvin.github.io/"
 languageCode = "en-us"
-title = "Alvin's blog"
+title = "Alvin's Blog"
 theme = "hugo-ivy"
 googleAnalytics = "UA-124185726-1"
 disqusShortname = ""

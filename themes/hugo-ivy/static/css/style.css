@@ -222,8 +222,7 @@ body {
 
 .masthead {
     width: 240px;
-    padding: 1em 40px;
-    text-align: center;
+    padding: 23px 40px;
     float: left;
 }
 
@@ -237,7 +236,7 @@ body {
 
 .masthead h1 {
     margin-top: 0;
-    margin-bottom: 34px;
+    margin-bottom: 32px;
     padding: 0;
     font-size: 46px;
     line-height: 58px;
@@ -259,8 +258,9 @@ body {
 }
 
 .masthead .menu {
-    margin-right: 20px;
+    margin-right: 60px;
     direction: rtl;
+    font-size: 1.08em;
 }
 
 .masthead .menu a {

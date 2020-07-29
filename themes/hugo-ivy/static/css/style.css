@@ -182,13 +182,23 @@ hr {
     list-style: none;
 }
 
-.nav-next {
-    margin-left: 1em;
-    text-align: right;
+.fixed-nav {
+    display: flex;
+    margin-left: 680px;
 }
 
-.nav-prev {
-    margin-right: 1em;
+.fixed-nav .next {
+    position: fixed;
+    bottom: 61.8%;
+    z-index: 2;
+}
+
+.fixed-nav a {
+    color: #ccc;
+}
+
+.fixed-nav a:hover {
+    color: #daa520;
 }
 
 .comments {
@@ -391,6 +401,12 @@ thead, tfoot, tr:nth-child(even) {
 
 .gt-comments-null {
     display: none;
+}
+
+@media screen and (max-width: 720px) {
+    .fixed-nav {
+        display: none;
+    }
 }
 
 @media screen and (min-width: 1024px) {

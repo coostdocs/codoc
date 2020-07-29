@@ -2,23 +2,29 @@
 {{ $next := .PrevInSection }}
 
 {{ if or $prev $next }}
+<nav class="fixed-nav">
+  <span class="next">
+    <a href="{{ if $next }} {{ $next.RelPermalink }} {{ else }} / {{ end }}">&raquo;</a>
+  </span>
+</nav>
 <nav class="post-nav">
   <ul>
     {{ if $prev }} 
     <li>
-      <span class="post-nav-prev">&rtrif; {{ .Site.Params.prev }} &emsp;</span>
+      <span class="prev">&rtrif; {{ .Site.Params.prev }} &emsp;</span>
       <a href="{{ $prev.RelPermalink }}">{{ $prev.Title }}</a>
     </li>
     {{ end }}
     {{ if $next }}
     <li>
-      <span class="post-nav-next">&rtrif; {{ .Site.Params.next }} &emsp;</span>
+      <span class="next">&rtrif; {{ .Site.Params.next }} &emsp;</span>
       <a href="{{ $next.RelPermalink }}">{{ $next.Title }}</a>
     </li>
     {{ end }}
   </ul>
 </nav>
 {{ end }}
+
 {{ if not .Pages }}
 {{ if and .Site.Params.comments (and (not .Params.nocom) (not .Params.no_comment)) }}
 {{ partial "comments.html" . }}

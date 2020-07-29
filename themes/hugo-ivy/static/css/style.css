@@ -412,7 +412,7 @@ thead, tfoot, tr:nth-child(even) {
 @media screen and (min-width: 1024px) {
     .toc {
         height: 100%;
-        max-width: calc(50% - 488px);
+        width: calc(50% - 488px);
         position: fixed;
         overflow-x: auto;
         overflow-y: auto;
@@ -421,7 +421,7 @@ thead, tfoot, tr:nth-child(even) {
         right: 0;
         background-color: #fafafa;
         transition: 0.5s;
-        padding: 36px 8px;
+        padding: 36px 10px;
     }
 }
 

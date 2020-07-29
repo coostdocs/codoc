@@ -7,8 +7,8 @@
 $(function() {
   var i = 0;
   $('pre>code').each(function() {
-    var id = 'plantuml-' + i++;
     if($(this).hasClass('language-plantuml')) {
+      var id = 'plantuml-' + i++;
       var e = $(this).addClass('nohighlight').parent();
       e.hide();
       var s = unescape(encodeURIComponent($(this).text()));

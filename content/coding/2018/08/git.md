@@ -33,12 +33,15 @@ git config --global core.excludesfile ~/.gitignore_global
 
 ```sh
 build
-.*
-*.o
+*.opendb
 *.exe
+*.o
 *.dblite
+*.db
 *.pyc
-*.idea
+.vscode
+.xmake
+.idea
 ```
 
 * ssh key

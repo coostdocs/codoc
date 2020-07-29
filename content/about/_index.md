@@ -2,7 +2,6 @@
 title: About
 keywords: idealvin,Alvin,blog,about,个人简介,网站简介
 noads: true
-hide_scroll_bar: true
 ---
 
 

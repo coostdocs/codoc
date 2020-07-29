@@ -1,0 +1,20 @@
+{{ $cdn := .Site.Params.cdn }}
+{{ $ver := .Site.Params.jqueryVersion }}
+<script src="{{ $cdn }}/jquery/{{ $ver }}/jquery.min.js"></script>
+<script src="/js/rawdeflate.js"></script>
+<script src="/js/jquery_plantuml.js"></script>
+<script type="text/javascript">
+$(function() {
+  var i = 0;
+  $('pre>code').each(function() {
+    var id = 'plantuml-' + i++;
+    if($(this).hasClass('language-plantuml')) {
+      var e = $(this).addClass('nohighlight').parent();
+      e.hide();
+      var s = unescape(encodeURIComponent($(this).text()));
+      var imgURL = "http://www.plantuml.com/plantuml/svg/" + encode64(deflate(s, 9));
+      var n = $('<div id="' + id + '"><img src="' + imgURL + '" /></div>').insertAfter(e);
+    }
+  });
+});
+</script>

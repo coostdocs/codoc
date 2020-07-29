@@ -3,7 +3,6 @@ title: "关于更新 CO 参考文档的说明"
 date: 2020-07-27T04:12:55+08:00
 author: Alvin
 keywords: idealvin,co,libco,coroutine,updating,documents,更新文档
-hide_scroll_bar: true
 ---
 
 之前在 github 上提供了 [CO](https://github.com/idealvin/co) 的 markdown 参考文档，但不支持 sidebar，阅读不方便。今天将参考文档转移到了此博客，加上 `sidebar`，以方便大家参考。

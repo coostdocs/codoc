@@ -1,4 +1,3 @@
 ---
 title: "Coding"
-hide_scroll_bar: true
 ---

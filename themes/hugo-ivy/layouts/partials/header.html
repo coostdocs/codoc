@@ -53,7 +53,10 @@
   </head>
 
   {{ $.Scratch.Set "section" (replaceRE "^/([^/]+)/.*" "$1" .RelPermalink) }}
-  <body class="{{ if .IsHome }}home{{ else }}{{ $.Scratch.Get "section" }}{{ end }}{{ if or .Params.hide_scroll_bar .Params.hidsb }} hide_scroll_bar{{ end }}">
+  {{ $param_hidsb := or .Params.hide_scroll_bar .Params.hidsb }}
+  {{ $lists_hidsb := or $param_hidsb (and .Pages (lt (len .Pages) (.Site.Params.hidsbn | default 49))) }}
+  {{ $hidsb := or $lists_hidsb (and (not .Pages) (lt (len .Content) (.Site.Params.hidsbc | default 4000))) }}
+  <body class="{{ if .IsHome }}home{{ else }}{{ $.Scratch.Get "section" }}{{ end }}{{ if $hidsb }} hide_scroll_bar{{ end }}">
     <header class="masthead">
       {{ partial "tagline.html" . }}
       {{ partial "menu.html" . }}

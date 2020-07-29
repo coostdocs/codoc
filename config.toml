@@ -43,6 +43,12 @@ enableEmoji = true
 #    name = "Subscribe"
 #    url = "/index.xml"
 
+[markup]
+  defaultMarkdownHandler = "goldmark"
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+ 
 [params]
     description = ""
     footer = "&copy;2018-{year} [Alvin Yih](/) | [Github](https://github.com/idealvin)"
@@ -53,7 +59,10 @@ enableEmoji = true
     highlightjsVersion = "10.1.2"
     highlightjsLang = ["cpp", "bash"]
     highlightjsTheme = "github"
+    jqueryVersion = "3.5.1"
     comments = true
     gitalkVersion = "1.6.2"
     goole_analytics = false
     cnzz = true
+    hidsbn = 49    # hide scroll bar if len(.Pages) < hidsbn
+    hidsbc = 4000  # hide scroll bar if len(.Content) < hidsbc

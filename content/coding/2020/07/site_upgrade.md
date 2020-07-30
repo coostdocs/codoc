@@ -47,7 +47,7 @@ Alvin -> Bob : hello plantuml
 
 [gitalk](https://github.com/gitalk/gitalk) 是基于 github issues 实现的评论系统，用户需要修改 [comments.html](https://github.com/idealvin/blog/blob/master/themes/hugo-ivy/layouts/partials/comments.html) 模板文件，填上自己的 gitalk 信息。
 
-本站支持在全局配置 [config.toml: Params](https://github.com/idealvin/blog/blob/master/config.toml#L52) 中加上 `comments = false`，禁用评论系统。也可以针对单个页面禁用评论，只需在 markdown 开头加上 `no_comment: true` 或 `nocom: true`:
+本站支持在全局配置 [config.toml: Params](https://github.com/idealvin/blog/blob/master/config.toml) 中加上 `comments = false`，禁用评论系统。也可以针对单个页面禁用评论，只需在 markdown 开头加上 `no_comment: true` 或 `nocom: true`:
 
 ```yaml
 ---
@@ -80,7 +80,7 @@ mathjax: true
 
 ### 隐藏 scroll bar
 
-文章不是很长时，没必要显示滚动条(影响美观:unamused:)。本站支持根据页面长度自动隐藏滚动条，用户可以修改全局配置 [config.toml: Params](https://github.com/idealvin/blog/blob/master/config.toml#L52) 中的参数：
+文章不是很长时，没必要显示滚动条(影响美观:unamused:)。本站支持根据页面长度自动隐藏滚动条，用户可以修改全局配置 [config.toml: Params](https://github.com/idealvin/blog/blob/master/config.toml) 中的参数：
 
 ```toml
 hidsbn = 49    # list   页面文章数小于 49，  隐藏滚动条  (len(.Pages) < hidsbn)

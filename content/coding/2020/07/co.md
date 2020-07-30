@@ -1868,7 +1868,7 @@ include: [co/so.h](https://github.com/idealvin/co/blob/master/include/co/so.h).
 
 [so/tcp](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h) 模块实现了 `tcp::Server` 与 `tcp::Client` 类，它们同时支持 `ipv4` 与 `ipv6`，可用于一般性的 TCP 编程。
 
-#### 17.1.1 [tcp::Server](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h)
+#### 17.1.1 tcp::Server
 
 ```cpp
 namespace tcp {
@@ -1909,7 +1909,7 @@ tcp::Server 采用一个连接一个协程的模型，调用 `start()` 方法即
 
 `co/test` 中有一个 demo，基于 tcp::Server 实现了一个简单的 pingpong server，源码见 [pingpong.cc](https://github.com/idealvin/co/blob/master/test/so/pingpong.cc)。
 
-#### 17.1.2 [tcp::Client](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h)
+#### 17.1.2 tcp::Client
 
 tcp::Client 必须在协程环境中使用，用户需要手动调用 `connect()` 方法建立连接。建议在调用 `recv`, `send` 之前，判断连接是否建立，没有的话，就调用 connect() 建立连接，这种方式容易实现自动重连。
 

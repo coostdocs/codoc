@@ -1884,7 +1884,7 @@ include: [co/so.h](https://github.com/idealvin/co/blob/master/include/co/so.h).
 
 [so/tcp](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h) module provides two classes `tcp::Server` and `tcp::Client`, which support both `ipv4` and `ipv6`, and can be used for general TCP programming.
 
-#### 17.1.1 [tcp::Server](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h)
+#### 17.1.1 tcp::Server
 
 ```cpp
 namespace tcp {
@@ -1925,7 +1925,7 @@ This class can only be used as a base class. User must inherit this class and im
 
 There is a demo in `co/test` which implements a simple pingpong server based on `tcp::Server`. The source code can be found in [pingpong.cc](https://github.com/idealvin/co/blob/master/test/so /pingpong.cc).
 
-#### 17.1.2 [tcp::Client](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h)
+#### 17.1.2 tcp::Client
 
 `tcp::Client` must be used in coroutine environment. User needs to manually call the `connect()` method to establish a connection. It is recommended to determine whether the connection is established before calling `recv`, `send`. If not, call connect() to establish the connection. It is easy to achieve automatic reconnection in this way.
 

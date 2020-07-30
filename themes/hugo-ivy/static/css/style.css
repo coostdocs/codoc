@@ -96,7 +96,8 @@ code {
     hyphens: none;
 }
 
-code.has-jax {font: inherit;
+code.has-jax {
+    font: inherit;
     font-size: 100%;
     background: inherit;
     border: inherit;
@@ -184,20 +185,24 @@ hr {
 
 .fixed-nav {
     display: flex;
-    margin-left: 680px;
 }
 
 .fixed-nav .next {
     position: fixed;
     bottom: 61.8%;
     z-index: 2;
+    width: 40px;
+    height: 40px;
+    margin-left: 660px;
+    text-align: center;
+    color: transparent;
 }
 
 .fixed-nav a {
-    color: #ccc;
+    color: inherit;
 }
 
-.fixed-nav a:hover {
+.fixed-nav .next:hover {
     color: #daa520;
 }
 

@@ -194,12 +194,12 @@ hr {
     width: 40px;
     height: 40px;
     margin-left: 660px;
-    text-align: center;
     color: transparent;
 }
 
 .fixed-nav a {
     color: inherit;
+    margin-left: 12px;
 }
 
 .fixed-nav .next:hover {

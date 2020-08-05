@@ -7,7 +7,7 @@ noads: true
 
 ## 个人简介
 
-小码农一枚，主要写 C/C++，目前已实现 C++ 协程库 [CO](https://github.com/idealvin/co)，维护中。彼人好极简、尚完美。请用 [idealvin(at)qq.com](mailto:idealvin@qq.com) 联系之。
+小码农一枚，主要写 C/C++，目前已实现 C++ 协程库 [CO](https://github.com/idealvin/co)，维护中。这个人很懒，有事请联系 [idealvin(at)qq.com](mailto:idealvin@qq.com)。
 
 
 ## 本站简介

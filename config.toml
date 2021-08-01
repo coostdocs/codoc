@@ -8,6 +8,7 @@ defaultContentLanguage = "cn"
 defaultContentLanguageInSubdir = true
 enableEmoji = true
 relativeURLs = true
+canonifyURLs = false
 
 # Book configuration
 disablePathToLower = true

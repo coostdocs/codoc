@@ -1,7 +1,7 @@
 # hugo server --minify --themesDir ... --baseURL=http://0.0.0.0:1313/theme/hugo-book/
 
-#baseURL = 'https://example.com/'
-baseURL = 'http://localhost:1313/'
+#baseURL = 'http://localhost:1313/'
+baseURL = 'https://idealvin.github.io/'
 title = "Alvin's Coding Life"
 theme = 'hugo-book'
 defaultContentLanguage = "cn"

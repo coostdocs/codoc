@@ -29,6 +29,7 @@ enableGitInfo = true
 
 [markup.tableOfContents]
   startLevel = 1
+  endLevel = 4
 
 # Multi-lingual mode config
 # There are different options to translate files

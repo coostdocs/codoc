@@ -2,7 +2,7 @@
 
 #baseURL = 'http://localhost:1313/'
 baseURL = 'https://idealvin.github.io/'
-title = "Alvin's Coding Life"
+title = "Book for CO"
 theme = 'hugo-book'
 defaultContentLanguage = "cn"
 defaultContentLanguageInSubdir = true
@@ -114,7 +114,7 @@ enableGitInfo = true
   jqueryVersion = "3.5.1"
   mathjaxVersion = "3.0.5"
   highlightjsVersion = "11.1.0"
-  highlightjsLang = ["cpp", "bash", "yaml"]
+  highlightjsLang = ["cpp", "bash", "lua", "yaml"]
   highlightjsTheme = "github"
   gitalkVersion = "1.7.2"
   gitalkClientID = "11f9ff9ca43804d70b32"

@@ -33,57 +33,15 @@ export XMAKE_ROOT=y
 
 
 
-### Quick start
+### Build
 
 Run commands below in the root directory of CO to build libco and other projects:
 
-```bash
-xmake      # build libco by default
-xmake -a   # build all projects (libco, gen, co/test, co/unitest)
+```sh
+xmake -a   # build all projects (libco, gen, test, unitest)
 ```
 
-
-
-### Build libco
-
-
-#### Build static library by default
-
-Run the following commands to build libco (release version of static library by default):
-
-```bash
-xmake               # build libco by default
-xmake build libco   # build libco
-xmake -b libco      # Same as above
-xmake -v -b libco   # Same as above, and print detailed compiling information
-xmake -vD -b libco  # Same as above, print more detailed compiling information
-```
-
-
-#### Using xmake f command to configure the project
-
-If you want to build dynamic library or set debug mode, you can use `xmake f` command for related configuration. Users can run `xmake f --help` to see the configurable items.
-
-The config file **xmake.conf** can be found in subdirectories of **.xmake** in the root directory of CO.
-
-- Build debug version of dynamic library (for Linux & Mac)
-
-```bash
-xmake f -m debug -k shared
-xmake -v
-```
-
-- Build 32-bit libco for Windows
-
-```bash
-xmake f -a x86
-xmake -v
-```
-
-
-#### Enable HTTP/SSL features
-
-If you need to use http::Client, SSL or HTTPS features, build libco with the following commands:
+To enable HTTP and SSL features, build with the following commands:
 
 ```sh
 xmake f --with_libcurl=true --with_openssl=true
@@ -91,6 +49,54 @@ xmake -a
 ```
 
 Xmake may install libcurl and openssl from the network, which may be slow.
+
+`-a` in the command line means to build all projects in CO. If `-a` is not added, only libco will be built by default. In addition, users may use `-v` or `-vD` to print more detailed compiling information:
+
+```sh
+xmake -v -a
+```
+
+
+### Compiling options
+
+Xmake provides the `xmake f` command to configure compiling options. Note that **multiple options must be set in a single xmake f command**.
+
+
+#### Build debug version of libco
+
+```bash
+xmake f -m debug
+xmake -v
+```
+
+
+#### Build dynamic library
+
+```bash
+xmake f -k shared
+xmake -v
+```
+
+Note that dynamic library is not supported on Windows.
+
+
+#### Build 32-bit libco
+
+- Windows
+
+```bash
+xmake f -a x86
+xmake -v
+```
+
+- Linux
+
+```bash
+xmake f -a i386
+xmake -v
+```
+
+The `-a` in `xmake f` command means arch. The arch supported by different platforms may be different. Run `xmake f --help` to see the details.
 
 
 #### set vs_runtime on Windows
@@ -104,6 +110,8 @@ xmake -v
 
 
 #### Android and IOS support
+
+CO can also be built on Android and IOS platforms, see [Github Actions](https://github.com/idealvin/co/actions) for details. Since the author has no front-end development experience, it has not been tested on Android and IOS.
 
 - android
 
@@ -119,8 +127,6 @@ xmake f -p iphoneos
 xmake -v
 ```
 
-[Github Actions](https://github.com/idealvin/co/actions) shows that CO can be built for android and ios (**not tested**).
-
 
 
 ### Build and run unitest code
@@ -129,8 +135,7 @@ xmake -v
 
 ```bash
 xmake -b unitest       # build unitest
-xmake run unitest -a   # run all unit tests
-xmake r unitest -a     # same as above
+xmake r unitest -a     # run all unit tests
 xmake r unitest -os    # run unit test: os
 xmake r unitest -json  # run unit test: json
 ```

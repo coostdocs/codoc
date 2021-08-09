@@ -121,3 +121,4 @@ enableGitInfo = true
   gitalkClientSecret = "07e2bd5b09a1654e7942a7698c3ec164e7566177"
   gitalkRepo = "gitalk"
   gitalkOwner = "idealvin"
+  gitalkProxy = "https://netnr-proxy.cloudno.de/https://github.com/login/oauth/access_token"

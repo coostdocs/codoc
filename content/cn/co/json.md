@@ -27,7 +27,7 @@ include: [co/json.h](https://github.com/idealvin/co/blob/master/include/co/json.
 [JSON](https://www.json.org/json-en.html) 是一种简单的数据格式，它支持两种数据结构：
 
 - 由一系列 **key/value** 键值对构成的集合，这类结构称为 **object**，对应编程语言中的 struct, map 等等。
-- 由一系列 **value** 构成的列表，这类结构称为** array**，对应编程语言中的 vector, list 等等。
+- 由一系列 **value** 构成的列表，这类结构称为 **array**，对应编程语言中的 vector, list 等等。
 
 
 
@@ -155,7 +155,7 @@ void add_member(const char* key, const fastring& x);
 - 第 2-5 个版本添加整数类型的值。
 - 第 6 个版本添加 double 类型的值。
 - 第 7-10 个版本添加 string 类型的值。
-- **温馨提示：**co/json 出于性能上的考虑，要求 key 中不能包含双引号，最好不要包含任何转义字符。我从未见有人这样用过，如果有的话，请告诉我，我再考虑支持一下^o^。
+- **温馨提示：** co/json 出于性能上的考虑，要求 key 中不能包含双引号，最好不要包含任何转义字符。我从未见有人这样用过，如果有的话，请告诉我，我再考虑支持一下^o^。
 
 
 
@@ -912,7 +912,7 @@ Json r;
 r["a"] = 1;
 r["s"] = "hello world";
 ```
-上面的操作虽然可行，但是**效率并不高**。`operator[]` 操作会先查找 key，找到了就更新值，没找到就插入新的元素。一般建议用 **add_member() **方法取而代之：
+上面的操作虽然可行，但是**效率并不高**。`operator[]` 操作会先查找 key，找到了就更新值，没找到就插入新的元素。一般建议用 **add_member()** 方法取而代之：
 ```cpp
 Json r;
 r.add_member("a", 1);

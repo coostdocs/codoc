@@ -1,6 +1,6 @@
 ---
 weight: 1
-title: "一文了解 CO"
+title: "简介"
 ---
 
 
@@ -25,6 +25,7 @@ CO 在 [github](https://github.com/idealvin/co) 上以 [MIT](https://mit-license
 
 
 ## 快速上手
+
 
 ### 编译
 
@@ -53,7 +54,6 @@ xmake r co
 ### 使用 CO 开发 C++ 项目
 
 最简单的，可以直接包含 [co/all.h](https://github.com/idealvin/co/blob/master/include/co/all.h)，使用 CO 中的所有特性。如果担心影响编译速度，也可以只包含需要用到的头文件，如包含 [co/co.h](https://github.com/idealvin/co/blob/master/include/co/co.h)，可以使用 co/flag, co/log 以及协程相关的所有特性。
-
 
 ```cpp
 #include "co/all.h"
@@ -213,7 +213,7 @@ DEF_test(os) {
 } // namespace test
 ```
 
-上面是一个简单的例子，`DEF_test` 宏定义了一个测试单元，实际上就是一个函数(类中的方法)。`DEF_case` 宏定义了测试用例，每个测试用例实际上就是一个代码块。用户可以将不同的测试单元，放到同一个 C++ 项目中，main 函数一般只需要下面几行：
+上面是一个简单的例子，`DEF_test` 宏定义了一个测试单元，实际上就是一个函数(类中的方法)。`DEF_case` 宏定义了测试用例，每个测试用例实际上就是一个代码块。多个测试单元可以放到同一个 C++ 项目中，main 函数一般只需要下面几行：
 
 ```cpp
 #include "co/unitest.h"
@@ -238,11 +238,16 @@ xmake r unitest -os  # 仅运行 os 单元中的测试用例
 
 CO 实现了类似 [golang](https://github.com/golang/go) 的协程，它有如下特性：
 
-- 支持多线程调度，默认线程数为系统 CPU 核数。
+- 多线程调度，默认线程数为系统 CPU 核数。
 - 共享栈，同一线程中的协程共用若干个栈(大小默认为 1MB)，内存占用低，Linux 上的测试显示 1000 万协程只用了 2.8G 内存(仅供参考)。
 - 各协程之间为平级关系，可以在任何地方(包括在协程中)创建新的协程。
-- 支持系统 API hook (Windows/Linux/Mac)，可以在直接在协程中使用三方网络库。
-
+- 支持系统 API hook (Windows/Linux/Mac)，可以直接在协程中使用三方网络库。
+- 协程化的 [socket API](../../co/coroutine/#协程化的-socket-api)。
+- 协程同步事件 [co::Event](../../co/coroutine/#协程同步事件coevent)。
+- 协程锁 [co::Mutex](../../co/coroutine/#协程锁comutex)。
+- 协程池 [co::Pool](../../co/coroutine/#协程池copool)。
+- channel [co::Chan](../../co/coroutine/#channelcochan)。
+- waitgroup [co::WaitGroup](../../co/coroutine/#waitgroupcowaitgroup)。
 
 
 #### 创建协程
@@ -279,7 +284,7 @@ for (size_t i = 0; i < s.size(); ++i) {
 
 #### channel
 
-CO 实现了 `co::Chan`，类似于 golang 中的 channel，它是一个模板类，模板参数可以是内置类型、指针类型或者其他可以进行内存拷贝的结构体或类。
+[co::Chan](../../co/coroutine/#channelcochan)，类似于 golang 中的 channel，可用于在协程之间传递数据。
 
 ```cpp
 #include "co/co.h"
@@ -298,29 +303,113 @@ DEF_main(argc, argv) {
 }
 ```
 
-上面是个简单的例子，需要注意，**co::Chan 必须在协程中使用**，因此代码中用 `DEF_main` 定义 main 函数，让 main 函数中的代码也运行在协程中。
+**channel 的读写操作必须在协程中进行**，因此上述代码中用 `DEF_main` 定义 main 函数，让 main 函数中的代码也运行在协程中。
 
-另外，代码中的 channel 对象在栈上，而 CO 采用的是共享栈实现方式，一个协程栈上的数据可能被其他协程覆盖，**协程间一般不能直接共享栈上的数据**，因此代码中的 lambda 采用了**按值捕获**的方式，将 channel 拷贝了一份，传递到新建的协程中。channel 的拷贝操作只是将内部引用计数加 1，几乎不会对性能造成影响。
+代码中的 channel 对象在栈上，而 CO 采用的是共享栈实现方式，一个协程栈上的数据可能被其他协程覆盖，**协程间一般不能直接通过栈上的数据通信**，因此代码中的 lambda 采用了**按值捕获**的方式，将 channel 拷贝了一份，传递到新建的协程中。channel 的拷贝操作只是将内部引用计数加 1，几乎不会对性能造成影响。
 
-用户在创建 channel 时，还可以加上超时时间：
+创建 channel 时可以像下面这样加上超时时间：
 
 ```cpp
 co::Chan<int> ch(8, 1000);
-go([ch]() {
-    ch << 7;
-    if (co::timeout()) LOG << "write to channel timeout";
-});
-
-int v = 0;
-ch >> v;
-if (!co::timeout()) LOG << "v: " << v;
 ```
 
-co::Chan 构造函数的第一个参数是内部队列长度，第二个参数是超时时间，单位为毫秒。用户在 channel 读写操作后，可以用 `co::timeout()` 判断是否超时。
+channel 读写操作结束后，可以调用 `co::timeout()` 判断是否超时，这种方式比 golang 中基于 select 的实现方式更简单。
+
+CO 中的 channel 基于内存拷贝实现，传递的数据类型可以是内置类型、指针类型，或者**拷贝操作具有简单的内存拷贝语义的结构体类型**。像 `std::string` 或 STL 中的容器类型，拷贝操作不是简单的内存拷贝，一般不能直接在 channel 中传递，详情见 [co::Chan 参考文档](../../co/coroutine/#channelcochan)。
 
 
 #### waitgroup
 
+[co::WaitGroup](../../co/coroutine/#waitgroupcowaitgroup)，类似于 golang 中的 `sync.WaitGroup`，可用于等待协程或线程的退出。
+
+```cpp
+#include "co/co.h"
+
+DEF_main(argc, argv) {
+    FLG_cout = true;
+
+    co::WaitGroup wg;
+    wg.add(8);
+
+    for (int i = 0; i < 8; ++i) {
+        go([wg]() {
+            LOG << "co: " << co::coroutine_id();
+            wg.done();
+        });
+    }
+
+    wg.wait();
+    return 0;
+}
+```
 
 
-#### 协程
+
+### 网络编程
+
+CO 提供了一套协程化的 [socket API](../../co/coroutine/#协程化的-socket-api)，它们大部分形式上与原生的 socket API 基本一致，熟悉 socket 编程的用户，可以轻松的用同步的方式写出高性能的网络程序。另外，CO 也实现了更高层的网络编程组件，包括 [TCP](../../co/net/tcp/)、[HTTP](../../co/net/http/) 以及基于 [JSON](../../co/json/) 的 [RPC](../../co/net/rpc/) 框架，它们兼容 IPv6，同时支持 SSL，用起来比 socket API 更方便。这里只简单的展示一下 HTTP 的用法，其余的可以查看参考文档。
+
+
+**静态 web server**
+
+```cpp
+#include "co/flag.h"
+#include "co/log.h"
+#include "co/so.h"
+
+DEF_string(d, ".", "root dir"); // Specify the root directory of the web server
+
+int main(int argc, char** argv) {
+    flag::init(argc, argv);
+    log::init();
+
+    so::easy(FLG_d.c_str()); // mum never have to worry again
+
+    return 0;
+}
+```
+
+
+**HTTP server**
+
+```cpp
+http::Server serv;
+
+serv.on_req(
+    [](const http::Req& req, http::Res& res) {
+        if (req.is_method_get()) {
+            if (req.url() == "/hello") {
+                res.set_status(200);
+                res.set_body("hello world");
+            } else {
+                res.set_status(404);
+            }
+        } else {
+            res.set_status(405); // method not allowed
+        }
+    }
+);
+
+serv.start("0.0.0.0", 80);                                    // http
+serv.start("0.0.0.0", 443, "privkey.pem", "certificate.pem"); // https
+```
+
+
+**HTTP client**
+
+```cpp
+void f() {
+    http::Client c("https://github.com");
+
+    c.get("/");
+    LOG << "response code: "<< c.response_code();
+    LOG << "body size: "<< c.body_size();
+    LOG << "Content-Length: "<< c.header("Content-Length");
+    LOG << c.header();
+
+    c.post("/hello", "data xxx");
+    LOG << "response code: "<< c.response_code();
+}
+
+go(f);
+```

@@ -8,27 +8,25 @@ include: [co/fastream.h](https://github.com/idealvin/co/blob/master/include/co/f
 
 ## fastream
 
-
 `fastream` 用于取代 C++ 标准库中的 `std::ostringstream`。std::ostringstream 性能较差，实测比 snprintf 慢好几倍，fastream 在不同平台测试比 snprintf 快 10~30 倍左右。
 
 
 
-
 ### fastream::fastream
+
 ```cpp
 fastream() noexcept;
 explicit fastream(size_t cap);
 fastream(fastream&& s) noexcept;
 ```
-**构造函数**
 
 - 第 1 个是默认构造函数，创建一个空的 fastream 对象，内部不会分配任何内存。
 - 第 2 个构造函数用参数 cap 指定 fastream 的初始容量，即预分配 cap 字节的内存。
 - 第 3 个是 move 构造函数，不会进行内存拷贝。
 
 
-
 - 示例
+
 ```cpp
 fastream s;               // 状态为空的 fastream, 未分配内存
 fastream s(1024);         // 预分配 1k 内存
@@ -37,17 +35,16 @@ fastream x(std::move(s);  // move 构造函数, s 变成空对象
 
 
 
-
 ### fastream::operator=
+
 ```cpp
 fastream& operator=(fastream&& s) noexcept;
 ```
 
 - fastream 只支持 move 赋值操作，s 的内容被转移到 fastream 中，s 自身变成空对象。
 
-
-
 - 示例
+
 ```cpp
 fastream s(32);
 fastream x;
@@ -56,9 +53,9 @@ x = std::move(s);  // x capacity -> 32,  s -> empty
 
 
 
-
 ### ———————————
 ### fastream::back
+
 ```cpp
 char& back() const;
 ```
@@ -66,9 +63,8 @@ char& back() const;
 - 此方法返回 fastream 中最后一个字符的引用。
 - 若 fastream 为空，调用此方法会导致未定义的行为。
 
-
-
 - 示例
+
 ```cpp
 fastream s;
 s.append("hello");
@@ -78,8 +74,8 @@ s.back() = 'x';      // s -> "hellx"
 
 
 
-
 ### fastream::front
+
 ```cpp
 char& front() const;
 ```
@@ -87,9 +83,8 @@ char& front() const;
 - 此方法返回 fastream 中第一个字符的引用。
 - 若 fastream 为空，调用此方法会导致未定义的行为。
 
-
-
 - 示例
+
 ```cpp
 fastream s;
 s.append("hello");
@@ -99,8 +94,8 @@ s.front() = 'x';     // s -> "xello"
 
 
 
-
 ### fastream::operator[]
+
 ```cpp
 char& operator[](size_t n) const;
 ```
@@ -108,9 +103,8 @@ char& operator[](size_t n) const;
 - 此方法返回 fastream 中第 n 个字符的引用。
 - 若 n 超出合理的范围，调用此方法会导致未定义的行为。
 
-
-
 - 示例
+
 ```cpp
 fastream s;
 s.append("hello");
@@ -120,9 +114,9 @@ s[1] = 'x';          // s -> "hxllo"
 
 
 
-
 ### ———————————
 ### fastream::capacity
+
 ```cpp
 size_t capacity() const;
 ```
@@ -131,9 +125,8 @@ size_t capacity() const;
 
 
 
-
-
 ### fastream::c_str
+
 ```cpp
 const char* c_str() const;
 ```
@@ -143,9 +136,8 @@ const char* c_str() const;
 
 
 
-
-
 ### fastream::data
+
 ```cpp
 const char* data() const;
 ```
@@ -154,16 +146,13 @@ const char* data() const;
 
 
 
-
-
 ### fastream::empty
+
 ```cpp
 bool empty() const;
 ```
 
 - 此方法判断 fastream 是否为空。
-
-
 
 
 
@@ -176,18 +165,16 @@ size_t size() const;
 
 
 
-
-
 ### fastream::str
+
 ```cpp
 fastring str() const;
 ```
 
 - 此方法以 fastring 形式返回 fastream 内部数据的一份拷贝。
 
-
-
 - 示例
+
 ```cpp
 fastream s;
 s.append("hello");
@@ -196,29 +183,28 @@ fastring x = s.str();  // x = "hello"
 
 
 
-
 ### ———————————
 ### fastream::append
+
 ```cpp
-fastream& append(const void* s, size_t n);
-fastream& append(const char* s);
-fastream& append(const fastring& s);
-fastream& append(const std::string& s);
-fastream& append(const fastream& s);
-fastream& append(size_t n, char c);
-fastream& append(char c, size_t n);
-fastream& append(char c);
-fastream& append(unsigned char c);
-fastream& append(short v);
-fastream& append(unsigned short v);
-fastream& append(int v);
-fastream& append(unsigned int v);
-fastream& append(long v);
-fastream& append(unsigned long v);
-fastream& append(long long v);
-fastream& append(unsigned long long v);
+1.  fastream& append(const void* s, size_t n);
+2.  fastream& append(const char* s);
+3.  fastream& append(const fastring& s);
+4.  fastream& append(const std::string& s);
+5.  fastream& append(const fastream& s);
+6.  fastream& append(size_t n, char c);
+7.  fastream& append(char c, size_t n);
+8.  fastream& append(char c);
+9.  fastream& append(unsigned char c);
+10. fastream& append(short v);
+11. fastream& append(unsigned short v);
+12. fastream& append(int v);
+13. fastream& append(unsigned int v);
+14. fastream& append(long v);
+15. fastream& append(unsigned long v);
+16. fastream& append(long long v);
+17. fastream& append(unsigned long long v);
 ```
-**追加操作**
 
 - 第 1 个版本追加长度为 n 的字节序列。
 - 第 2 个版本追加 C 风格字符串，与 fastring 不同，fastream 不检测内存是否重叠，s 不能是进行 append 操作的 fastream 的一部分。
@@ -229,8 +215,8 @@ fastream& append(unsigned long long v);
 - 第 10 到 17 个版本以二进制形式追加 8 种内置整数类型，等价于 `append(&v, sizeof(v))`。
 
 
-
 - 示例
+
 ```cpp
 fastream s;
 int32 i = 7;
@@ -253,8 +239,8 @@ s.append(s.c_str() + 1);
 
 
 
-
 ### fastream::operator<<
+
 ```cpp
 fastream& operator<<(const char* s);
 fastream& operator<<(const std::string& s);
@@ -262,14 +248,12 @@ fastream& operator<<(const fastring& s);
 fastream& operator<<(const fastream& s)
 template<typename T> fastream& operator<<(T v);
 ```
-**流式输出操作**
 
 - 前 4 个版本等价于 `append(s)`。
 - 第 5 个版本中，T 可以是任意的内置数据类型，如 bool, char, int, double, void* 等等。
 
-
-
 - 示例
+
 ```cpp
 fastream s;
 s << false;           // s -> "false"
@@ -281,9 +265,9 @@ s << s;               // s -> "hello 23 hello 23 "
 
 
 
-
 ### ———————————
 ### fastream::clear
+
 ```cpp
 void clear();
 ```
@@ -292,9 +276,8 @@ void clear();
 
 
 
-
-
 ### fastream::ensure
+
 ```cpp
 void ensure(size_t n);
 ```
@@ -303,9 +286,8 @@ void ensure(size_t n);
 
 
 
-
-
 ### fastream::reserve
+
 ```cpp
 void reserve(size_t n);
 ```
@@ -315,9 +297,8 @@ void reserve(size_t n);
 
 
 
-
-
 ### fastream::resize
+
 ```cpp
 void resize(size_t n);
 ```
@@ -325,9 +306,8 @@ void resize(size_t n);
 - 此方法将 fastream 的 size 设置为 n。
 - 当 n 大于原来的 size 时，此操作将 size 扩大到 n，但不会用 '\0' 填充扩展的部分。
 
-
-
 - 示例
+
 ```cpp
 fastream s;
 s.append("hello");
@@ -338,18 +318,27 @@ char c = s[5];  // c 是不确定的随机值
 
 
 
+### fastream::safe_clear
+
+```cpp
+void safe_clear();
+```
+
+- 与 `clear()` 类似，但会将内部内存清零。
+
+
 
 ### fastream::swap
+
 ```cpp
 void swap(fastream& s) noexcept;
 void swap(fastream&& s) noexcept;
 ```
 
-- 此方法交换两个 fastream，内部仅交换数据指针、容量、大小。
-
-
+- 此方法交换两个 fastream，仅交换内部指针、容量、大小。
 
 - 示例
+
 ```cpp
 fastream s(32);
 fastring x(64);
@@ -358,12 +347,11 @@ s.swap(x);  // s: cap -> 64,  x: cap -> 32
 
 
 
-
 ### ———————————
 ### 与 fastring 的互操作
 
+`fastream` 与 `fastring` 都是继承自 `fast::stream`，它们的内存结构完全相同，因此可以方便的互相转换：
 
-`fastream` 与 `fastring` 都是继承自 `fast::stream`，二者的内存结构完全相同，因此可以方便的互相转换：
 ```cpp
 fastream s;
 s.append("Hello");
@@ -374,12 +362,11 @@ void f(fastream&);
 f(*(fastream*)&x);
 ```
 
-
 前面说到 fastream 的 append 操作不会检测内存重叠的情况，若有必要，可以转换成 fastring 再操作：
+
 ```cpp
 fastream s;
 s.append("hello");
 ((fastring*)&s)->append(s.c_str() + 1);
 ```
-
 

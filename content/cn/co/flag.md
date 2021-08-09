@@ -5,49 +5,44 @@ title: "命令行参数与配置文件解析"
 
 include: [co/flag.h](https://github.com/idealvin/co/blob/master/include/co/flag.h).
 
-## 基本概念
 
+## 基本概念
 
 `co/flag` 是一个类似 [google gflags](https://github.com/gflags/gflags) 的命令行参数及配置文件解析库，其原理很简单，代码中定义全局变量，然后在程序启动时解析命令行参数或配置文件，修改这些全局变量的值。
 
 
 
-
 ### flag 变量
 
-
 co/flag 中的宏定义的全局变量，称为 **flag 变量**。如下面的代码定义了一个 flag 变量，变量名是 `FLG_x`。
+
 ```cpp
 DEF_bool(x, false, "xxx"); // bool FLG_x = false;
 ```
 
-
 co/flag 支持 7 种类型的 flag 变量：
+
 ```cpp
 bool, int32, int64, uint32, uint64, double, string
 ```
 
-
-用户可以通过命令行参数或配置文件修改 flag 变量的值，如前面定义的 FLG_x，在命令行中，可以用 `-x=true` 修改它的值，在配置文件中，可以用 `x = true` 修改它的值。
-
+每个 flag 变量都有一个默认值，用户可以通过命令行参数或配置文件修改 flag 变量的值。如前面定义的 `FLG_x`，在命令行中可以用 `-x=true`，在配置文件中可以用 `x = true`，设置一个新的值。
 
 
 
 ### command line flag
 
+命令行参数中，以 `-x=y` 的形式出现，其中 `x` 被称为一个 **command line flag**(以下简称为 flag)。命令行中的 flag `x` 对应代码中的全局变量 `FLG_x`，命令行中的 `-x=y` 就相当于将 `FLG_x` 的值设置为 `y`。为了方便，下面可能将 flag 与 flag 变量统一称为 flag。
 
-命令行参数中，以 `-x=y` 的形式出现，其中 `x` 被称为一个 **command line flag **(以下简称为 flag)。命令行中的 flag `x` 对应代码中的全局变量 `FLG_x`，命令行中的 `-x=y` 就相当于将 `FLG_x` 的值设置为 `y`。为了方便，下面可能将 flag 与 flag 变量统一称为 flag。
+co/flag 为了简便易用，设计得非常灵活：
 
-flag 库为了简便易用，设计得非常灵活：
-
-- -x=y 可以省略前面的 -，简写为 x=y.
-- -x=y 也可以写成 -x y.
-- x=y 前面可以带任意数量的 -.
-- bool 类型的 flag，-b=true 可以简写为 -b.
-
-
+- `-x=y` 可以省略前面的 `-`，简写为 `x=y`.
+- `-x=y` 也可以写成 `-x y`.
+- `x=y` 前面可以添加任意数量的 `-`.
+- bool 类型的 flag，`-b=true` 可以简写为 `-b`.
 
 - 示例
+
 ```bash
 # b, i, s 都是 flag, xx 不是 flag
 ./exe -b -i=32 -s=hello xx
@@ -56,21 +51,23 @@ flag 库为了简便易用，设计得非常灵活：
 
 
 
-
-
 ## 初始化(flag::init)
+
 ```cpp
 std::vector<fastring> init(int argc, char** argv);
+void init(const fastring& path);
 ```
 
-- 此函数解析命令行参数及配置文件，更新 flag 变量的值，需要在 main 函数开头调用一次。
-- argc, argv 是 main() 函数的传入参数。
-- 此函数先解析由 `FLG_config` 指定的配置文件，如果有的话，然后解析其他命令行参数。
-- 若 `FLG_mkconf` 为 true，则自动生成配置文件，并退出程序。
-- 若 `FLG_daemon` 为 true，则将程序放入后台运行 (仅适用于 linux 平台)。
-- 此函数遇到错误时，输出错误信息，并立即退出程序。
-- 若未发生任何错误，此函数返回 non-flag 列表。如执行 `./exe x y` 时，flag::init() 将返回 `["x", "y"]`。
+- 第 1 个 init 函数，解析命令行参数及配置文件，并更新 flag 变量的值。此函数一般需要在 main 函数开头调用一次。它的大致流程如下：
+  - 对命令行参数进行预处理，此过程中可能会更新 `FLG_config` 的值。
+  - 如果 `FLG_config` 非空，解析由它指定的配置文件，更新 flag 变量的值。
+  - 解析其他命令行参数，更新 flag 变量的值。
+  - 若 `FLG_mkconf` 为 true，则生成配置文件，并退出程序。
+  - 若 `FLG_daemon` 为 true，则将程序放入后台运行 (仅适用于 linux 平台)。
+  - 遇到任何错误时，输出错误信息，并立即退出程序。
+  - 若未发生任何错误，返回 non-flag 列表。如执行 `./exe x y` 时，此函数将返回 `["x", "y"]`。
 
+- 第 2 个 init 函数，解析配置文件，并更新 flag 变量的值。参数 `path` 是配置文件的路径。遇到错误时，会输出错误信息，并退出程序。
 
 
 - 示例
@@ -86,14 +83,11 @@ int main(int argc, char** argv) {
 
 
 
-
-
 ## 代码中使用 flag 变量
 
 
-
-
 ### 定义 flag 变量
+
 ```cpp
 #define DEF_bool(name, value, help)    _DEFINE_FLAG(bool, name, value, help)
 #define DEF_int32(name, value, help)   _DEFINE_FLAG(int32, name, value, help)
@@ -105,15 +99,14 @@ int main(int argc, char** argv) {
 ```
 
 - 上面的 7 个宏，分别用于定义 7 种不同类型的 flag 变量。
-- 参数 name 是 flag 名，对应的全局变量名是 `FLG_name`，参数 value 是默认值，参数 help 是注释信息。
+- 参数 `name` 是 flag 名，对应的全局变量名是 `FLG_name`，参数 `value` 是默认值，参数 `help` 是注释信息。
 - flag 变量是全局变量，一般不要在头文件中定义。
 - flag 变量的名字是唯一的，不能定义两个名字相同的 flag 变量。
 - flag 变量一般在命名空间之外定义，否则可能无法使用 FLG_name 访问 flag 变量。
 
 
-
-
 - 示例
+
 ```cpp
 DEF_bool(b, false, "comments");  // bool FLG_b = false;
 DEF_int32(i32, 32, "comments");  // int32 FLG_i32 = 32;
@@ -126,8 +119,8 @@ DEF_string(s, "x", "comments");  // fastring FLG_s = "x";
 
 
 
-
 ### 声明 flag 变量
+
 ```cpp
 #define DEC_bool(name)    _DECLARE_FLAG(bool, name)
 #define DEC_int32(name)   _DECLARE_FLAG(int32, name)
@@ -139,14 +132,13 @@ DEF_string(s, "x", "comments");  // fastring FLG_s = "x";
 ```
 
 - 上面的 7 个宏，分别用于声明 7 种不同类型的 flag 变量。
-- 参数 name 是 flag 名，对应的全局变量名是 `FLG_name`。
+- 参数 `name` 是 flag 名，对应的全局变量名是 `FLG_name`。
 - 一个 flag 变量只能定义一次，但可以声明多次，可以在任何需要的地方声明它们。
 - flag 变量一般在命名空间之外声明，否则可能无法使用 FLG_name 访问 flag 变量。
 
 
-
-
 - 示例
+
 ```cpp
 DEC_bool(b);      // extern bool FLG_b;
 DEC_int32(i32);   // extern int32 FLG_i32;
@@ -159,13 +151,11 @@ DEC_string(s);    // extern fastring FLG_s;
 
 
 
-
 ### 使用 flag 变量
 
-
 定义或声明 flag 变量后，就可以像普通变量一样使用它们：
+
 ```cpp
-// xx.cc
 #include "co/flag.h"
 
 DEC_bool(b);
@@ -185,15 +175,13 @@ int main(int argc, char** argv) {
 
 
 
-
-
 ## 命令行中使用 flag
 
 
 ### 命令行中修改 flag 变量的值
 
-
 假设程序中定义了如下的 flag：
+
 ```cpp
 DEF_bool(x, false, "bool x");
 DEF_bool(y, false, "bool y");
@@ -201,11 +189,14 @@ DEF_int32(i, -32, "int32");
 DEF_uint64(u, 64, "uint64");
 DEF_string(s, "nice", "string");
 ```
+
 程序启动时，可以通过命令行参数修改 flag 变量的值：
+
 ```bash
 # -x=y, x=y, -x y, 三者是等价的
 ./xx -i=8 u=88 -s=xxx
 ./xx -i 8 -u 88 -s "hello world"
+./xx -i8       # 仅适用于单字母命名的整数类型 flag
 
 # bool 类型设置为 true 时, 可以略去值
 ./xx -x        # -x=true
@@ -216,18 +207,17 @@ DEF_string(s, "nice", "string");
 # 整数类型的 flag 可以带单位 k, m, g, t, p, 不区分大小写
 ./xx -i -4k    # i=-4096
 
-# 整数类型的 flag 可以传 8 或 16 进制数
+# 整数类型的 flag 可以传 8 进制 或 16 进制数
 ./xx i=032     # i=26     8 进制
 ./xx u=0xff    # u=255   16 进制
 ```
 
 
 
-
 ### 查看帮助信息(--help)
 
+co/flag 支持用 `--help` 命令查看程序的帮助信息：
 
-flag 库支持用 `--help` 命令查看程序的帮助信息：
 ```bash
 $ ./xx --help
 usage:
@@ -244,11 +234,10 @@ usage:
 
 
 
-
 ### 查看 flag 列表(--)
 
+co/flag 可以用 `--` 命令，用于查看程序中定义的 flag 列表：
 
-flag 库提供了 `--` 命令，用于查看程序中定义的 flag 列表：
 ```bash
 $ ./xx --
 --config: .path of config file
@@ -262,18 +251,15 @@ $ ./xx --
 
 
 
-
-
 ## 配置文件
 
 
 ### 配置文件格式
 
+co/flag 的配置文件格式比较灵活：
 
-flag 库的配置文件格式比较灵活：
-
-- 一行一个配置项，每个配置项对应一个 flag，形式统一为 x = y，看起来一目了然。
-- `#` 或 `//` 表示注释，支持整行注释与行尾注释。
+- 一行一个配置项，每个配置项对应一个 flag，形式统一为 `x = y`，看起来一目了然。
+- `#` 或 `//` 表示注释，支持行尾注释。
 - 引号中的 `#` 或 `//`  不是注释。
 - 忽略行前、行尾的空白字符，书写更自由，不容易出错。
 - `=` 号前后可以任意添加空白字符，书写更自由。
@@ -282,8 +268,8 @@ flag 库的配置文件格式比较灵活：
 - 字符串可以用双引号、单引号或 3个反引号括起来。
 
 
-
 - 配置文件示例
+
 ```yaml
    # config file: xx.conf
      boo = true                # bool 类型
@@ -304,14 +290,15 @@ flag 库的配置文件格式比较灵活：
 
 
 
-
 ### 自动生成配置文件
+
 ```cpp
 DEF_bool(mkconf, false, ".generate config file");
 ```
 
-- mkconf 是 co/flag 内部定义的 flag，它是自动生成配置文件的开关。
+- `mkconf` 是 co/flag 内部定义的 flag，它是自动生成配置文件的开关。
 - 命令行中可以用 `-mkconf` 自动生成配置文件。
+
 ```bash
 ./xx -mkconf            # 在 xx 所在目录生成 xx.conf
 ./xx -mkconf -x u=88    # 自定义配置项的值
@@ -319,14 +306,12 @@ DEF_bool(mkconf, false, ".generate config file");
 
 
 
-
 ### 调整配置文件中配置项的顺序
-
 
 自动生成的配置文件中，配置项按 flag 级别、所在文件名、所在代码行数进行排序。如果用户想让某些配置项的排序靠前些，可以将 flag 的级别设成较小的值，反之可以将 flag 级别设成较大的值。
 
-
 定义 flag 时可以在注释开头用 `#n` 指定级别，**n 必须是 0 到 99 之间的整数**，若注释非空，n 后面必须有一个空格。不指定时，默认 flag 级别为 10。
+
 ```cpp
 DEF_bool(x, false, "comments");     // 默认级别为 10
 DEF_bool(y, false, "#23");          // 级别为 23, 注释为空
@@ -335,11 +320,10 @@ DEF_bool(z, false, "#3 comments");  // 级别为 3, 注释非空, 3 后面必须
 
 
 
-
 ### 禁止某些配置项生成到配置文件中
 
-
 注释以 `.` 开头的 flag，带有**隐藏**属性，不会生成到配置文件中，但用 `--` 命令可以查看。注释为空的 flag，则是完全不可见的，既不会生成到配置文件中，也不能用 `--` 命令查看。
+
 ```cpp
 DEF_bool(x, false, ".say something here");
 DEF_string(s, "good", "");
@@ -347,15 +331,16 @@ DEF_string(s, "good", "");
 
 
 
-
 ### 程序启动时指定配置文件
+
 ```cpp
 DEF_string(config, "", ".path of config file");
 ```
 
-- config 是 co/flag 内部定义的 flag，表示配置文件的路径。
+- `config` 是 co/flag 内部定义的 flag，表示配置文件的路径。
 - 命令行中可以用 `-config` 指定配置文件。
 - 代码中可以在调用 `flag::init()` 之前，修改 `FLG_config` 的值，以指定配置文件。
+
 ```bash
 ./xx -config xx.conf
 
@@ -368,20 +353,19 @@ DEF_string(config, "", ".path of config file");
 
 
 
-
-
 ## 自定义帮助信息
+
 ```cpp
 DEF_string(help, "", ".help info");
 ```
 
-- help 是 co/flag 内部定义的 flag，表示程序的帮助信息，命令行中使用 `--help` 命令可以查看此信息。
-- FLG_help 默认为空，使用 co/flag 内部提供的默认帮助信息。
+- `help` 是 co/flag 内部定义的 flag，表示程序的帮助信息，命令行中使用 `--help` 命令可以查看此信息。
+- `FLG_help` 默认为空，使用 co/flag 内部提供的默认帮助信息。
 - 用户想自定义帮助信息时，可以在调用 `flag::init()` 前，修改 `FLG_help` 的值。
 
 
-
 - 示例
+
 ```cpp
 #include "co/flag.h"
 
@@ -396,21 +380,18 @@ int main(int argc, char** argv) {
 
 
 
-
-
 ## 让程序在后台运行
+
 ```cpp
 DEF_bool(daemon, false, "#0 run program as a daemon");
 ```
 
-- daemon 是 co/flag 内部定义的 flag，若为 true，程序将在后台运行，仅支持 linux 平台。
+- `daemon` 是 co/flag 内部定义的 flag，若为 true，程序将在后台运行，仅支持 linux 平台。
 - 命令行中可以用 `-daemon` 指定程序以 daemon 形式在后台运行。
 
-
-
 - 示例
+
 ```bash
 ./xx -daemon
 ```
-
 

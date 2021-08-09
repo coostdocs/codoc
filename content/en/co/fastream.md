@@ -8,14 +8,11 @@ include: [co/fastream.h](https://github.com/idealvin/co/blob/master/include/co/f
 
 ## fastream
 
-
-`fastream` is used to replace `std::ostringstream` in the C++ standard library. The performance of std::ostringstream is poor which may be several times slower than snprintf, and fastream is about 10~30 times faster than snprintf on different platforms. 
-
+`fastream` is used to replace `std::ostringstream` in the C++ standard library. The performance of std::ostringstream is poor which may be several times slower than `snprintf`, and fastream is about 10~30 times faster than snprintf on different platforms. 
 
 
 
 ### fastream::fastream
-
 
 ```cpp
 fastream() noexcept;
@@ -23,19 +20,11 @@ explicit fastream(size_t cap);
 fastream(fastream&& s) noexcept;
 ```
 
-
-**Constructor**
-
-
-- The first one is the default constructor, which creates an empty fastream object without any internal memory allocation.
-- The second constructor uses the parameter cap to specify the initial capacity of fastream, that is, pre-allocated cap bytes of memory.
-- The third is the move constructor, which does not copy memory.
-
-
+- The first one is the default constructor, which creates an empty fastream object without any memory allocation.
+- The second constructor uses the parameter cap to specify the initial capacity of fastream.
+- The third is the move constructor.
 
 - Example
-
-
 
 ```cpp
 fastream s;              // fastream with empty status, no memory allocated
@@ -45,19 +34,15 @@ fastream x(std::move(s); // move constructor, s becomes an empty object
 
 
 
-
 ### fastream::operator=
-
 
 ```cpp
 fastream& operator=(fastream&& s) noexcept;
 ```
 
-
 - Move assignment, the content of s is transferred to fastream, and s itself becomes an empty object.
+
 - Example
-
-
 
 ```cpp
 fastream s(32);
@@ -67,25 +52,17 @@ x = std::move(s); // x capacity -> 32, s -> empty
 
 
 
-
 ### ———————————
-
-
-
-
 ### fastream::back
-
 
 ```cpp
 char& back() const;
 ```
 
-
 - This method returns a reference to the last character in fastream.
 - If fastream is empty, calling this method will cause undefined behavior.
+
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -96,20 +73,16 @@ s.back() ='x';     // s -> "hellx"
 
 
 
-
 ### fastream::front
-
 
 ```cpp
 char& front() const;
 ```
 
-
 - This method returns a reference to the first character in fastream.
 - If fastream is empty, calling this method will cause undefined behavior.
+
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -120,20 +93,16 @@ s.front() ='x';     // s -> "xello"
 
 
 
-
 ### fastream::operator[]
-
 
 ```cpp
 char& operator[](size_t n) const;
 ```
 
-
 - This method returns the reference of the nth character in fastream.
 - If n is out of a reasonable range, calling this method will cause undefined behavior.
+
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -144,23 +113,14 @@ s[1] ='x';     // s -> "hxllo"
 
 
 
-
 ### ———————————
-
-
-
-
 ### fastream::capacity
-
 
 ```cpp
 size_t capacity() const;
 ```
 
-
 - This method returns the capacity of fastream.
-
-
 
 
 
@@ -177,62 +137,45 @@ const char* c_str() const;
 
 
 
-
-
 ### fastream::data
-
 
 ```cpp
 const char* data() const;
 ```
 
-
 - This method is similar to c_str(), but it does not guarantee that the string ends with '\0'.
-
-
 
 
 
 ### fastream::empty
 
-
 ```cpp
 bool empty() const;
 ```
-
 
 - This method determines whether fastream is empty.
 
 
 
-
-
 ### fastream::size
-
 
 ```cpp
 size_t size() const;
 ```
 
-
 - This method returns the length of data in fastream.
-
-
 
 
 
 ### fastream::str
 
-
 ```cpp
 fastring str() const;
 ```
 
-
 - This method returns a copy of fastream's internal data in the form of fastring.
+
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -242,52 +185,39 @@ fastring x = s.str(); // x = "hello"
 
 
 
-
 ### ———————————
-
-
-
-
 ### fastream::append
 
-
 ```cpp
-fastream& append(const void* s, size_t n);
-fastream& append(const char* s);
-fastream& append(const fastring& s);
-fastream& append(const std::string& s);
-fastream& append(const fastream& s);
-fastream& append(size_t n, char c);
-fastream& append(char c, size_t n);
-fastream& append(char c);
-fastream& append(unsigned char c);
-fastream& append(short v);
-fastream& append(unsigned short v);
-fastream& append(int v);
-fastream& append(unsigned int v);
-fastream& append(long v);
-fastream& append(unsigned long v);
-fastream& append(long long v);
-fastream& append(unsigned long long v);
+1.  fastream& append(const void* s, size_t n);
+2.  fastream& append(const char* s);
+3.  fastream& append(const fastring& s);
+4.  fastream& append(const std::string& s);
+5.  fastream& append(const fastream& s);
+6.  fastream& append(size_t n, char c);
+7.  fastream& append(char c, size_t n);
+8.  fastream& append(char c);
+9.  fastream& append(unsigned char c);
+10. fastream& append(short v);
+11. fastream& append(unsigned short v);
+12. fastream& append(int v);
+13. fastream& append(unsigned int v);
+14. fastream& append(long v);
+15. fastream& append(unsigned long v);
+16. fastream& append(long long v);
+17. fastream& append(unsigned long long v);
 ```
-
-
-**Append operation**
-
 
 - The first version appends a byte sequence of length n.
 - The second version appends a C string. Unlike fastring, fastream does not check whether the memory overlaps, and s cannot be part of the fastream performing the append operation.
 - The 3rd and 4th versions appends fastring and std::string respectively.
-- The fifth version appends fastream, s can be the fastream object itself performing the append operation.
+- The fifth version appends fastream, s can be the fastream performing the append operation.
 - The 6th and 7th versions appends n characters c.
 - The 8th and 9th versions appends a single character c.
 - The 10th to 17th versions appends 8 built-in integer types in binary form, which is equivalent to `append(&v, sizeof(v))`.
 
 
-
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -311,9 +241,7 @@ s.append(s.c_str() + 1);
 
 
 
-
 ### fastream::operator<<
-
 
 ```cpp
 fastream& operator<<(const char* s);
@@ -323,15 +251,10 @@ fastream& operator<<(const fastream& s)
 template<typename T> fastream& operator<<(T v);
 ```
 
-
-**Streaming output operation**
-
-
 - The first 4 versions are equivalent to `append(s)`.
-- In the fifth version, T can be any built-in data type, such as bool, char, int, double, void* and so on.
+- In the fifth version, T can be any built-in type like bool, char, int, double, void*, etc.
+
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -344,70 +267,47 @@ s << s;             // s -> "hello 23 hello 23 "
 
 
 
-
 ### ———————————
-
-
-
-
 ### fastream::clear
-
 
 ```cpp
 void clear();
 ```
 
-
 - This method only sets the size of fastream to 0, and the capacity remains unchanged.
-
-
 
 
 
 ### fastream::ensure
 
-
 ```cpp
 void ensure(size_t n);
 ```
-
 
 - This method ensures that the remaining memory of fastream can hold at least n characters.
 
 
 
-
-
 ### fastream::reserve
-
 
 ```cpp
 void reserve(size_t n);
 ```
 
-
 - This method adjusts the capacity of fastream to ensure that the capacity is at least n.
-
-
 
 
 
 ### fastream::resize
 
-
 ```cpp
 void resize(size_t n);
 ```
 
-
 - This method sets the size of fastream to n.
 - When n is greater than the original size, this operation will expand size to n, but will not fill the expanded part with '\0'.
 
-
-
 - Example
-
-
 
 ```cpp
 fastream s;
@@ -419,8 +319,8 @@ char c = s[5]; // c is an uncertain random value
 
 
 
-
 ### fastream::safe_clear
+
 ```cpp
 void safe_clear();
 ```
@@ -429,10 +329,7 @@ void safe_clear();
 
 
 
-
-
 ### fastream::swap
-
 
 ```cpp
 void swap(fastream& s) noexcept;
@@ -442,11 +339,7 @@ void swap(fastream&& s) noexcept;
 
 - This method exchanges the contents of two fastreams, only the internal pointer, capacity, and size are exchanged.
 
-
-
 - Example
-
-
 
 ```cpp
 fastream s(32);
@@ -456,17 +349,10 @@ s.swap(x); // s: cap -> 64, x: cap -> 32
 
 
 
-
 ### ———————————
-
-
-
-
 ### Interoperability with fastring
 
-
 `fastream` and `fastring` are both inherited from `fast::stream`, the memory structure of them is exactly the same, so they can be easily converted to each other:
-
 
 ```cpp
 fastream s;
@@ -478,12 +364,11 @@ void f(fastream&);
 f(*(fastream*)&x);
 ```
 
-
 As mentioned earlier, the append operation of fastream will not check memory overlap. If necessary, it can be converted to fastring to perform the operation safely:
-
 
 ```cpp
 fastream s;
 s.append("hello");
 ((fastring*)&s)->append(s.c_str() + 1);
 ```
+

@@ -85,8 +85,7 @@ It contains a pointer of the Json class, and an index, which indicates its posit
 
 
 
-**json::Value supports almost all operations in the Json class. Therefore, the following documents about the Json class generally also apply to the json::Value class. **
-
+**json::Value supports almost all operations in the Json class. Therefore, the following documents about the Json class generally also apply to the json::Value class.**
 
 
 
@@ -183,7 +182,7 @@ void add_member(const char* key, const fastring& x);
 - Versions 2-5 add a value of integer type.
 - The sixth version adds a value of double type.
 - Versions 7-10 add a value of string type.
-- **Reminder: **for performance reasons, it is required that the key cannot contain double quotes, and it is best not to contain any escape characters. I have never seen anyone use it in this way. If so, please let me know and I will consider supporting it.
+- **NOTE**: for performance reasons, it is required that the key cannot contain double quotes, and it is best not to contain any escape characters. I have never seen anyone use it in this way. If so, please let me know and I will consider supporting it.
 
 
 
@@ -462,7 +461,7 @@ bool parse_from(const std::string& s);
 - In the first version, s is not required to end with `'\0'`.
 - When the parsing is successful, it returns true, otherwise it returns false.
 - When the parsing fails, the internal state of Json is uncertain. If the user does not check the return value, and use the Json object directly, it may cause undefined behavior.
-- It is **recommended to use **`json::parse()` instead of this method, which always returns a null when parsing failed.
+- It is **recommended to use** `json::parse()` instead of this method, which always returns a null when parsing failed.
 
 
 
@@ -991,7 +990,7 @@ Value operator*() const;
 ```
 
 
-- Overload `operator*`, this method ** only applies to iterator of array type**.
+- Overload `operator*`, this method **only applies to iterator of array type**.
 - When Json is an array, the iterator points to the elements in the array. This method returns a json::Value that represents the element pointed to by the iterator.
 
 
@@ -1006,7 +1005,7 @@ const char* key();
 ```
 
 
-- This method ** only applies to iterator of object type**.
+- This method **only applies to iterator of object type**.
 - When Json is an object, the iterator points to the key-value pair in the object, and this method returns the key.
 
 
@@ -1021,7 +1020,7 @@ Value value();
 ```
 
 
-- This method ** only applies to iterator of object type**.
+- This method **only applies to iterator of object type**.
 - When Json is an object, the iterator points to the key-value pair in the object, and this method returns the value.
 
 

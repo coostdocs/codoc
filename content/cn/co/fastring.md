@@ -8,25 +8,23 @@ include: [co/fastring.h](https://github.com/idealvin/co/blob/master/include/co/f
 
 ## fastring
 
-
-`fastring` 是 co 中的字符串类型，它实现了 std::string 中的大部分方法，同时也提供了一些 std::string 没有的方法。早期的实现中使用了引用计数，复制行为与 std::string 不同，容易造成混淆，新版本移除了引用计数。
-
+`fastring` 是 co 中的字符串类型，它实现了 std::string 中的大部分方法，同时也提供了一些 std::string 没有的方法。
 
 
 
 ### fastring::fastring
+
 ```cpp
-fastring() noexcept;
-explicit fastring(size_t cap);
-fastring(const void* s, size_t n);
-fastring(const char* s);
-fastring(const std::string& s);
-fastring(size_t n, char c);
-fastring(char c, size_t n);
-fastring(const fastring& s);
-fastring(fastring&& s) noexcept;
+1.  fastring() noexcept;
+2.  explicit fastring(size_t cap);
+3.  fastring(const void* s, size_t n);
+4.  fastring(const char* s);
+5.  fastring(const std::string& s);
+6.  fastring(size_t n, char c);
+7.  fastring(char c, size_t n);
+8.  fastring(const fastring& s);
+9.  fastring(fastring&& s) noexcept;
 ```
-**构造函数**
 
 - 第 1 个是默认构造函数，创建一个空的 fastring 对象，不会分配任何内存。
 - 第 2 个构造函数同样创建一个空的 fastring 对象，但用参数 cap 指定初始容量，即预分配 cap 字节的内存。
@@ -38,9 +36,8 @@ fastring(fastring&& s) noexcept;
 - 第 9 个是 move 构造函数，不会进行内存拷贝。
 
 
-
-
 - 示例
+
 ```cpp
 fastring s;                // 空字符串，无内存分配
 fastring s(32);            // 空字符串，预分配内存(容量为32)
@@ -54,24 +51,22 @@ fastring x(std::move(s));  // 移动构造，s 自身变成空字符串
 
 
 
-
 ### fastring::operator=
+
 ```cpp
 fastring& operator=(const char* s);
 fastring& operator=(const std::string& s);
 fastring& operator=(const fastring& s);
 fastring& operator=(fastring&& s) noexcept;
 ```
-**赋值操作**
 
 - 第 1 个用 '\0' 结尾的字符串进行赋值，s 可以是进行赋值操作的 fastring 的一部分。
 - 第 2 个用 std::string 进行赋值。
 - 第 3 个是拷贝赋值操作，若 s 与进行赋值操作的 fastring 是同一个对象，则不会进行任何操作。
 - 第 4 个是 move 赋值操作，s 自身会变成空字符串。
 
-
-
 - 示例
+
 ```cpp
 fastring s;
 fastring t;
@@ -84,9 +79,9 @@ t = std::move(s);
 
 
 
-
 ### ———————————
 ### fastring::back
+
 ```cpp
 char& back() const;
 ```
@@ -94,9 +89,8 @@ char& back() const;
 - 此方法返回 fastring 中最后一个字符的引用。
 - 若 fastring 为空，调用此方法会导致未定义的行为。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 char c = s.back();   // c = 'o'
@@ -105,8 +99,8 @@ s.back() = 'x';      // s -> "hellx"
 
 
 
-
 ### fastring::front
+
 ```cpp
 char& front() const;
 ```
@@ -114,9 +108,8 @@ char& front() const;
 - 此方法返回 fastring 中第一个字符的引用。
 - 若 fastring 为空，调用此方法会导致未定义的行为。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 char c = s.front();  // c = 'h'
@@ -125,8 +118,8 @@ s.front() = 'x';     // s -> "xello"
 
 
 
-
 ### fastring::operator[]
+
 ```cpp
 char& operator[](size_t n) const;
 ```
@@ -134,11 +127,8 @@ char& operator[](size_t n) const;
 - 此方法返回 fastring 中第 n 个字符的引用。
 - 若 n 超出合理的范围，调用此方法会导致未定义的行为。
 
-
-
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 char c = s[1];       // c = 'e'
@@ -147,9 +137,9 @@ s[1] = 'x';          // s -> "hxllo"
 
 
 
-
 ### ———————————
 ### fastring::capacity
+
 ```cpp
 size_t capacity() const;
 ```
@@ -158,9 +148,8 @@ size_t capacity() const;
 
 
 
-
-
 ### fastring::c_str
+
 ```cpp
 const char* c_str() const;
 ```
@@ -170,9 +159,8 @@ const char* c_str() const;
 
 
 
-
-
 ### fastring::data
+
 ```cpp
 const char* data() const;
 ```
@@ -181,9 +169,8 @@ const char* data() const;
 
 
 
-
-
 ### fastring::empty
+
 ```cpp
 bool empty() const;
 ```
@@ -192,9 +179,8 @@ bool empty() const;
 
 
 
-
-
 ### fastring::size
+
 ```cpp
 size_t size() const;
 ```
@@ -203,9 +189,8 @@ size_t size() const;
 
 
 
-
-
 ### fastring::substr
+
 ```cpp
 fastring substr(size_t pos) const;
 fastring substr(size_t pos, size_t len) const;
@@ -214,9 +199,8 @@ fastring substr(size_t pos, size_t len) const;
 - 第 1 个版本返回从位置 pos 开始的子串。
 - 第 2 个版本返回从位置 pos 开始、长度为 len 的子串。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s.substr(2);     // "llo"
@@ -225,19 +209,18 @@ s.substr(2, 2);  // "ll"
 
 
 
-
 ### ———————————
 ### fastring::append
+
 ```cpp
-fastring& append(const void* s, size_t n);
-fastring& append(const char* s);
-fastring& append(const fastring& s);
-fastring& append(const std::string& s);
-fastring& append(size_t n, char c);
-fastring& append(char c, size_t n);
-fastring& append(char c);
+1.  fastring& append(const void* s, size_t n);
+2.  fastring& append(const char* s);
+3.  fastring& append(const fastring& s);
+4.  fastring& append(const std::string& s);
+5.  fastring& append(size_t n, char c);
+6.  fastring& append(char c, size_t n);
+7.  fastring& append(char c);
 ```
-**追加操作**
 
 - 第 1 个版本追加指定长度的字节序列，n 为序列长度。
 - 第 2 个版本追加 '\0' 结尾的字符串，s 可以是执行 append 操作的 fastring 的一部分。
@@ -248,9 +231,8 @@ fastring& append(char c);
 - 此方法返回 fastring 的引用，多个 append 操作可以连写到一行。
 
 
-
-
 - 示例
+
 ```cpp
 fastring s;
 s.append('c');                 // s -> "c"
@@ -264,23 +246,21 @@ s.append(s.data(), 3);         // s -> "cxxxxcxx"
 
 
 
-
 ### fastring::operator<<
+
 ```cpp
 fastring& operator<<(const char* s);
 fastring& operator<<(const std::string& s);
 fastring& operator<<(const fastring& s);
 template<typename T> fastring& operator<<(T v);
 ```
-**流式输出操作**
 
 - 第 1 个版本中，s 是 '\0' 结尾的字符串，s 可以是执行 `operator<<` 操作的 fastring 的一部分。
 - 第 3 个版本中，s 可以是执行 `operator<<` 操作的 fastring 对象本身。
 - 第 4 个版本中，T 可以是任意的内置类型，如 bool, char, int, double, void* 等。
 
-
-
 - 示例
+
 ```cpp
 fastring s;
 s << false;           // s -> "false"
@@ -293,8 +273,8 @@ s << s;               // s -> "hello 2323 hello 2323 "
 
 
 
-
 ### fastring::operator+=
+
 ```cpp
 fastring& operator+=(const char* s);
 fastring& operator+=(const fastring& s);
@@ -304,9 +284,8 @@ fastring& operator+=(char c);
 
 - 此方法等价于 [append()](#fastringappend) 方法。
 
-
-
 - 示例
+
 ```cpp
 fastring s;
 s += 'c';   // s -> "c"
@@ -315,26 +294,24 @@ s += "xx";  // s -> "cxx"
 
 
 
-
 ### ———————————
 ### fastring::find
+
 ```cpp
 size_t find(char c) const;
 size_t find(char c, size_t pos) const;
 size_t find(const char* s) const;
 size_t find(const char* s, size_t pos) const;
 ```
-**查找操作**
 
 - 第 1 个版本从位置 0 开始查找字符 c。
 - 第 2 个版本从位置 pos 开始查找字符 c。
 - 第 3 个版本从位置 0 开始查找子串 s，内部基于 `strstr()` 实现，不适用于包含 '\0' 的 fastring。
 - 第 4 个版本从位置 pos 开始查找子串 s，内部基于 `strstr()` 实现，不适用于包含 '\0' 的 fastring。
-- 此方法查找成功时，返回所查找字符或子串的位置，否则返回 fastring::npos。
-
-
+- 此方法查找成功时，返回所查找字符或子串的位置，否则返回 `fastring::npos`。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 s.find('l');      // return 2
@@ -345,22 +322,19 @@ s.find("ll", 3);  // return s.npos
 
 
 
-
 ### fastring::rfind
+
 ```cpp
 size_t rfind(char c) const;
 size_t rfind(const char* s) const;
 ```
-**反向查找操作**
 
 - 第 1 个版本反向查找单个字符，基于 `strrchr()` 实现，不适用于包含 '\0' 的 fastring。
 - 第 2 个版本反向查找子串。
 - 此方法查找成功时，返回所查找字符或子串的位置，否则返回 fastring::npos。
 
-
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s.rfind('l');   // return 3
@@ -370,23 +344,21 @@ s.rfind("le");  // return s.npos
 
 
 
-
 ### fastring::find_first_of
+
 ```cpp
 size_t find_first_of(const char* s) const;
 size_t find_first_of(const char* s, size_t pos) const;
 ```
-**查找第一个出现的指定字符集中的字符**
 
+- 查找第一个出现的指定字符集中的字符。
 - 第 1 个版本从位置 0 开始查找。
 - 第 2 个版本从位置 pos 开始查找。
 - 此方法基于 `strcspn()` 实现，不适用于包含 '\0' 的 fastring。
-- 此方法从头开始查找，遇到 s 中的任意字符时，即返回该字符的位置，否则返回 fastring::npos。
-
-
-
+- 此方法从头开始查找，遇到 s 中的任意字符时，即返回该字符的位置，否则返回 `fastring::npos`。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 s.find_first_of("def");    // return 1
@@ -395,25 +367,23 @@ s.find_first_of("ol", 3);  // return 3
 
 
 
-
 ### fastring::find_first_not_of
+
 ```cpp
 size_t find_first_not_of(const char* s) const;
 size_t find_first_not_of(const char* s, size_t pos) const;
 size_t find_first_not_of(char s, size_t pos=0);
 ```
-**查找第一个出现的非指定字符集中的字符**
 
+- 查找第一个出现的非指定字符集中的字符。
 - 第 1 个版本从位置 0 开始查找。
 - 第 2 个版本从位置 pos 开始查找。
 - 第 3 个版本字符集为单个字符，s 不能是 '\0'。
 - 此方法基于 `strspn` 实现，不适用于包含 '\0' 的 fastring。
-- 此方法从头开始查找，遇到非 s 中的任意字符时，即返回该字符的位置，否则返回 fastring::npos。
-
-
-
+- 此方法从头开始查找，遇到非 s 中的任意字符时，即返回该字符的位置，否则返回 `fastring::npos`。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 s.find_first_not_of("he");     // return 2
@@ -423,19 +393,18 @@ s.find_first_not_of('x');      // return 0
 
 
 
-
 ### fastring::find_last_of
+
 ```cpp
 size_t find_last_of(const char* s, size_t pos=npos) const;
 ```
-**查找最后一个出现的指定字符集中的字符**
 
+- 查找最后一个出现的指定字符集中的字符。
 - 此方法中参数 pos 默认为 npos，即从字符串尾部开始查找。
-- 此方法从 pos 处开始反向查找，遇到 s 中的任意字符时，即返回该字符的位置，否则返回 fastring::npos。
-
-
+- 此方法从 pos 处开始反向查找，遇到 s 中的任意字符时，即返回该字符的位置，否则返回 `fastring::npos`。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 s.find_last_of("le");     // return 3
@@ -444,22 +413,20 @@ s.find_last_of("le", 1);  // return 1
 
 
 
-
 ### fastring::find_last_not_of
+
 ```cpp
 size_t find_last_not_of(const char* s, size_t pos=npos) const;
 size_t find_last_not_of(char s, size_t pos=npos) const;
 ```
-**查找最后一个出现的非指定字符集中的字符**
 
+- 查找最后一个出现的非指定字符集中的字符。
 - 此方法中参数 pos 默认为 npos，即从字符串尾部开始查找。
 - 第 2 个版本中 s 是单个字符，s 不能是 '\0'。
-- 此方法从 pos 处开始反向查找，遇到非 s 中的任意字符时，即返回该字符的位置，否则返回 fastring::npos。
-
-
-
+- 此方法从 pos 处开始反向查找，遇到非 s 中的任意字符时，即返回该字符的位置，否则返回 `fastring::npos`。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 s.find_last_not_of("le");     // return 4
@@ -469,8 +436,8 @@ s.find_last_not_of('o');      // return 3
 
 
 
-
 ### fastring::npos
+
 ```cpp
 static const size_t npos = (size_t)-1;
 ```
@@ -479,9 +446,8 @@ static const size_t npos = (size_t)-1;
 - npos 作为长度时，表示直到字符串结尾。
 - npos 作为返回值时，表示未找到。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 size_t r = s.find('x');
@@ -490,20 +456,18 @@ r == s.npos;  // true
 
 
 
-
 ### ———————————
 ### fastring::replace
+
 ```cpp
 fastring& replace(const char* sub, const char* to, size_t maxreplace=0);
 ```
-**替换操作**
 
 - 此方法将 fastring 中的子串 sub 替换成 to，参数 maxreplace 指定最大的替换次数，0 表示不限次数。
 - 此方法返回 fastring 的引用，多个 replace 操作可以连写到一行。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s.replace("ll", "rr");                     // s -> "herro"
@@ -512,22 +476,20 @@ s.replace("err", "ok").replace("k", "o");  // s -> "hooo"
 
 
 
-
 ### fastring::strip
+
 ```cpp
 fastring& strip(const char* s=" \t\r\n", char d='b');
 fastring& strip(char s, char d='b');
 ```
-**修剪操作**
 
+- 修剪字符串，去掉 fastring 左边、右边或两边的指定字符。
 - 参数 s 为要修剪的字符，参数 d 表示方向，'l' 或 'L' 表示左边，'r' 或 'R' 表示右边，默认为 'b' 表示左右两边。
 - 第 1 个版本默认去掉字符串两边的空白字符。
 - 第 2 个版本中 s 为单个字符，s 不能是 '\0'。
-- 此方法去掉 fastring 左边、右边或两边的 s 中的字符，返回 fastring 引用。
-
-
 
 - 示例
+
 ```cpp
 fastring s = " sos\r\n";
 s.strip();          // s -> "sos"
@@ -537,8 +499,8 @@ s.strip('s', 'r');  // s -> "o"
 
 
 
-
 ### fastring::tolower
+
 ```cpp
 fastring& tolower();
 ```
@@ -547,9 +509,8 @@ fastring& tolower();
 
 
 
-
-
 ### fastring::toupper
+
 ```cpp
 fastring& toupper();
 ```
@@ -558,9 +519,8 @@ fastring& toupper();
 
 
 
-
-
 ### fastring::lower
+
 ```cpp
 fastring lower() const;
 ```
@@ -569,9 +529,8 @@ fastring lower() const;
 
 
 
-
-
 ### fastring::upper
+
 ```cpp
 fastring upper() const;
 ```
@@ -579,8 +538,8 @@ fastring upper() const;
 - 此方法返回 fastring 的大写形式。
 
 
-
 - 示例
+
 ```cpp
 fastring s("Hello");
 fastring x = s.lower();  // x = "hello", s 保持不变
@@ -591,9 +550,9 @@ s.toupper();             // s -> "HELLO"
 
 
 
-
 ### ———————————
 ### fastring::clear
+
 ```cpp
 void clear();
 ```
@@ -602,9 +561,8 @@ void clear();
 
 
 
-
-
 ### fastring::ensure
+
 ```cpp
 void ensure(size_t n);
 ```
@@ -613,9 +571,8 @@ void ensure(size_t n);
 
 
 
-
-
 ### fastring::reserve
+
 ```cpp
 void reserve(size_t n);
 ```
@@ -625,9 +582,8 @@ void reserve(size_t n);
 
 
 
-
-
 ### fastring::resize
+
 ```cpp
 void resize(size_t n);
 ```
@@ -635,9 +591,8 @@ void resize(size_t n);
 - 此方法将 fastring 的 size 设置为 n。
 - 当 n 大于原来的 size 时，此操作将 size 扩大到 n，但不会用 '\0' 填充扩展的部分。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s.resize(3);    // s -> "hel"
@@ -647,18 +602,27 @@ char c = s[5];  // c 是不确定的随机值
 
 
 
+### fastring::safe_clear
+
+```cpp
+void safe_clear();
+```
+
+- 与 `clear()` 类似，但会对内部内存清零。
+
+
 
 ### fastring::swap
+
 ```cpp
 void swap(fastring& s) noexcept;
 void swap(fastring&& s) noexcept;
 ```
 
-- 此方法交换两个 fastring，内部仅交换数据指针、容量、大小。
-
-
+- 此方法交换两个 fastring，仅交换内部指针、容量、大小。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 fastring x("world");
@@ -667,9 +631,9 @@ s.swap(x);  // s -> "world", x -> "hello"
 
 
 
-
 ### ———————————
 ### fastring::starts_with
+
 ```cpp
 bool starts_with(char s) const;
 bool starts_with(const char* s, size_t n) const;
@@ -683,9 +647,8 @@ bool starts_with(const std::string& s) const;
 
 
 
-
-
 ### fastring::ends_with
+
 ```cpp
 bool ends_with(char s) const;
 bool ends_with(const char* s, size_t n) const;
@@ -699,18 +662,16 @@ bool ends_with(const std::string& s) const;
 
 
 
-
-
 ### fastring::match
+
 ```cpp
 bool match(const char* pattern) const;
 ```
 
-- 判断 fastring 是否匹配模式 pattern，***** 匹配任意字符串，**?** 匹配单个字符。
-
-
+- 判断 fastring 是否匹配模式 pattern，`*` 匹配任意字符串，`?` 匹配单个字符。
 
 - 示例
+
 ```cpp
 fastring s("hello");
 s.match("he??o");  // true
@@ -722,17 +683,16 @@ s.match("h*l?");   // true
 
 
 
-
 ### fastring::lshift
+
 ```cpp
 fastring& lshift(size_t n);
 ```
 
 - 此方法将 fastring 左移 n 个字符，也就是删除前 n 个字符。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s.lshift(2);          // s -> "llo"
@@ -741,8 +701,8 @@ s.lshift(8);          // s -> ""
 
 
 
-
 ### fastring::remove_tail
+
 ```cpp
 fastring& remove_tail(const char* s, size_t n);
 fastring& remove_tail(const char* s);
@@ -752,9 +712,8 @@ fastring& remove_tail(const std::string& s);
 
 - 此方法删除 fastring 尾部的字符串 s，仅当 fastring 以 s 结尾时，才会删除。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello.log");
 s.remove_tail(".log");  // s -> "hello"
@@ -762,17 +721,16 @@ s.remove_tail(".log");  // s -> "hello"
 
 
 
-
 ### fastring::shrink
+
 ```cpp
 void shrink();
 ```
 
 - 此方法释放 fastring 中多余的内存。
 
-
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s.reserve(32);  // capacity -> 32
@@ -782,14 +740,11 @@ s.shrink();     // capacity -> 6
 
 
 
-
-
 ## global functions
 
 
-
-
 ### operator+
+
 ```cpp
 fastring operator+(const fastring& a, char b);
 fastring operator+(char a, const fastring& b);
@@ -802,9 +757,8 @@ fastring operator+(const std::string& a, const fastring& b);
 
 - 加法操作，此方法至少有一个参数是 fastring。
 
-
-
 - 示例
+
 ```cpp
 fastring s;
 s = s + '^';        // s -> "^"
@@ -813,8 +767,8 @@ s = "o" + s + "o";  // s -> "o^o"
 
 
 
-
 ### operator==
+
 ```cpp
 bool operator==(const fastring& a, const fastring& b);
 bool operator==(const fastring& a, const char* b);
@@ -827,9 +781,8 @@ bool operator==(const std::string& a, const fastring& b);
 
 
 
-
-
 ### operator!=
+
 ```cpp
 bool operator!=(const fastring& a, const fastring& b);
 bool operator!=(const fastring& a, const char* b);
@@ -842,9 +795,8 @@ bool operator!=(const std::string& a, const fastring& b);
 
 
 
-
-
 ### operator<
+
 ```cpp
 bool operator<(const fastring& a, const fastring& b);
 bool operator<(const fastring& a, const char* b);
@@ -857,9 +809,8 @@ bool operator<(const std::string& a, const fastring& b);
 
 
 
-
-
 ### operator>
+
 ```cpp
 bool operator>(const fastring& a, const fastring& b);
 bool operator>(const fastring& a, const char* b);
@@ -872,9 +823,8 @@ bool operator>(const std::string& a, const fastring& b);
 
 
 
-
-
 ### operator<=
+
 ```cpp
 bool operator<=(const fastring& a, const fastring& b);
 bool operator<=(const fastring& a, const char* b);
@@ -888,6 +838,7 @@ bool operator<=(const std::string& a, const fastring& b);
 
 
 ### operator>=
+
 ```cpp
 bool operator>=(const fastring& a, const fastring& b);
 bool operator>=(const fastring& a, const char* b);
@@ -899,8 +850,8 @@ bool operator>=(const std::string& a, const fastring& b);
 - 此方法判断字符串 a 是否大于或等于 b，至少有一个参数是 fastring。
 
 
-
 - 示例
+
 ```cpp
 fastring s("hello");
 s == "hello";  // true
@@ -913,16 +864,16 @@ s <= "he";     // false
 
 
 
-
 ### operator<<
+
 ```cpp
 std::ostream& operator<<(std::ostream& os, const fastring& s);
 ```
 
 - 示例
+
 ```cpp
 fastring s("xx");
 std::cout << s << std::endl;
 ```
-
 

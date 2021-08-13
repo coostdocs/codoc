@@ -18,7 +18,7 @@ title: "更新日志"
 
 - xrepo
 ```sh
-xrepo install -f "with_openssl=true,with_libcurl=true" co
+xrepo install -f "openssl=true,libcurl=true" co
 ```
 
 - vcpkg

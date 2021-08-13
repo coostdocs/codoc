@@ -190,7 +190,7 @@ xmake i -o /usr/local  # install to /usr/local
 ### Install libco from xmake repo
 
 ```cpp
-xrepo install -f "with_openssl=true,with_libcurl=true" co
+xrepo install -f "openssl=true,libcurl=true" co
 ```
 
 
@@ -221,7 +221,7 @@ make -j8
 
 ```bash
 mkdir build && cd build
-cmake .. -DBUILD_ALL=ON -DCMAKE_INSTALL_PREFIX=pkg
+cmake .. -DBUILD_ALL=ON -DCMAKE_INSTALL_PREFIX=/usr/local
 make -j8
 make install
 ```
@@ -234,6 +234,17 @@ To use HTTP or SSL features, libcurl, zlib, and openssl 1.1.0 or above must be i
 
 ```sh
 mkdir build && cd build
-cmake .. -DBUILD_ALL=ON -DWITH_LIBCURL=ON
+cmake .. -DBUILD_ALL=ON -DWITH_LIBCURL=ON -DWITH_OPENSSL=ON
 make -j8
+```
+
+
+
+### Install libco from vcpkg
+
+```sh
+vcpkg install co:x64-windows
+
+# HTTP & SSL support
+vcpkg install co[libcurl,openssl]:x64-windows
 ```

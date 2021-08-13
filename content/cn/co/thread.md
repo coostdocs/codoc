@@ -448,8 +448,7 @@ T* release();
 void reset(T* p = 0);
 ```
 
-- 将当前线程的 ptr 重置为 p，p 默认是 0，之前的 ptr 会被 delete 掉。
-- 参数 p 必须是 `operator new` 操作返回的指针。
+- 将当前线程的 ptr 重置为 p，p 默认是 0，之前的 ptr 会调用 `D()(x)` delete 掉。
 
 
 

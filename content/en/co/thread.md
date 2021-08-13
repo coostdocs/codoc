@@ -548,8 +548,7 @@ void reset(T* p = 0);
 ```
 
 
-- Reset the ptr of the current thread to p, p is 0 by default, and the previous ptr will be deleted.
-- The parameter p must be a pointer by `operator new`.
+- Reset the ptr of the current thread to p, p is 0 by default, and the previous ptr will be deleted by `D()(x)`.
 
 
 

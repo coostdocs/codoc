@@ -24,3 +24,8 @@ CO 是一个个人项目，如果您有意向赞助 CO，可以联系 Alvin(idea
 - 支付宝
 
   ![zfb.png](/images/zfb.png)
+
+
+- Paypal
+
+  idealvin@qq.com

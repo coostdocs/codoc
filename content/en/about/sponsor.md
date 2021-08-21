@@ -24,3 +24,8 @@ If you like CO, you may also consider giving the author a cup of coffee, thanksð
 - Alipay
 
   ![zfb.png](/images/zfb.png)
+
+
+- Paypal
+
+  idealvin@qq.com

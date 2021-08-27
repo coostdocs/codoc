@@ -814,7 +814,7 @@ void add(uint32 n=1) const;
 ### WaitGroup::done
 
 ```cpp
-void done( const;
+void done() const;
 ```
 
 - 将内部计数器减 1。

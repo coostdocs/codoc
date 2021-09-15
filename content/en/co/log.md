@@ -280,6 +280,23 @@ CHECK(it != m.end()); // Cannot use CHECK_NE(it, m.end()), the compiler will rep
 
 
 
+## Stack trace
+
+`co/log` will print the function call stack when `CHECK` assertion failed, or an abnormal signal like `SIGSEGV` was caught. See details below:
+
+<script src="https://asciinema.org/a/435894.js" id="asciicast-435894" async></script>
+
+On linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system:
+
+```sh
+git clone https://github.com/ianlancetaylor/libbacktrace.git
+cd libbacktrace-master
+./configure
+make -j8
+sudo make install
+```
+
+
 
 
 ## Configuration

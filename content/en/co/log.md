@@ -284,7 +284,7 @@ CHECK(it != m.end()); // Cannot use CHECK_NE(it, m.end()), the compiler will rep
 
 `co/log` will print the function call stack when `CHECK` assertion failed, or an abnormal signal like `SIGSEGV` was caught. See details below:
 
-<script src="https://asciinema.org/a/435894.js" id="asciicast-435894" async></script>
+![stack](https://idealvin.github.io/images/stack.png)(https://asciinema.org/a/435894)
 
 On linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system:
 

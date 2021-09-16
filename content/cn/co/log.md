@@ -246,7 +246,7 @@ CHECK(it != m.end()); // 不能使用 CHECK_NE(it, m.end()), 编译器会报错
 
 `co/log` 在 `CHECK` 断言失败或捕获到 `SIGSEGV` 等异常信号时，会打印函数调用栈，以方便定位问题，效果见下图：
 
-<script src="https://asciinema.org/a/435894.js" id="asciicast-435894" async></script>
+![stack](https://idealvin.github.io/images/stack.png)(https://asciinema.org/a/435894)
 
 在 linux 与 macosx 平台，需要安装 [libbacktrace](https://github.com/ianlancetaylor/libbacktrace)，才能打印堆栈信息：
 

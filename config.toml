@@ -2,7 +2,7 @@
 
 #baseURL = 'http://localhost:1313/'
 baseURL = 'https://idealvin.github.io/'
-title = "Book for CO"
+title = "Documents for CO"
 theme = 'hugo-book'
 defaultContentLanguage = "cn"
 defaultContentLanguageInSubdir = true

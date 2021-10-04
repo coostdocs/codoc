@@ -32,7 +32,7 @@ fastring cwd();
 
 
 - Returns path of the current working directory.
-- On windows, `\\` in the results will be converted to `/`.
+- On windows, `\` in the results will be converted to `/`.
 
 
 
@@ -91,7 +91,7 @@ fastring exepath();
 
 
 - Returns the full path of the current process.
-- On windows, `\\` in the results will be converted to `/`.
+- On windows, `\` in the results will be converted to `/`.
 
 
 
@@ -106,7 +106,7 @@ fastring homedir();
 
 
 - Returns path of the home directory of the current user.
-- On windows, `\\` in the results will be converted to `/`.
+- On windows, `\` in the results will be converted to `/`.
 
 
 

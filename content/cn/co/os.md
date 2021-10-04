@@ -29,7 +29,7 @@ fastring cwd();
 ```
 
 - 返回当前工作目录 (current working directory)。
-- 在 windows 平台，返回值中的 `\\` 会转换成 `/`。
+- 在 windows 平台，返回值中的 `\` 会转换成 `/`。
 
 
 
@@ -76,7 +76,7 @@ fastring exepath();
 ```
 
 - 返回当前进程的完整路径。
-- 在 windows 平台，返回值中的 `\\` 会转换成 `/`。
+- 在 windows 平台，返回值中的 `\` 会转换成 `/`。
 
 
 
@@ -88,7 +88,7 @@ fastring homedir();
 ```
 
 - 返回当前用户的 home 目录。
-- 在 windows 平台，返回值中的 `\\` 会转换成 `/`。
+- 在 windows 平台，返回值中的 `\` 会转换成 `/`。
 
 
 

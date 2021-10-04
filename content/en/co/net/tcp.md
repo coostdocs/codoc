@@ -191,7 +191,7 @@ template<typename T> void on_connection(void (T::*f)(Connection), T* o);
 - Set a callback for handling connections.
 - In the first 2 versions, the parameter f is a function of type `void f(Connection)`, or a function object of type `std::function<void(Connection)>`.
 - In the third version, the parameter f is a method in the class T, and the parameter o is a pointer to type T.
-- Since v2.0.2, the parameter f is an object of tcp::Connection, rather than a pointer, and users do not need to **delete it** any more.
+- Since v2.0.2, the parameter of f is an object of tcp::Connection, rather than a pointer, and users do not need to **delete it** any more.
 - When the server receives a connection, it will create a new coroutine and call the callback set by this method in the coroutine to handle the connection.
 
 

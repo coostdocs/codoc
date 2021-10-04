@@ -110,6 +110,19 @@ void join();
 
 
 
+
+## co::thread_id
+```cpp
+uint32 thread_id();
+```
+
+- This function returns the id of the current thread.
+- In the internal implementation, [TLS](https://wiki.osdev.org/Thread_Local_Storage) is used to save the thread id, and each thread only needs one system call.
+
+
+
+
+
 ## current_thread_id
 
 
@@ -117,11 +130,7 @@ void join();
 uint32 current_thread_id();
 ```
 
-
-- This function returns the id of the current thread.
-- In the internal implementation, [TLS](https://wiki.osdev.org/Thread_Local_Storage) is used to save the thread id, and each thread only needs one system call.
-
-
+- Deprecated since v2.0.2, use `co::thread_id()` instead.
 
 
 

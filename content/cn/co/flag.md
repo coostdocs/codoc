@@ -54,11 +54,12 @@ co/flag 为了简便易用，设计得非常灵活：
 ## 初始化(flag::init)
 
 ```cpp
+std::vector<fastring> init(int argc, const char** argv);
 std::vector<fastring> init(int argc, char** argv);
 void init(const fastring& path);
 ```
 
-- 第 1 个 init 函数，解析命令行参数及配置文件，并更新 flag 变量的值。此函数一般需要在 main 函数开头调用一次。它的大致流程如下：
+- 前两个 init 函数，解析命令行参数及配置文件，并更新 flag 变量的值。此函数一般需要在 main 函数开头调用一次。大致流程如下：
   - 对命令行参数进行预处理，此过程中可能会更新 `FLG_config` 的值。
   - 如果 `FLG_config` 非空，解析由它指定的配置文件，更新 flag 变量的值。
   - 解析其他命令行参数，更新 flag 变量的值。
@@ -67,7 +68,7 @@ void init(const fastring& path);
   - 遇到任何错误时，输出错误信息，并立即退出程序。
   - 若未发生任何错误，返回 non-flag 列表。如执行 `./exe x y` 时，此函数将返回 `["x", "y"]`。
 
-- 第 2 个 init 函数，解析配置文件，并更新 flag 变量的值。参数 `path` 是配置文件的路径。遇到错误时，会输出错误信息，并退出程序。
+- 最后一个 init 函数，解析配置文件，并更新 flag 变量的值。参数 `path` 是配置文件的路径。遇到错误时，会输出错误信息，并退出程序。
 
 
 - 示例

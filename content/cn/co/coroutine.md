@@ -37,6 +37,47 @@ co 协程库中 context 切换相关的代码，取自 [ruki](https://github.com
 ## 协程 API
 
 
+### co::init
+
+```cpp
+void init();
+void init(int argc, char** argv);
+void init(const char* config);
+```
+
+- v2.0.2 新增，用于初始化协程库。
+- 第 1 个版本仅执行协程库内部的一些初始化工作。
+- 第 2 个版本先调用 `flag::init(argc, argv)` 与 `log::init()`，再调用 `co::init()` 进行初始化。
+- 第 3 个版本先调用 `flag::init(config)` 与 `log::init()`，再调用 `co::init()` 进行初始化。
+
+
+
+### co::exit
+
+```cpp
+void exit();
+```
+
+- v2.0.2 新增，退出协程调度线程，回收协程相关资源。
+- 如果用户之前调用了 `co::init(argc, argv)` 或 `co::init(config)`，那么此函数还会调用 `log::exit()`。
+- 一般建议在 main() 函数结束时调用此函数。
+
+
+- 代码示例
+
+```cpp
+#include "co/co.h"
+
+int main(int argc, char** argv) {
+    co::init(argc, argv);
+    // user code
+    co::exit();
+    return 0;
+}
+```
+
+
+
 ### go
 
 ```cpp
@@ -79,7 +120,7 @@ go(&x); // Ensure that x is alive when the coroutine is running.
 
 ### DEF_main
 
-这个宏用于定义 main 函数，并将 main 函数中的代码也放到协程中运行。DEF_main 内部已经调用 `flag::init()` 与 `log::init()` 进行初始化，用户无需再次调用。
+这个宏用于定义 main 函数，并将 main 函数中的代码也放到协程中运行。DEF_main 内部已经调用 `co::init(argc, argv)` 进行初始化，用户无需再次调用。
 
 - 示例
 
@@ -205,7 +246,8 @@ void sleep(uint32 ms);
 void stop();
 ```
 
-- 退出所有调度线程，此函数一般在程序退出时调用，用户一般不需要手动调用此函数。
+- 与 `co::exit()` 一样。
+- v2.0.2 中标记为 deprecated，建议用 `co::exit()`。
 
 
 
@@ -1108,6 +1150,16 @@ T* operator->() const;
 ```
 
 - 重载 `operator->`，返回从 co::Pool 中取出的元素。
+
+
+
+### PoolGuard::operator*
+
+```cpp
+T& operator*() const;
+```
+
+- 重载 `operator*`，返回 T 类的引用。
 
 
 

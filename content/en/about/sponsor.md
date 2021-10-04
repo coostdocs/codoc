@@ -16,6 +16,16 @@ CO is a personal project. If you are interested in sponsoring CO, you can contac
 If you like CO, you may also consider giving the author a cup of coffee, thanksğŸ™
 
 
+- Github Sponsor
+
+  <iframe src="https://github.com/sponsors/idealvin/card" title="Sponsor idealvin" height="225" width="600" style="border: 0;"></iframe>
+
+
+- Paypal
+
+  idealvin@qq.com
+
+
 - Wechat
 
   ![wx.png](/images/wx.png)
@@ -25,7 +35,3 @@ If you like CO, you may also consider giving the author a cup of coffee, thanksğ
 
   ![zfb.png](/images/zfb.png)
 
-
-- Paypal
-
-  idealvin@qq.com

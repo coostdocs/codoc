@@ -220,6 +220,8 @@ s.substr(2, 2);  // "ll"
 5.  fastring& append(size_t n, char c);
 6.  fastring& append(char c, size_t n);
 7.  fastring& append(char c);
+8.  fastring& append(signed char c);
+9.  fastring& append(unsigned char c);
 ```
 
 - 第 1 个版本追加指定长度的字节序列，n 为序列长度。
@@ -227,7 +229,7 @@ s.substr(2, 2);  // "ll"
 - 第 3 个版本追加 fastring 对象，s 可以是执行 append 操作的 fastring 对象本身。
 - 第 4 个版本追加 std::string 对象。
 - 第 5 个与第 6 个版本追加 n 个字符 c。
-- 第 7 个版本追加单个字符 c。
+- 第 7 到 9 个版本追加单个字符 c。
 - 此方法返回 fastring 的引用，多个 append 操作可以连写到一行。
 
 
@@ -280,6 +282,8 @@ fastring& operator+=(const char* s);
 fastring& operator+=(const fastring& s);
 fastring& operator+=(const std::string& s);
 fastring& operator+=(char c);
+fastring& operator+=(signed char c);
+fastring& operator+=(unsigned char c);
 ```
 
 - 此方法等价于 [append()](#fastringappend) 方法。

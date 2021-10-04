@@ -32,6 +32,7 @@ fastring cwd();
 
 
 - Returns path of the current working directory.
+- On windows, `\\` in the results will be converted to `/`.
 
 
 
@@ -56,10 +57,12 @@ void daemon();
 
 ```cpp
 fastring env(const char* name);
+bool env(const char* name, const char* value);
 ```
 
 
-- Get value of the system environment variable.
+- The first version, get value of the system environment variable.
+- The second version, added since v2.0.2, set value of the system environment variable, return true on success, otherwise false.
 
 
 
@@ -88,6 +91,7 @@ fastring exepath();
 
 
 - Returns the full path of the current process.
+- On windows, `\\` in the results will be converted to `/`.
 
 
 
@@ -102,6 +106,7 @@ fastring homedir();
 
 
 - Returns path of the home directory of the current user.
+- On windows, `\\` in the results will be converted to `/`.
 
 
 

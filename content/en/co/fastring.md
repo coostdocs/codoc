@@ -217,6 +217,8 @@ s.substr(2, 2); // "ll"
 5.  fastring& append(size_t n, char c);
 6.  fastring& append(char c, size_t n);
 7.  fastring& append(char c);
+8.  fastring& append(signed char c);
+9.  fastring& append(unsigned char c);
 ```
 
 - The first version appends a byte sequence, and n is the sequence length.
@@ -224,7 +226,7 @@ s.substr(2, 2); // "ll"
 - The third version appends a fastring, and s can be the fastring itself that performs the append operation.
 - The fourth version appends a std::string.
 - The 5th and 6th versions appends n characters c.
-- The seventh version appends a single character c.
+- The 7th to 9th version appends a single character c.
 - This method returns a fastring reference, multiple append operations can be written to one line.
 
 
@@ -277,6 +279,8 @@ fastring& operator+=(const char* s);
 fastring& operator+=(const fastring& s);
 fastring& operator+=(const std::string& s);
 fastring& operator+=(char c);
+fastring& operator+=(signed char c);
+fastring& operator+=(unsigned char c);
 ```
 
 - This method is equivalent to the [append()](#fastringappend) method.
@@ -285,7 +289,7 @@ fastring& operator+=(char c);
 
 ```cpp
 fastring s;
-s +='c';   // s -> "c"
+s += 'c';  // s -> "c"
 s += "xx"; // s -> "cxx"
 ```
 

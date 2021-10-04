@@ -29,6 +29,7 @@ fastring cwd();
 ```
 
 - 返回当前工作目录 (current working directory)。
+- 在 windows 平台，返回值中的 `\\` 会转换成 `/`。
 
 
 
@@ -48,9 +49,11 @@ void daemon();
 ### os::env
 ```cpp
 fastring env(const char* name);
+bool env(const char* name, const char* value);
 ```
 
-- 获取系统环境变量的值，参数 name 是环境变量名。
+- 第 1 个版本，获取系统环境变量的值，参数 name 是环境变量名。
+- 第 2 个版本，v2.0.2 新增，设置环境变量的值，成功时返回 true，否则返回 false。
 
 
 
@@ -73,6 +76,7 @@ fastring exepath();
 ```
 
 - 返回当前进程的完整路径。
+- 在 windows 平台，返回值中的 `\\` 会转换成 `/`。
 
 
 
@@ -84,6 +88,7 @@ fastring homedir();
 ```
 
 - 返回当前用户的 home 目录。
+- 在 windows 平台，返回值中的 `\\` 会转换成 `/`。
 
 
 

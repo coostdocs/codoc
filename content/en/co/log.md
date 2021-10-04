@@ -67,15 +67,16 @@ int main(int argc, char** argv) {
 
 
 
-### log::close
+### log::exit and log::close
 
 
 ```cpp
+void exit();
 void close();
 ```
 
 
-- This function writes logs in the cache to a file and exits the log thread.
+- The above 2 functions are equal, which write logs in the cache to a file and exit the log thread.
 - When the program exits normally, co/log will automatically call this function.
 - It is safe to call this function multiple times.
 - co/log internally captures signals such as `SIGINT, SIGTERM, SIGQUIT`, and calls this function before the program exits.

@@ -195,15 +195,16 @@ fastring x = s.str();  // x = "hello"
 6.  fastream& append(size_t n, char c);
 7.  fastream& append(char c, size_t n);
 8.  fastream& append(char c);
-9.  fastream& append(unsigned char c);
-10. fastream& append(short v);
-11. fastream& append(unsigned short v);
-12. fastream& append(int v);
-13. fastream& append(unsigned int v);
-14. fastream& append(long v);
-15. fastream& append(unsigned long v);
-16. fastream& append(long long v);
-17. fastream& append(unsigned long long v);
+9.  fastream& append(signed char v)
+10. fastream& append(unsigned char c);
+11. fastream& append(short v);
+12. fastream& append(unsigned short v);
+13. fastream& append(int v);
+14. fastream& append(unsigned int v);
+15. fastream& append(long v);
+16. fastream& append(unsigned long v);
+17. fastream& append(long long v);
+18. fastream& append(unsigned long long v);
 ```
 
 - 第 1 个版本追加长度为 n 的字节序列。
@@ -211,8 +212,8 @@ fastring x = s.str();  // x = "hello"
 - 第 3 个与第 4 个版本分别追加 fastring 与 std::string。
 - 第 5 个版本追加 fastream，s 可以是进行 append 操作的 fastream 对象本身。
 - 第 6 个与第 7 个版本追加 n 个字符 c。
-- 第 8 个与第 9 个版本追加单个字符 c。
-- 第 10 到 17 个版本以二进制形式追加 8 种内置整数类型，等价于 `append(&v, sizeof(v))`。
+- 第 8 到 10 个版本追加单个字符 c。
+- 第 11 到 18 个版本以二进制形式追加 8 种内置整数类型，等价于 `append(&v, sizeof(v))`。
 
 
 - 示例

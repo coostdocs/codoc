@@ -54,11 +54,12 @@ co/flag is designed to be very flexible:
 ## Initialization (flag::init)
 
 ```cpp
+std::vector<fastring> init(int argc, const char** argv);
 std::vector<fastring> init(int argc, char** argv);
 void init(const fastring& path);
 ```
 
-- The first init function, parses the command line parameters and config file, and updates value of the flag variables. It usually needs to be called once at the beginning of the main function. Generally speaking, it does the following steps:
+- The first 2 init functions, parse the command line parameters and config file, and update value of the flag variables. It usually needs to be called once at the beginning of the main function. Generally speaking, it does the following steps:
   - Preprocess the command line parameters, the value of `FLG_config` may be updated then.
   - If `FLG_config` is not empty, parse the config file specified by it, and update value of the flag variables.
   - Parse other command line parameters and update value of the flag variables.
@@ -67,7 +68,7 @@ void init(const fastring& path);
   - When any error occurs, print the error message and terminate the program immediately.
   - If no error occurs, return the non-flag list. For example, when executing `./exe x y`, this function will return `["x", "y"]`.
 
-- The second init function, parses the config file and updates value of the flag variables. The parameter `path` is the path of the config file. When any error occurs, print the error message and terminate the program.
+- The third init function, parses the config file and updates value of the flag variables. The parameter `path` is the path of the config file. When any error occurs, print the error message and terminate the program.
 
 
 - Example

@@ -93,14 +93,25 @@ void join();
 
 
 
+## co::thread_id
+```cpp
+uint32 thread_id();
+```
+
+- 此函数返回当前线程的 id。
+- 内部实现中使用 [TLS](https://wiki.osdev.org/Thread_Local_Storage) 保存线程 id，每个线程只需一次系统调用。
+
+
+
+
 
 ## current_thread_id
 ```cpp
 uint32 current_thread_id();
 ```
 
-- 此函数返回当前线程的 id。
-- 内部实现中使用 [TLS](https://wiki.osdev.org/Thread_Local_Storage) 保存线程 id，每个线程只需一次系统调用。
+- 与 `co::thread_id()` 相同。
+- v2.0.2 标记为 deprecated，建议用 `co::thread_id()`。
 
 
 

@@ -62,12 +62,13 @@ int main(int argc, char** argv) {
 
 
 
-### log::close
+### log::exit 与 log::close
 ```cpp
+void exit();
 void close();
 ```
 
-- 此函数将缓存中的日志写入文件，并退出后台写日志的线程。
+- 这两个函数是等价的，将缓存中的日志写入文件，并退出后台写日志的线程。
 - 程序正常退出时，co/log 会自动调用此函数。
 - 多次调用此函数是安全的。
 - co/log 内部会捕获 `SIGINT, SIGTERM, SIGQUIT` 等信号，在程序退出前调用此函数，将缓存中的日志写入文件。

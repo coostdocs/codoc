@@ -38,6 +38,47 @@ The relevant code for context switching is taken from [tbox](https://github.com
 ## Coroutine API
 
 
+### co::init
+
+```cpp
+void init();
+void init(int argc, char** argv);
+void init(const char* config);
+```
+
+- Added since v2.0.2, used to initialize the coroutine library.
+- The first version performs some initialization work inside the coroutine library.
+- The second version first calls `flag::init(argc, argv)` and `log::init()`, and then calls `co::init()` to initialize the coroutine library.
+- The third version first calls `flag::init(config)` and `log::init()`, and then calls `co::init()` to initialize the coroutine library.
+
+
+
+### co::exit
+
+```cpp
+void exit();
+```
+
+- Added in v2.0.2, stop the coroutine scheduling threads and reclaim system resources.
+- If `co::init(argc, argv)` or `co::init(config)` was called before, this function will also call `log::exit()` to stop the logging thread.
+- It is generally recommended to call this function at the end of the main() function.
+
+
+- Code example
+
+```cpp
+#include "co/co.h"
+
+int main(int argc, char** argv) {
+     co::init(argc, argv);
+     // user code
+     co::exit();
+     return 0;
+}
+```
+
+
+
 ### go
 
 ```cpp
@@ -80,7 +121,7 @@ go(&x); // Ensure that x is alive when the coroutine is running.
 
 ### DEF_main
 
-This macro is used to define the main function and make code in the main function also run in coroutine. DEF_main has already called `flag::init()` and `log::init()` for initialization, and users do not need to call it again.
+This macro is used to define the main function and make code in the main function also run in coroutine. DEF_main has already called `co::init(argc, argv)` for initialization, and users do not need to call it again.
 
 - Example
 
@@ -207,7 +248,8 @@ void sleep(uint32 ms);
 void stop();
 ```
 
-- Stop all scheduling threads. This function is generally called when the program exits, and users generally do not need to manually call this function.
+- The same as `co::exit()`.
+- Deprecated since v2.0.2, use `co::exit()` instead.
 
 
 
@@ -1111,6 +1153,16 @@ T* operator->() const;
 ```
 
 - Overload `operator->`, returns the pointer popped from co::Pool in the constructor.
+
+
+
+### PoolGuard::operator*
+
+```cpp
+T& operator*() const;
+```
+
+- Overload `operator*`, returns a reference of object of type T.
 
 
 

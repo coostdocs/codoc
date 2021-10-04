@@ -9,7 +9,7 @@ include: [co/so/tcp.h](https://github.com/idealvin/co/blob/master/include/co/so/
 ## tcp::Connection
 
 
-`tcp::Connection` is a simple encapsulation of TCP connection, it is designed for TCP server. When SSL is enabled in a TCP server, tcp::Connection will use SSL to transmit data. 
+`tcp::Connection` is a simple encapsulation of TCP connection, it is designed for TCP server. When SSL is enabled in a TCP server, tcp::Connection will transfer data by SSL. 
 
 
 
@@ -18,12 +18,14 @@ include: [co/so/tcp.h](https://github.com/idealvin/co/blob/master/include/co/so/
 
 
 ```cpp
-Connection(sock_t s);
+Connection(int sock);
+Connection(void* ssl);
+Connection(Connection&& c);
 ```
 
 
-- Constructor, the parameter s is the socket descriptor.
-
+- The constructor, `Connection` is created by `tcp::Server`, users do not need to create it manually.
+- The first version constructs a normal TCP connection, the second version constructs a TCP connection that support SSL, and the third is a move constructor.
 
 
 
@@ -46,12 +48,12 @@ Connection::~Connection();
 
 
 ```cpp
-virtual int close(int ms = 0);
+int close(int ms = 0);
 ```
 
 
 - Close the connection. When the parameter ms > 0, close the connection after a certain delay.
-- This method must be called in the I/O thread (usually a coroutine that performs the I/O operations).
+- Since v2.0.1, this method can be called anywhere.
 
 
 
@@ -61,7 +63,7 @@ virtual int close(int ms = 0);
 
 
 ```cpp
-virtual int recv(void* buf, int n, int ms=-1);
+int recv(void* buf, int n, int ms=-1);
 ```
 
 
@@ -77,7 +79,7 @@ virtual int recv(void* buf, int n, int ms=-1);
 
 
 ```cpp
-virtual int recvn(void* buf, int n, int ms=-1);
+int recvn(void* buf, int n, int ms=-1);
 ```
 
 
@@ -92,7 +94,7 @@ virtual int recvn(void* buf, int n, int ms=-1);
 
 
 ```cpp
-virtual int reset(int ms = 0)
+int reset(int ms = 0)
 ```
 
 
@@ -107,7 +109,7 @@ virtual int reset(int ms = 0)
 
 
 ```cpp
-virtual int send(const void* buf, int n, int ms=-1);
+int send(const void* buf, int n, int ms=-1);
 ```
 
 
@@ -122,7 +124,7 @@ virtual int send(const void* buf, int n, int ms=-1);
 
 
 ```cpp
-sock_t socket() const;
+int socket() const;
 ```
 
 
@@ -136,7 +138,7 @@ sock_t socket() const;
 
 
 ```cpp
-virtual const char* strerror() const;
+const char* strerror() const;
 ```
 
 
@@ -166,11 +168,11 @@ virtual const char* strerror() const;
 
 
 ```cpp
-Server() = default;
+Server();
 ```
 
 
-- The constructor, does nothing.
+- The constructor, initialization.
 
 
 
@@ -180,15 +182,16 @@ Server() = default;
 
 
 ```cpp
-void on_connection(std::function<void(Connection*)>&& f);
-template<typename T> void on_connection(void (T::*f)(Connection*), T* o);
+void on_connection(std::function<void(Connection)>&& f);
+void on_connection(const std::function<void(Connection)>& f);
+template<typename T> void on_connection(void (T::*f)(Connection), T* o);
 ```
 
 
-- Set a callback for handling a connection.
-- In the first version, the parameter f is a function of type `void f(Connection*)`, or a function object of type `std::function<void(Connection*)>`.
-- In the second version, the parameter f is a method in the class T, and the parameter o is a pointer to type T.
-- The parameter of f is a pointer to tcp::Connection, which is created with **operator new**, and the user must **delete it **when the connection is closed.
+- Set a callback for handling connections.
+- In the first 2 versions, the parameter f is a function of type `void f(Connection)`, or a function object of type `std::function<void(Connection)>`.
+- In the third version, the parameter f is a method in the class T, and the parameter o is a pointer to type T.
+- Since v2.0.2, the parameter f is an object of tcp::Connection, rather than a pointer, and users do not need to **delete it** any more.
 - When the server receives a connection, it will create a new coroutine and call the callback set by this method in the coroutine to handle the connection.
 
 
@@ -198,21 +201,20 @@ template<typename T> void on_connection(void (T::*f)(Connection*), T* o);
 
 
 ```cpp
-void f(tcp::Connection* conn) {
-    std::unique_ptr<tcp::Connection> c(conn);
-    
-    while (true) {
-        conn->recv(...);
-        process(...);
-        conn->send(...);
-    }
-    
-    conn->close();
-}
+void f(tcp::Connection conn);
 
 tcp::Server s;
 s.on_connection(f);
-s.start(...);
+
+void f(tcp::Connection conn) {
+    while (true) {
+        conn.recv(...);
+        process(...);
+        conn.send(...);
+    }
+    
+    conn.close();
+}
 ```
 
 
@@ -222,17 +224,25 @@ s.start(...);
 
 
 ```cpp
-virtual void start(const char* ip, int port, const char* key=NULL, const char* ca=NULL);
+void start(const char* ip, int port, const char* key=0, const char* ca=0);
 ```
 
 
 - Start the TCP server, this method will not block the current thread.
 - The parameter ip is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
-- The parameter **key** is path of a **PEM **file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
+- The parameter **key** is path of a **PEM** file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
 
 
 
 
+#### Server::exit
+```cpp
+void exit();
+```
+
+- Added since v2.0.2.
+- Exit the TCP server, close the listening socket, and no longer receive new connections.
+- This method will not close the connections that has been established before.
 
 
 
@@ -278,7 +288,6 @@ Client::~Client();
 
 
 - Destructor, call the disconnect() method to close the connection.
-- Since disconnect() must be called in the I/O thread, users generally need to destruct the tcp::Client object in the coroutine that performs the I/O operation.
 
 
 
@@ -302,7 +311,7 @@ void close();
 
 
 ```cpp
-virtual bool connect(int ms);
+bool connect(int ms);
 ```
 
 
@@ -318,7 +327,7 @@ virtual bool connect(int ms);
 
 
 ```cpp
-virtual bool connected() const;
+bool connected() const;
 ```
 
 
@@ -332,12 +341,12 @@ virtual bool connected() const;
 
 
 ```cpp
-virtual void disconnect();
+void disconnect();
 ```
 
 
-- Close the connection, it must be called in the I/O thread (usually a coroutine that performs the I/O operations).
-- It is safe to call this method multiple times, it will be called automatically in the destructor.
+- Since v2.0.1, it can be called anywhere.
+- It is safe to call this method multiple times, and it will be called automatically in the destructor.
 
 
 
@@ -347,7 +356,7 @@ virtual void disconnect();
 
 
 ```cpp
-virtual int recv(void* buf, int n, int ms=-1);
+int recv(void* buf, int n, int ms=-1);
 ```
 
 
@@ -363,7 +372,7 @@ virtual int recv(void* buf, int n, int ms=-1);
 
 
 ```cpp
-virtual int recvn(void* buf, int n, int ms=-1);
+int recvn(void* buf, int n, int ms=-1);
 ```
 
 
@@ -379,7 +388,7 @@ virtual int recvn(void* buf, int n, int ms=-1);
 
 
 ```cpp
-virtual int send(const void* buf, int n, int ms=-1);
+int send(const void* buf, int n, int ms=-1);
 ```
 
 
@@ -395,7 +404,7 @@ virtual int send(const void* buf, int n, int ms=-1);
 
 
 ```cpp
-sock_t socket() const;
+int socket() const;
 ```
 
 
@@ -410,7 +419,7 @@ sock_t socket() const;
 
 
 ```cpp
-virtual const char* strerror() const;
+const char* strerror() const;
 ```
 
 
@@ -420,29 +429,28 @@ virtual const char* strerror() const;
 
 
 
-## TCP server code example
+## TCP server example
 
 
 ```cpp
-void on_connection(tcp::Connection* conn) {
-    std::unique_ptr<tcp::Connection> c(conn);
-    char buf[8] = {0 };
+void on_connection(tcp::Connection conn) {
+    char buf[8] = { 0 };
 
     while (true) {
-        int r = conn->recv(buf, 8);
-        if (r == 0) {/* client close the connection */
-            conn->close();
+        int r = conn.recv(buf, 8);
+        if (r == 0) {         /* client close the connection */
+            conn.close();
             break;
-        } else if (r < 0) {/* error */
-            conn->reset(3000);
+        } else if (r < 0) { /* error */
+            conn.reset(3000);
             break;
         } else {
-            LOG << "server recv "<< fastring(buf, r);
+            LOG << "server recv " << fastring(buf, r);
             LOG << "server send pong";
-            r = conn->send("pong", 4);
+            r = conn.send("pong", 4);
             if (r <= 0) {
-                LOG << "server send error: "<< conn->strerror();
-                conn->reset(3000);
+                LOG << "server send error: " << conn.strerror();
+                conn.reset(3000);
                 break;
             }
         }
@@ -451,8 +459,8 @@ void on_connection(tcp::Connection* conn) {
 
 tcp::Server s;
 s.on_connection(on_connection);
-s.start("0.0.0.0", 7788);                                   // no ssl
-s.start("0.0.0.0", 7788, "privkey.pem", "certificate.pem"); // use ssl
+s.start("0.0.0.0", 7788);                                    // no ssl
+s.start("0.0.0.0", 7788, "privkey.pem", "certificate.pem");  // use ssl
 ```
 
 

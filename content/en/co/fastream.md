@@ -197,24 +197,25 @@ fastring x = s.str(); // x = "hello"
 6.  fastream& append(size_t n, char c);
 7.  fastream& append(char c, size_t n);
 8.  fastream& append(char c);
-9.  fastream& append(unsigned char c);
-10. fastream& append(short v);
-11. fastream& append(unsigned short v);
-12. fastream& append(int v);
-13. fastream& append(unsigned int v);
-14. fastream& append(long v);
-15. fastream& append(unsigned long v);
-16. fastream& append(long long v);
-17. fastream& append(unsigned long long v);
+9.  fastream& append(signed char v)
+10. fastream& append(unsigned char c);
+11. fastream& append(short v);
+12. fastream& append(unsigned short v);
+13. fastream& append(int v);
+14. fastream& append(unsigned int v);
+15. fastream& append(long v);
+16. fastream& append(unsigned long v);
+17. fastream& append(long long v);
+18. fastream& append(unsigned long long v);
 ```
 
 - The first version appends a byte sequence of length n.
 - The second version appends a C string. Unlike fastring, fastream does not check whether the memory overlaps, and s cannot be part of the fastream performing the append operation.
 - The 3rd and 4th versions appends fastring and std::string respectively.
-- The fifth version appends fastream, s can be the fastream performing the append operation.
+- The 5th version appends fastream, s can be the fastream performing the append operation.
 - The 6th and 7th versions appends n characters c.
-- The 8th and 9th versions appends a single character c.
-- The 10th to 17th versions appends 8 built-in integer types in binary form, which is equivalent to `append(&v, sizeof(v))`.
+- The 8th to 10th versions appends a single character c.
+- The 11th to 18th versions appends 8 built-in integer types in binary form, which is equivalent to `append(&v, sizeof(v))`.
 
 
 - Example

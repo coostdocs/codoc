@@ -14,7 +14,7 @@ CO 是一个个人项目，如果您有意向赞助 CO，可以联系 Alvin(idea
 CO 由如下企业特别赞助，在此深表感谢！
 
 <a href="https://www.oneflow.org/index.html">
-<img src="/images/sponsor/oneflow.png" width="175" height="125">
+<img src="/images/sponsor/oneflow.png" width="210" height="150">
 </a>
 
 

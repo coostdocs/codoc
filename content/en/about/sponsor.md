@@ -16,9 +16,11 @@ CO is a personal project. If you are interested in sponsoring CO, you can contac
 
 ### Special sponsors
 
-- OneFlow
+CO is specially sponsored by the following companies, thank you very much!
 
-  ![oneflow](/images/sponsor/oneflow.png)(https://www.oneflow.org/index.html)
+<a href="https://www.oneflow.org/index.html">
+<img src="/images/sponsor/oneflow.png" width="175" height="125">
+</a>
 
 
 

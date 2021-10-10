@@ -249,7 +249,7 @@ CHECK(it != m.end()); // 不能使用 CHECK_NE(it, m.end()), 编译器会报错
 
 ![stack](https://idealvin.github.io/images/stack.png)(https://asciinema.org/a/435894)
 
-在 linux 与 macosx 平台，需要安装 [libbacktrace](https://github.com/ianlancetaylor/libbacktrace)，才能打印堆栈信息：
+在 linux 与 macosx 平台，需要安装 [libbacktrace](https://github.com/ianlancetaylor/libbacktrace)，才能打印堆栈信息。在 linux 上，`libbacktrace` 可能已经集成到 gcc 里了，您也许可以在类似 `/usr/lib/gcc/x86_64-linux-gnu/9` 的目录中找到它。否则，您可以按下面的方式手动安装它：
 
 ```sh
 git clone https://github.com/ianlancetaylor/libbacktrace.git

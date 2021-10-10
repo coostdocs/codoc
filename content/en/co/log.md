@@ -287,7 +287,7 @@ CHECK(it != m.end()); // Cannot use CHECK_NE(it, m.end()), the compiler will rep
 
 ![stack](https://idealvin.github.io/images/stack.png)(https://asciinema.org/a/435894)
 
-On linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system:
+On linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system. On linux, `libbacktrace` may have been installed within a newer version of gcc. You may find it in a directory like `/usr/lib/gcc/x86_64-linux-gnu/9`. Otherwise, you can install it by yourself as follow:
 
 ```sh
 git clone https://github.com/ianlancetaylor/libbacktrace.git

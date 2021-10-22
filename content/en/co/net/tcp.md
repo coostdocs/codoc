@@ -53,7 +53,7 @@ int close(int ms = 0);
 
 
 - Close the connection. When the parameter ms > 0, close the connection after a certain delay.
-- Since v2.0.1, this method can be called anywhere.
+- Since v2.0.1, this method can be called anywhere(in coroutine or non-coroutine).
 
 
 
@@ -345,7 +345,7 @@ void disconnect();
 ```
 
 
-- Since v2.0.1, it can be called anywhere.
+- Since v2.0.1, it can be called anywhere(in coroutine or non-coroutine).
 - It is safe to call this method multiple times, and it will be called automatically in the destructor.
 
 

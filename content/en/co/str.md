@@ -6,7 +6,7 @@ title: "String utilities"
 include: [co/str.h](https://github.com/idealvin/co/tree/master/include/co/str.h).
 
 
-## split, strip, replace
+## split, strip, replace, 
 
 
 ### str::split
@@ -97,6 +97,26 @@ fastring replace(const fastring& s, const char* sub, const char* to, uint32 n=0)
 str::replace("xooxoox", "oo", "ee");    // -> "xeexeex"
 str::replace("xooxoox", "oo", "ee", 1); // -> "xeexoox"
 ```
+
+
+
+
+### str::cat
+```cpp
+template <typename ...X>
+inline fastring cat(X&& ... x);
+```
+
+- Added in v2.0.3. Concatenate any number of elements to make a string.
+- This function concatenates elements in the parameters to the string one by one through `operator<<`.
+
+- 示例
+
+```cpp
+// s -> "hello 23true"
+fastring s = str::cat("hello", ' ', 23, true);
+```
+
 
 
 

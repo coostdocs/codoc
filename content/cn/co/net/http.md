@@ -527,6 +527,18 @@ void start(const char* ip, int port, const char* key, const char* ca);
 
 
 
+### Server::exit
+```cpp
+void exit();
+```
+
+- v2.0.3 新增。
+- 退出 HTTP server，关闭 listening socket，不再接收新的连接。
+- 此方法不会关闭之前已经建立的连接。
+
+
+
+
 
 ### 代码示例
 

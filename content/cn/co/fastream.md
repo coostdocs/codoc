@@ -240,18 +240,37 @@ s.append(s.c_str() + 1);
 
 
 
+### fastream::cat
+
+```cpp
+template<typename X, typename ...V>
+fastream& cat(X&& x, V&& ... v);
+```
+
+- v2.0.3 新增。将任意数量的元素连接到 fastream 中。
+- 此方法调用 `operator<<` 操作，将参数中的元素逐个追加到 fastream 中。
+
+- 示例
+
+```cpp
+fastream s;
+s << "hello";
+s.cat(' ', 23, "xx", false); // s -> "hello 23xxfalse"
+```
+
+
+
 ### fastream::operator<<
 
 ```cpp
-fastream& operator<<(const char* s);
-fastream& operator<<(const std::string& s);
-fastream& operator<<(const fastring& s);
-fastream& operator<<(const fastream& s)
-template<typename T> fastream& operator<<(T v);
+fastream& operator<<(const signed char* s);
+fastream& operator<<(const unsigned char* s);
+template<typename T> fastream& operator<<(T&& t);
 ```
 
-- 前 4 个版本等价于 `append(s)`。
-- 第 5 个版本中，T 可以是任意的内置数据类型，如 bool, char, int, double, void* 等等。
+- 第 1, 2 个版本 v2.0.3 中新增，等价于 `fastream& operator<<(const char* s)`。
+- 第 3 个版本中，T 可以是任意的基本类型(bool, char, int, double, void* 等)，以及字符串类型(const char*, fastring, std::string) 或者 fastream 类型。
+- 与 fastring 不一样，fastream **不会进行内存安全检查**，像 `s << s.c_str() + 3;` 这样的操作是不安全的。
 
 - 示例
 
@@ -295,6 +314,16 @@ void reserve(size_t n);
 
 - 此方法调整 fastream 的容量，确保容量至少是 n。
 - 当 n 小于原来的容量时，则保持容量不变。
+
+
+
+### fastream::reset
+
+```cpp
+void reset();
+```
+
+- v2.0.3 新增。清空 fastream 并释放内存。
 
 
 

@@ -143,6 +143,17 @@ void start(const char* ip, int port, const char* key=NULL, const char* ca=NULL);
 
 
 
+### Server::exit
+```cpp
+void exit();
+```
+
+- Added since v2.0.2.
+- Exit the RPC server, close the listening socket, and no longer receive new connections.
+- This method will not close the connections that has been established before.
+
+
+
 
 
 

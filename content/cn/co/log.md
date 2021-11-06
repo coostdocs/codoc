@@ -62,16 +62,49 @@ int main(int argc, char** argv) {
 
 
 
-### log::exit 与 log::close
+### log::exit
 ```cpp
 void exit();
+```
+
+- 将缓存中的日志写入文件，并退出后台写日志的线程。
+- 程序正常退出时，co/log 会自动调用此函数。
+- 多次调用此函数是安全的。
+- co/log 内部捕获到 `SIGINT, SIGTERM, SIGQUIT` 等信号时，会在程序退出前调用此函数。
+
+
+
+
+### log::close
+```cpp
 void close();
 ```
 
-- 这两个函数是等价的，将缓存中的日志写入文件，并退出后台写日志的线程。
-- 程序正常退出时，co/log 会自动调用此函数。
-- 多次调用此函数是安全的。
-- co/log 内部会捕获 `SIGINT, SIGTERM, SIGQUIT` 等信号，在程序退出前调用此函数，将缓存中的日志写入文件。
+- 与 `log::exit()` 同，新版本中建议用 `log::exit()`。
+
+
+
+
+### log::set_write_cb
+```cpp
+void set_write_cb(const std::function<void(const void*, size_t)>& cb);
+```
+
+- co/log 默认将日志写到本地文件中，用户可以调用此 API 自定义写日志的 callback，将日志写到不同的目标中。
+- callback 的参数是日志 buffer 的地址及长度，buffer 中可能包含多条日志。
+- 设置了 callback 时，co/log 就不会将日志写到本地文件。用户可以将配置项 `also_log_to_local` 设置为 true，这样本地也会写一份日志。
+
+
+
+
+### log::set_single_write_cb
+```cpp
+void set_single_write_cb(const std::function<void(const void*, size_t)>& cb);
+```
+
+- 与 `log::set_write_cb()` 类似，但每次仅写一条日志。
+- 用户可以调用此 API 设置通过 UDP 发送日志的 callback。
+
 
 
 
@@ -366,6 +399,16 @@ DEF_bool(cout, false, "#0 also logging to terminal");
 - 终端日志开关，默认为 false。若为 true，将日志也打印到终端。
 
 
+
+
+
+
+### also_log_to_local
+```cpp
+DEF_bool(also_log_to_local, false, "#0 if true, also log to local file when write-cb is set");
+```
+
+- 值为 true 时，即使用户设置了 write_cb，本地也会写一份日志。
 
 
 

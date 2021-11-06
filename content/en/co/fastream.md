@@ -242,18 +242,37 @@ s.append(s.c_str() + 1);
 
 
 
+### fastream::cat
+
+```cpp
+template<typename X, typename ...V>
+fastream& cat(X&& x, V&& ... v);
+```
+
+- Added in v2.0.3. Concatenate any number of elements to fastream.
+- This method appends elements in the parameters to fastream one by one through `operator<<`.
+
+- Example
+
+```cpp
+fastream s;
+s << "hello";
+s.cat('', 23, "xx", false); // s -> "hello 23xxfalse"
+```
+
+
+
 ### fastream::operator<<
 
 ```cpp
-fastream& operator<<(const char* s);
-fastream& operator<<(const std::string& s);
-fastream& operator<<(const fastring& s);
-fastream& operator<<(const fastream& s)
-template<typename T> fastream& operator<<(T v);
+fastream& operator<<(const signed char* s);
+fastream& operator<<(const unsigned char* s);
+template<typename T> fastream& operator<<(T&& t);
 ```
 
-- The first 4 versions are equivalent to `append(s)`.
-- In the fifth version, T can be any built-in type like bool, char, int, double, void*, etc.
+- The first two versions are added in v2.0.3, which are equivalent to `fastream& operator<<(const char* s)`.
+- In the third version, T can be any basic type (bool, char, int, double, void*, etc.), string type (const char*, fastring, std::string) or fastream.
+- Unlike fastring, fastream **does not perform memory security checks**, operations like `s << s.c_str() + 3;` are not safe.
 
 - Example
 
@@ -286,6 +305,16 @@ void ensure(size_t n);
 ```
 
 - This method ensures that the remaining memory of fastream can hold at least n characters.
+
+
+
+### fastream::reset
+
+```cpp
+void reset();
+```
+
+- Added in v2.0.3. Clear fastream and free the memory.
 
 
 

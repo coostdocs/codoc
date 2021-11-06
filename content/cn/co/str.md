@@ -5,7 +5,7 @@ title: "字符串操作"
 
 include: [co/str.h](https://github.com/idealvin/co/tree/master/include/co/str.h).
 
-## 切分、修剪、替换
+## 切分、修剪、替换、连接
 
 
 
@@ -82,6 +82,24 @@ str::replace("xooxoox", "oo", "ee");     // -> "xeexeex"
 str::replace("xooxoox", "oo", "ee", 1);  // -> "xeexoox"
 ```
 
+
+
+
+### str::cat
+```cpp
+template <typename ...X>
+inline fastring cat(X&& ... x);
+```
+
+- v2.0.3 新增。将任意数量的元素连接为一个字符串。
+- 此函数调用 `operator<<` 操作将参数中的元素逐个追加到字符串中。
+
+- 示例
+
+```cpp
+// s -> "hello 23true"
+fastring s = str::cat("hello", ' ', 23, true);
+```
 
 
 

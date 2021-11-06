@@ -245,29 +245,47 @@ s.append(s.data(), 3);       // s -> "cxxxxcxx"
 
 
 
+### fastring::cat
+
+```cpp
+template<typename X, typename ...V>
+fastring& cat(X&& x, V&& ... v);
+```
+
+- Added in v2.0.3. Concatenate any number of elements to fastring.
+- This method appends elements in the parameters to fastring one by one through `operator<<`.
+
+- Example
+
+```cpp
+fastring s("hello");
+s.cat('', 23, "xx", false); // s -> "hello 23xxfalse"
+```
+
+
+
 ### fastring::operator<<
 
 ```cpp
-fastring& operator<<(const char* s);
-fastring& operator<<(const std::string& s);
-fastring& operator<<(const fastring& s);
-template<typename T> fastring& operator<<(T v);
+fastring& operator<<(const signed char* s);
+fastring& operator<<(const unsigned char* s);
+template<typename T> fastring& operator<<(T&& t);
 ```
 
-- In the first version, s is a string ending in '\0', and s can be part of the fastring that performs the `operator<<` operation.
-- In the third version, s can be the fastring itself that performs the `operator<<` operation.
-- In the fourth version, T can be any built-in type, such as bool, char, int, double, void*, etc.
+- The first two versions are added in v2.0.3, which are equivalent to `fastring& operator<<(const char* s)`.
+- In the third version, T can be any basic type (bool, char, int, double, void*, etc.), and string type (const char*, fastring, std::string).
+- For argument of string type, it can be the fastring itself or a part of it that performs the `operator<<` operation.
 
 - Example
 
 ```cpp
 fastring s;
-s << false;         // s -> "false"
+s << false;           // s -> "false"
+s << s;               // s -> "falsefalse"    (append itself)
 s.clear();
-s << "hello "<< 23; // s -> "hello 23"
-s << s.c_str() + 6; // s -> "hello 2323"
-s << '';            // s -> "hello 2323 "
-s << s;             // s -> "hello 2323 hello 2323 "
+s << "hello " << 23;  // s -> "hello 23"
+s << s.c_str() + 6;   // s -> "hello 2323"    (append part of s)
+s << ' ';             // s -> "hello 2323 "
 ```
 
 
@@ -580,6 +598,16 @@ void reserve(size_t n);
 
 - This method ensures that the capacity of fastring is at least n.
 - When n is less than the original capacity, the capacity remains unchanged.
+
+
+
+### fastring::reset
+
+```cpp
+void reset();
+```
+
+- Added in v2.0.3. Clear fastring and free the memory.
 
 
 

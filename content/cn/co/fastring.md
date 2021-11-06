@@ -248,29 +248,47 @@ s.append(s.data(), 3);         // s -> "cxxxxcxx"
 
 
 
+### fastring::cat
+
+```cpp
+template<typename X, typename ...V>
+fastring& cat(X&& x, V&& ... v);
+```
+
+- v2.0.3 新增。将任意数量的元素连接到 fastring 中。
+- 此方法调用 `operator<<` 操作，将参数中的元素逐个追加到 fastring 中。
+
+- 示例
+
+```cpp
+fastring s("hello");
+s.cat(' ', 23, "xx", false); // s -> "hello 23xxfalse"
+```
+
+
+
 ### fastring::operator<<
 
 ```cpp
-fastring& operator<<(const char* s);
-fastring& operator<<(const std::string& s);
-fastring& operator<<(const fastring& s);
-template<typename T> fastring& operator<<(T v);
+fastring& operator<<(const signed char* s);
+fastring& operator<<(const unsigned char* s);
+template<typename T> fastring& operator<<(T&& t);
 ```
 
-- 第 1 个版本中，s 是 '\0' 结尾的字符串，s 可以是执行 `operator<<` 操作的 fastring 的一部分。
-- 第 3 个版本中，s 可以是执行 `operator<<` 操作的 fastring 对象本身。
-- 第 4 个版本中，T 可以是任意的内置类型，如 bool, char, int, double, void* 等。
+- 第 1, 2 个版本 v2.0.3 中新增，等价于 `fastring& operator<<(const char* s)`。
+- 第 3 个版本中，T 可以是任意的基本类型(bool, char, int, double, void* 等)，以及字符串类型(const char*, fastring, std::string)。
+- 字符串类型的参数，可以是执行 `operator<<` 操作的 fastring 本身或它的一部分。
 
 - 示例
 
 ```cpp
 fastring s;
 s << false;           // s -> "false"
+s << s;               // s -> "falsefalse"    (append itself)
 s.clear();
 s << "hello " << 23;  // s -> "hello 23"
-s << s.c_str() + 6;   // s -> "hello 2323"
+s << s.c_str() + 6;   // s -> "hello 2323"    (append part of s)
 s << ' ';             // s -> "hello 2323 "
-s << s;               // s -> "hello 2323 hello 2323 "
 ```
 
 
@@ -603,6 +621,16 @@ s.resize(3);    // s -> "hel"
 s.resize(6);
 char c = s[5];  // c 是不确定的随机值
 ```
+
+
+
+### fastring::reset
+
+```cpp
+void reset();
+```
+
+- v2.0.3 新增。清空 fastring 并释放内存。
 
 
 

@@ -67,12 +67,11 @@ int main(int argc, char** argv) {
 
 
 
-### log::exit and log::close
+### log::exit
 
 
 ```cpp
 void exit();
-void close();
 ```
 
 
@@ -80,6 +79,40 @@ void close();
 - When the program exits normally, co/log will automatically call this function.
 - It is safe to call this function multiple times.
 - co/log internally captures signals such as `SIGINT, SIGTERM, SIGQUIT`, and calls this function before the program exits.
+
+
+
+
+### log::close
+
+```cpp
+void close();
+```
+
+- The same as `log::exit()`.
+
+
+
+### log::set_write_cb
+
+```cpp
+void set_write_cb(const std::function<void(const void*, size_t)>& cb);
+```
+
+- By default, co/log writes logs to a local file. Users can set a callback to write logs to different destinations through this API.
+- The callback has 2 parameters, a pointer to the log buffer and its length. The buffer may contain more than one logs.
+- Once a callback is set, co/log will stop writing logs to the local file, which can be changed by setting the config item `also_log_to_local` to true.
+
+
+
+
+### log::set_single_write_cb
+```cpp
+void set_single_write_cb(const std::function<void(const void*, size_t)>& cb);
+```
+
+- Similar to `log::set_write_cb()`, but only writes a single log each time.
+- It may be useful when users want to send logs by UDP.
 
 
 
@@ -410,6 +443,14 @@ DEF_bool(cout, false, "#0 also logging to terminal");
 
 - Terminal log switch, the default is false. If true, logs will also be printed to the terminal.
 
+
+
+### also_log_to_local
+```cpp
+DEF_bool(also_log_to_local, false, "#0 if true, also log to local file when write-cb is set");
+```
+
+- If the value is true, also write logs to a local file when a write_cb has been set.
 
 
 

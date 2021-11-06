@@ -198,7 +198,7 @@ void start(const char* ip, int port, const char* key=0, const char* ca=0);
 
 
 
-#### Server::exit
+### Server::exit
 ```cpp
 void exit();
 ```

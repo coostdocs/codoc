@@ -30,8 +30,8 @@ fastream(fastream&& s) noexcept;
 ```cpp
 fastream s;               // 状态为空的 fastream, 未分配内存
 fastream s(1024);         // 预分配 1k 内存
-fastream x(std::move(s);  // move 构造函数, s 变成空对象
-```
+fastream x(std::move(s));  // move 构造函数, s 变成空对象
+ ```
 
 
 

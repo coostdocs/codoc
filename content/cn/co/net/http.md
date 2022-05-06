@@ -96,7 +96,7 @@ void del(const char* url, const char* s);
 void del(const char* url);
 ```
 
-- HTTP **DELETE **请求，必须在协程中调用。
+- HTTP **DELETE** 请求，必须在协程中调用。
 - 参数 url 必须是 `'/'` 开头的字符串。
 - 前两个版本，适用于带 body 部分的 DELETE 请求，参数 s 是 body，n 是 s 的长度，第 2 个版本 s 以 '\0' 结尾。
 - 第 3 个版本适用于不带 body 的 DELETE 请求。
@@ -121,7 +121,7 @@ void* easy_handle() const;
 void get(const char* url);
 ```
 
-- HTTP **GET **请求，必须在协程中调用。
+- HTTP **GET** 请求，必须在协程中调用。
 - 参数 url 必须是 `'/'` 开头的字符串。
 
 
@@ -133,7 +133,7 @@ void get(const char* url);
 void head(const char* url);
 ```
 
-- HTTP **HEAD **请求，必须在协程中调用。
+- HTTP **HEAD** 请求，必须在协程中调用。
 - 参数 url 必须是 `'/'` 开头的字符串。
 
 
@@ -191,7 +191,7 @@ void post(const char* url, const char* s, size_t n);
 void post(const char* url, const char* s);
 ```
 
-- HTTP **POST **请求，必须在协程中调用。
+- HTTP **POST** 请求，必须在协程中调用。
 - 参数 url 必须是 `'/'` 开头的字符串。
 - 参数 s 是 HTTP 请求的 body 数据，n 是 s 的长度，第 2 个版本 s 以 '\0' 结尾。
 
@@ -205,7 +205,7 @@ void put(const char* url, const char* s, size_t n);
 void put(const char* url, const char* s);
 ```
 
-- HTTP **PUT **请求，必须在协程中调用。
+- HTTP **PUT** 请求，必须在协程中调用。
 - 参数 url 必须是 `'/'` 开头的字符串。
 - 参数 s 是 HTTP 请求的 body 数据，n 是 s 的长度，第 2 个版本 s 以 '\0' 结尾。
 

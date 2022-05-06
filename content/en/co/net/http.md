@@ -120,7 +120,7 @@ void del(const char* url);
 ```
 
 
-- HTTP **DELETE **request, must be called in the coroutine.
+- HTTP **DELETE** request, must be called in the coroutine.
 - The parameter url must be a string beginning with `'/'`.
 - The first two versions are suitable for DELETE requests with a body, and parameter s is a pointer to the body data.
 - The third version is for DELETE requests without body.
@@ -151,7 +151,7 @@ void get(const char* url);
 ```
 
 
-- HTTP **GET **request, must be called in the coroutine.
+- HTTP **GET** request, must be called in the coroutine.
 - The parameter url must be a string beginning with `'/'`.
 
 
@@ -166,7 +166,7 @@ void head(const char* url);
 ```
 
 
-- HTTP **HEAD **request, must be called in the coroutine.
+- HTTP **HEAD** request, must be called in the coroutine.
 - The parameter url must be a string beginning with `'/'`.
 
 
@@ -239,7 +239,7 @@ void post(const char* url, const char* s);
 ```
 
 
-- HTTP **POST **request, must be called in the coroutine.
+- HTTP **POST** request, must be called in the coroutine.
 - The parameter url must be a string beginning with `'/'`.
 
 
@@ -255,7 +255,7 @@ void put(const char* url, const char* s);
 ```
 
 
-- HTTP **PUT **request, must be called in the coroutine.
+- HTTP **PUT** request, must be called in the coroutine.
 - The parameter url must be a string beginning with `'/'`.
 
 

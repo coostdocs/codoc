@@ -11,20 +11,26 @@ include: [co/log.h](https://github.com/idealvin/co/blob/master/include/co/log.h)
 
 `co/log` 是一个类似 [google glog](https://github.com/google/glog) 的 C++ 流式日志库，它像下面这样打印日志：
 ```cpp
-LOG << "hello world" << 23;
+LOG << "hello world" << 23;//等级日志
+TLOG("topic") << "123";//标题日志
 ```
 
-
-co/log 将日志分为 debug, info, warning, error, fatal 5 个级别，并提供一系列的宏，用于打印不同级别的日志。**打印 fatal 级别的日志会终止程序的运行**，co/log 还会在程序退出前打印函数调用栈信息，以方便追查程序崩溃的原因。
-
+- `LOG` 等级日志  
+co/log 将日志分为 debug, info, warning, error, fatal 5 个级别，并提供一系列的宏，用于打印不同级别的日志。  
+**打印 fatal 级别的日志会终止程序的运行**，co/log 还会在程序退出前打印函数调用栈信息，以方便追查程序崩溃的原因。   
 co/log 内部采用异步的实现方式，日志先写入缓存，达到一定量或超过一定时间后，由后台线程一次性写入文件，性能在不同平台比 glog 提升了 20~150 倍左右。下表是不同平台单线程连续打印 100 万条(每条 50 字节左右) info 日志的测试结果：
 
-| log vs glog | google glog | co/log |
-| --- | --- | --- |
-| win2012 HHD | 1.6MB/s | 180MB/s |
-| win10 SSD | 3.7MB/s | 560MB/s |
-| mac SSD | 17MB/s | 450MB/s |
-| linux SSD | 54MB/s | 1023MB/s |
+    | log vs glog | google glog | co/log |
+    | --- | --- | --- |
+    | win2012 HHD | 1.6MB/s | 180MB/s |
+    | win10 SSD | 3.7MB/s | 560MB/s |
+    | mac SSD | 17MB/s | 450MB/s |
+    | linux SSD | 54MB/s | 1023MB/s |
+  
+- `TLOG` 标题日志  
+  根据topic标题将日志文件分类存储、轮替。  
+  注意：`TLOG`的日志不分等级，单线程性能比`LOG`要低一些，多线程性能优于`LOG`。  
+  推荐用法`LOG`用于调试日志，可以通过`Flag:min_log_level`关闭日志输出。`TLOG`按照功能逻辑划分日志，便于日志管理。
 
 
 
@@ -37,27 +43,9 @@ co/log 内部采用异步的实现方式，日志先写入缓存，达到一定�
 
 
 
-### log::init
-```cpp
-void init();
-```
+### ~~log::init~~
+(新版本中弃用，只需要flag::init不需要额外的初始化。)
 
-- 此函数初始化 log 库，并启动日志线程，需要在 main 函数开头调用一次。
-- 此函数在内部增加了多线程保护，多次调用此函数也是安全的。
-- co/log 依赖于 [co/flag](../flag/)，调用此函数前需要先调用 `flag::init()`。
-
-
-
-- 示例
-```cpp
-#include "co/flag.h"
-#include "co/log.h"
-
-int main(int argc, char** argv) {
-    flag::init(argc, argv);
-    log::init();
-}
-```
 
 
 
@@ -75,35 +63,28 @@ void exit();
 
 
 
-### log::close
-```cpp
-void close();
-```
-
-- 与 `log::exit()` 同，新版本中建议用 `log::exit()`。
-
-
-
-
 ### log::set_write_cb
 ```cpp
-void set_write_cb(const std::function<void(const void*, size_t)>& cb);
+void f(const void* p, size_t n);//回调函数
+void void set_write_cb(const std::function<void(const void*, size_t)>& cb, int flags=0);
 ```
 
 - co/log 默认将日志写到本地文件中，用户可以调用此 API 自定义写日志的 callback，将日志写到不同的目标中。
-- callback 的参数是日志 buffer 的地址及长度，buffer 中可能包含多条日志。
-- 设置了 callback 时，co/log 就不会将日志写到本地文件。用户可以将配置项 `also_log_to_local` 设置为 true，这样本地也会写一份日志。
+- callback 的参数是日志 buffer 的地址及长度。
+- flags：        
+    `log::log2locallog` 记录日志到本地  
 
-
-
-
-### log::set_single_write_cb
+- 1个重载函数：（用于TLOG）
 ```cpp
-void set_single_write_cb(const std::function<void(const void*, size_t)>& cb);
+void f(const char* topic, const void* p, size_t n);//回调函数
+void set_write_cb(const std::function<void(const char*, const void*, size_t)>& cb, int flags)
 ```
 
-- 与 `log::set_write_cb()` 类似，但每次仅写一条日志。
-- 用户可以调用此 API 设置通过 UDP 发送日志的 callback。
+
+
+### ~~log::set_single_write_cb~~  
+（新版本中弃用）
+
 
 
 
@@ -403,13 +384,8 @@ DEF_bool(cout, false, "#0 also logging to terminal");
 
 
 
-### also_log_to_local
-```cpp
-DEF_bool(also_log_to_local, false, "#0 if true, also log to local file when write-cb is set");
-```
-
-- 值为 true 时，即使用户设置了 write_cb，本地也会写一份日志。
-
+### ~~also_log_to_local~~
+（新版中本弃用，默认将会打印文件日志）
 
 
 

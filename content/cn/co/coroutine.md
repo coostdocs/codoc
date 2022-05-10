@@ -37,44 +37,15 @@ co 协程库中 context 切换相关的代码，取自 [ruki](https://github.com
 ## 协程 API
 
 
-### co::init
-
-```cpp
-void init();
-void init(int argc, char** argv);
-void init(const char* config);
-```
-
-- v2.0.2 新增，用于初始化协程库。
-- 第 1 个版本仅执行协程库内部的一些初始化工作。
-- 第 2 个版本先调用 `flag::init(argc, argv)` 与 `log::init()`，再调用 `co::init()` 进行初始化。
-- 第 3 个版本先调用 `flag::init(config)` 与 `log::init()`，再调用 `co::init()` 进行初始化。
+### ~~co::init~~
+弃用,只需要flag::init();
 
 
 
-### co::exit
 
-```cpp
-void exit();
-```
+### ~~co::exit~~  
+弃用，不再需要主动调用。
 
-- v2.0.2 新增，退出协程调度线程，回收协程相关资源。
-- 如果用户之前调用了 `co::init(argc, argv)` 或 `co::init(config)`，那么此函数还会调用 `log::exit()`。
-- 一般建议在 main() 函数结束时调用此函数。
-
-
-- 代码示例
-
-```cpp
-#include "co/co.h"
-
-int main(int argc, char** argv) {
-    co::init(argc, argv);
-    // user code
-    co::exit();
-    return 0;
-}
-```
 
 
 
@@ -120,7 +91,7 @@ go(&x); // Ensure that x is alive when the coroutine is running.
 
 ### DEF_main
 
-这个宏用于定义 main 函数，并将 main 函数中的代码也放到协程中运行。DEF_main 内部已经调用 `co::init(argc, argv)` 进行初始化，用户无需再次调用。
+这个宏用于定义 main 函数，并将 main 函数中的代码也放到协程中运行。DEF_main 内部已经调用 `flag::init(argc, argv)` 进行初始化，用户无需再次调用。
 
 - 示例
 
@@ -240,14 +211,9 @@ void sleep(uint32 ms);
 
 
 
-### co::stop
+### ~~co::stop~~
+已弃用，无需主动调用。
 
-```cpp
-void stop();
-```
-
-- 与 `co::exit()` 一样。
-- v2.0.2 中标记为 deprecated，建议用 `co::exit()`。
 
 
 
@@ -275,7 +241,7 @@ void f() {
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
+   
     FLG_cout = true; // also log to terminal
 
     for (int i = 0; i < 32; ++i) go(f);
@@ -1223,7 +1189,18 @@ void reset(T* p = 0);
 
 
 ### 代码示例
+```cpp
+co::Pool p(
+	[]() { return (void*) new string; }, // ccb
+	[](void* p) { delete (string*)p; }  // dcb
+);
+void fs() {
+	co::PoolGuard<string> rds(p); // now rds can be used like a Redis* pointer.
+	rds->append("xx");
+}
 
+go(fs);
+```
 ```cpp
 class Redis;  // assume class Redis is a connection to the redis server
 
@@ -1234,7 +1211,7 @@ co::Pool p(
 
 void f() {
     co::PoolGuard<Redis> rds(p); // now rds can be used like a Redis* pointer.
-    rds->get("xx");
+    rds->get("xx");//redis的方法
 }
 
 go(f);

@@ -51,11 +51,13 @@ co/flag is designed to be very flexible:
 
 
 
-## Initialization (flag::init)
+## APIs
+
+### flag::init
 
 ```cpp
-std::vector<fastring> init(int argc, const char** argv);
-std::vector<fastring> init(int argc, char** argv);
+co::vector<fastring> init(int argc, const char** argv);
+co::vector<fastring> init(int argc, char** argv);
 void init(const fastring& path);
 ```
 
@@ -83,6 +85,52 @@ int main(int argc, char** argv) {
 
 
 
+### flag::set_value
+
+````cpp
+fastring set_value(const fastring& name, const fastring& value)
+````
+
+- Added in v3.0. Set value of a flag variable, `name` is the flag name.
+- This function is not thread-safe and usually needs to be called at the beginning of the main function.
+
+
+- Example
+
+````cpp
+DEF_bool(b, false, "");
+DEF_int32(i, 0, "");
+DEF_string(s, "", "");
+flag::set_value("b", "true"); // FLG_b -> true
+flag::set_value("i", "23");   // FLG_i -> 23
+flag::set_value("s", "xx");   // FLG_s -> "xx"
+````
+
+
+
+### flag::alias
+
+````cpp
+bool alias(const char* name, const char* new_name);
+````
+
+- Added in v3.0. Add an alias to a flag, in **command line or config file** you can replace the original name with the alias.
+
+- This function is not thread safe and needs to be called before `flag::init()`.
+
+
+- Example
+
+````cpp
+DEF_bool(all, false, "");
+
+int main(int argc, char** argv) {
+     flag::alias("all", "a");
+     flag::init(argc, argv);
+}
+````
+
+
 
 ## Use flag variable in the code
 
@@ -90,13 +138,13 @@ int main(int argc, char** argv) {
 ### Define a flag variable
 
 ```cpp
-#define DEF_bool(name, value, help)    _DEFINE_FLAG(bool, name, value, help)
-#define DEF_int32(name, value, help)   _DEFINE_FLAG(int32, name, value, help)
-#define DEF_int64(name, value, help)   _DEFINE_FLAG(int64, name, value, help)
-#define DEF_uint32(name, value, help)  _DEFINE_FLAG(uint32, name, value, help)
-#define DEF_uint64(name, value, help)  _DEFINE_FLAG(uint64, name, value, help)
-#define DEF_double(name, value, help)  _DEFINE_FLAG(double, name, value, help)
-#define DEF_string(name, value, help)  _DEFINE_FLAG(string, name, value, help)
+DEF_bool(name, value, help, ...)
+DEF_int32(name, value, help, ...)
+DEF_int64(name, value, help, ...)
+DEF_uint32(name, value, help, ...)
+DEF_uint64(name, value, help, ...)
+DEF_double(name, value, help, ...)
+DEF_string(name, value, help, ...)
 ```
 
 - The above 7 macros are used to define 7 different types of flag variables.
@@ -120,16 +168,32 @@ DEF_string(s, "x", "comments"); // fastring FLG_s = "x";
 
 
 
+### Add alias for a flag
+
+- Added in v3.0, when defining a flag variable, you can add any number of aliases to the flag.
+- In command line or config file, alias can be used instead of the original name.
+
+
+- Example
+
+```cpp
+DEF_bool(debug, false, "");         // no alias
+DEF_bool(debug, false, "", d);      // d is an alias of debug
+DEF_bool(debug, false, "", d, dbg); // 2 aliases
+```
+
+
+
 ### Declare the flag variable
 
 ```cpp
-#define DEC_bool(name)   _DECLARE_FLAG(bool, name)
-#define DEC_int32(name)  _DECLARE_FLAG(int32, name)
-#define DEC_int64(name)  _DECLARE_FLAG(int64, name)
-#define DEC_uint32(name) _DECLARE_FLAG(uint32, name)
-#define DEC_uint64(name) _DECLARE_FLAG(uint64, name)
-#define DEC_double(name) _DECLARE_FLAG(double, name)
-#define DEC_string(name) _DECLARE_FLAG(string, name)
+DEC_bool(name)
+DEC_int32(name)
+DEC_int64(name)
+DEC_uint32(name)
+DEC_uint64(name)
+DEC_double(name)
+DEC_string(name)
 ```
 
 - The 7 macros above are used to declare 7 different types of flag variables.
@@ -179,7 +243,7 @@ int main(int argc, char** argv) {
 ## Use flag in the command line
 
 
-### Set value of flag variables
+### Set value of flags
 
 Suppose the following flags are defined in the program:
 
@@ -215,22 +279,25 @@ When the program starts, we can modify value of the flag variables through comma
 
 
 
-### List Help Information
+### Show Help Information
 
 co/flag supports using `--help` command to print the help information of the program:
 
 ```bash
 $ ./xx --help
-usage:
-    ./xx - print flags info
-    ./xx --help print this help info
-    ./xx --mkconf generate config file
-    ./xx --daemon run as a daemon (Linux)
-    ./xx xx.conf run with config file
-    ./xx config=xx.conf run with config file
-    ./xx -x -i=8k -s=ok run with commandline flags
-    ./xx -x -i 8k -s ok run with commandline flags
-    ./xx x=true i=8192 s=ok run with commandline flags
+usage:  $exe [-flag] [value]
+        $exe -x -i 8k -s ok        # x=true, i=8192, s="ok"
+        $exe --                    # print all flags
+        $exe -mkconf               # generate config file
+        $exe -conf xx.conf         # run with config file
+
+flags:
+    -n  int32
+        type: int32       default: 0
+        from: test/flag.cc
+    -s  string
+        type: string      default: "hello world"
+        from: test/flag.cc
 ```
 
 
@@ -241,12 +308,41 @@ co/flag provides `--` command to list all the flags defined in the program:
 
 ```bash
 $ ./xx --
---config: .path of config file
-		type: string default: ""
-		from: ../../base/flag.cc
---mkconf: .generate config file
-		type: bool default: false
-		from: ../../base/flag.cc
+flags:
+    -boo  bool flag
+        type: bool        default: false
+        from: test/flag.cc
+    -co_debug_log  enable debug log for coroutine library
+        type: bool        default: false
+        from: src/co/scheduler.cc
+    -co_sched_num  number of coroutine schedulers, default: os::cpunum()
+        type: uint32      default: os::cpunum()
+        from: src/co/scheduler.cc
+```
+
+
+
+### Show version of the program
+
+- `version` is a flag defined inside co/flag. You can use the `--version` command to print version information.
+- `version` is empty by default, its value should be set before calling `flag::init()`.
+
+
+- Example
+
+```cpp
+#include "co/flag.h"
+
+int main(int argc, char** argv) {
+     FLG_version = "v3.0.0";
+     flag::init(argc, argv);
+     return 0;
+}
+```
+
+```bash
+$ ./xx --version
+v3.0.0
 ```
 
 
@@ -293,10 +389,6 @@ The config file format of co/flag is flexible:
 
 ### Generate config file
 
-```cpp
-DEF_bool(mkconf, false, ".generate config file");
-```
-
 - `mkconf` is a flag defined internally in co/flag, which is a switch for automatically generating config file.
 - You can use `-mkconf` to generate a config file in command line.
 
@@ -311,11 +403,11 @@ DEF_bool(mkconf, false, ".generate config file");
 
 In the automatically generated config file, the config items are sorted by flag level, file name, and code line number. If the user wants some config items to be ranked higher, the flag level can be set to a smaller value, otherwise, the flag level can be set to a larger value. 
 
-When defining a flag, you can use `#n` at the beginning of the comment to specify the flag level, **n must be an integer between 0 and 99**. If the comment is not empty, there must be a space after n. When not specified, the default flag level is 10.
+When defining a flag, you can use `#n` at the beginning of the comment to specify the flag level, **n must be an integer between 0 and 9**. If the comment is not empty, there must be a space after n. When not specified, the default flag level is 5.
 
 ```cpp
-DEF_bool(x, false, "comments");    // The default level is 10
-DEF_bool(y, false, "#23");         // The level is 23, and the comment is empty
+DEF_bool(x, false, "comments");    // The default level is 5
+DEF_bool(y, false, "#3");          // The level is 3, and the comment is empty
 DEF_bool(z, false, "#3 comments"); // The level is 3
 ```
 
@@ -334,16 +426,13 @@ DEF_string(s, "good", "");
 
 ### Specify the config file when the program starts
 
-```cpp
-DEF_string(config, "", ".path of config file");
-```
-
-- `config` is a flag defined internally in co/flag, which is the path of the config file.
+- `config` is a flag defined internally in co/flag, which is the path of the config file. It has an alias `conf`.
 - You can use `-config` to specify the config file in command line.
 - Another way, you can modify the value of `FLG_config` to specify the config file, before calling `flag::init()`.
 
 ```bash
 ./xx -config xx.conf
+./xx -conf xx.conf
 
 # If the config file name ends with .conf or config, 
 # and it is the first non-flag parameter in command line, 
@@ -356,10 +445,6 @@ DEF_string(config, "", ".path of config file");
 
 
 ## Custom help information
-
-```cpp
-DEF_string(help, "", ".help info");
-```
 
 - `help` is a flag defined in co/flag, which stores the help information of the program. This information can be seen with the command `--help` in command line.
 - `FLG_help` is empty by default, and the default help information provided by co/flag is used.

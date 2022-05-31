@@ -60,6 +60,26 @@ class T {
 
 
 
+### __arch64, __arch32
+
+64位系统上，`__arch64` 定义为 1；32位系统上，`__arch32` 定义为 1。
+
+- 示例
+
+```cpp
+#if __arch64
+inline size_t murmur_hash(const void* s, size_t n) {
+    return murmur_hash64(s, n, 0);
+}
+#else
+inline size_t murmur_hash(const void* s, size_t n) {
+    return murmur_hash32(s, n, 0);
+}
+#endif
+```
+
+
+
 ### __forceinline
 
 [__forceinline](https://docs.microsoft.com/en-us/cpp/cpp/inline-functions-cpp?view=vs-2019#inline-__inline-and-__forceinline) 是 VS 中的关键字，放在函数定义开头，强制内联函数，linux 与 mac 平台用下面的宏模拟：

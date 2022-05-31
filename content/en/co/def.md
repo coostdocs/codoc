@@ -60,6 +60,26 @@ class T {
 
 
 
+### __arch64, __arch32
+
+`__arch64` is defined as 1 on 64 bit platforms, `__arch32` is defined as 1 on 32 bit platforms.
+
+- Example
+
+```cpp
+#if __arch64
+inline size_t murmur_hash(const void* s, size_t n) {
+    return murmur_hash64(s, n, 0);
+}
+#else
+inline size_t murmur_hash(const void* s, size_t n) {
+    return murmur_hash32(s, n, 0);
+}
+#endif
+```
+
+
+
 ### __forceinline
 
 [__forceinline](https://docs.microsoft.com/en-us/cpp/cpp/inline-functions-cpp?view=vs-2019#inline-__inline-and-__forceinline) is a keyword in VS. Linux and mac platforms use the following macro simulation:

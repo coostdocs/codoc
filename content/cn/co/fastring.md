@@ -320,17 +320,20 @@ s += "xx";  // s -> "cxx"
 ### fastring::find
 
 ```cpp
-size_t find(char c) const;
-size_t find(char c, size_t pos) const;
-size_t find(const char* s) const;
-size_t find(const char* s, size_t pos) const;
+1. size_t find(char c) const;
+2. size_t find(char c, size_t pos) const;
+3. size_t find(char c, size_t pos, size_t len) const;
+4. size_t find(const char* s) const;
+5. size_t find(const char* s, size_t pos) const;
 ```
 
-- 第 1 个版本从位置 0 开始查找字符 c。
-- 第 2 个版本从位置 pos 开始查找字符 c。
-- 第 3 个版本从位置 0 开始查找子串 s，内部基于 `strstr()` 实现，不适用于包含 '\0' 的 fastring。
-- 第 4 个版本从位置 pos 开始查找子串 s，内部基于 `strstr()` 实现，不适用于包含 '\0' 的 fastring。
+- 1, 从位置 0 开始查找字符 c。
+- 2, 从位置 pos 开始查找字符 c。
+- 3, v3.0 新增，在 `[pos, pos + len)` 范围内查找字符 c。
+- 4, 从位置 0 开始查找子串 s，内部基于 `strstr()` 实现，不适用于包含 '\0' 的 fastring。
+- 5, 从位置 pos 开始查找子串 s，内部基于 `strstr()` 实现，不适用于包含 '\0' 的 fastring。
 - 此方法查找成功时，返回所查找字符或子串的位置，否则返回 `fastring::npos`。
+
 
 - 示例
 

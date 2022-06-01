@@ -171,11 +171,11 @@ file(const std::string& path, char mode);
 - 第 1 个版本是默认构造函数，创建一个空的 file 对象，不会打开任何文件。
 - 第 2 个版本是 move 构造函数，支持将 file 对象放到 STL 容器中。
 - 第 3-5 个版本，打开指定的文件，参数 path 是文件路径，参数 mode 是打开模式。
-- mode 是 `'r'`, `'w'`, `'a'`, `'m'` 中的一种，r 是只读模式，w 是写模式，a 是追加模式，m 是修改模式，与 w 类似，但不会清空已存在文件的数据。
+- mode 是 `'r'`, `'w'`, `'a'`, `'m'` 或 `'+'` 中的一种，r 是只读模式，w 是写模式，a 是追加模式，m 是修改模式，+ 是读写模式。
 - mode 为 `'r'` 时，文件必须存在，否则打开失败。
 - mode 为 `'w'` 时，文件不存在时自动创建，文件已存在时清空文件数据。
-- mode 为 `'a'` 时，文件不存在时自动创建，文件已存在时不清空文件数据。
-- mode 为 `'m'` 时，文件不存在时自动创建，文件已存在时不清空文件数据。
+- mode 为 `'a'`, `'m'` 或 `'+'` 时，文件不存在时自动创建，文件已存在时不清空文件数据。
+- `'+'` 是 v3.0 新增，此模式下，读与写共享文件指针，因此在读、写操作前，一般需要调用 [seek()](#fileseek) 方法设置偏移位置。
 
 
 
@@ -334,6 +334,12 @@ f.open("xx", 'a');        // append mode
 if(f) f.write(buf, 32);   // write 32 bytes
 f.write("hello");         // write a C string
 f.write('c');             // write a single character
+
+f.open("xx", '+');        // read/write mode
+f.seek(0);                // seek to beginning before write
+f.write("hello");
+f.seek(0);                // seek to beginning before read 
+f.read(buf, 8);
 f.close();                // close the file
 ```
 

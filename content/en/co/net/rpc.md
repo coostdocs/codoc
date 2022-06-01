@@ -4,7 +4,7 @@ title: "RPC"
 ---
 
 
-include: [co/so/rpc.h](https://github.com/idealvin/co/blob/master/include/co/so/rpc.h).
+include: [co/rpc.h](https://github.com/idealvin/co/blob/master/include/co/rpc.h).
 
 
 co/rpc is a high-performance RPC framework similar to [grpc](https://github.com/grpc/grpc), it uses **JSON** as the data exchange format, which is different from binary protocols such as protobuf.
@@ -373,6 +373,9 @@ for (int i = 0; i < 8; ++i) {
 
 
 ## Config items
+
+co/rpc uses [co/flag](../../flag/) to define config items. The flags defined in co/rpc are listed below.
+
 
 ### rpc_conn_idle_sec
 

@@ -4,18 +4,17 @@ title: "HTTP"
 ---
 
 
-include: [co/so/http.h](https://github.com/idealvin/co/blob/master/include/co/so/http.h).
+include: [co/http.h](https://github.com/idealvin/co/blob/master/include/co/http.h).
 
 
 ## http::Client
-
 
 `http::Client` 是基于协程的 http 客户端，它基于 [libcurl](https://curl.se/libcurl/) 实现。
 
 
 
-
 ### Client::Client
+
 ```cpp
 explicit Client(const char* serv_url);
 ```
@@ -25,13 +24,12 @@ explicit Client(const char* serv_url);
    - "https://github.com"
    - "http://127.0.0.1:7788"
    - "http://[::1]:8888"
-- http::Client 对象创建时，并没有建立连接。
-
-
+- http::Client 对象创建时，并不会立即建立连接。
 
 
 
 ### Client::~Client
+
 ```cpp
 Client::~Client();
 ```
@@ -40,9 +38,8 @@ Client::~Client();
 
 
 
-
-
 ### Client::add_header
+
 ```cpp
 void add_header(const char* key, const char* val);
 void add_header(const char* key, int val);
@@ -53,43 +50,29 @@ void add_header(const char* key, int val);
 
 
 
-
-
 ### Client::body
+
 ```cpp
-const char* body() const;
+const fastring& body() const;
 ```
 
-- 获取当前 HTTP 请求的响应体，返回一个指针，用户需要用 `body_size()` 方法获取它的长度。
-
-
-
-
-
-### Client::body_size
-```cpp
-size_t body_size() const;
-```
-
-- 返回当前 HTTP 请求的响应体长度。
-
-
+- 获取当前 HTTP 请求的响应体。
 
 
 
 ### Client::close
+
 ```cpp
 void close();
 ```
 
-- 关闭 HTTP 连接，需要在协程中调用此方法。
-- **调用此方法后，http::Client 对象就不能再用了**。
-
-
+- 关闭 HTTP 连接，一般需要在协程中调用此方法。
+- 调用此方法后，http::Client 对象就不能再用了，直到用户调用 [reset()](#clientreset) 方法重置 server url。
 
 
 
 ### Client::del
+
 ```cpp
 void del(const char* url, const char* s, size_t n);
 void del(const char* url, const char* s);
@@ -103,9 +86,8 @@ void del(const char* url);
 
 
 
-
-
 ### Client::easy_handle
+
 ```cpp
 void* easy_handle() const;
 ```
@@ -114,9 +96,8 @@ void* easy_handle() const;
 
 
 
-
-
 ### Client::get
+
 ```cpp
 void get(const char* url);
 ```
@@ -126,9 +107,8 @@ void get(const char* url);
 
 
 
-
-
 ### Client::head
+
 ```cpp
 void head(const char* url);
 ```
@@ -138,20 +118,19 @@ void head(const char* url);
 
 
 
-
-
 ### Client::header
+
 ```cpp
 const char* header(const char* key);
-const char* header() const;
+const fastring& header() const;
 ```
 
 - 第 1 个版本获取当前 HTTP 响应中 header 的值，header 不存在时，返回一个空字符串。
-- 第 2 个版本获取当前 HTTP 响应的整个 header 部分。
-
+- 第 2 个版本获取当前 HTTP 响应的整个 header 部分(包括起始行)。
 
 
 - 示例
+
 ```cpp
 http::Client c("xx.com");
 c.get("/");
@@ -160,8 +139,8 @@ auto s = c.header("Content-Length");
 
 
 
-
 ### Client::perform
+
 ```cpp
 void perform();
 ```
@@ -170,8 +149,8 @@ void perform();
 - 用户一般不需要调用此方法，只有当 http::Client 提供的 get, post 等方法满足不了需要时，才考虑用此方法自定义 HTTP 请求。
 
 
-
 - 示例
+
 ```cpp
 void Client::post(const char* url, const char* data, size_t size) {
     curl_easy_setopt(_ctx->easy, CURLOPT_POST, 1L);
@@ -184,8 +163,8 @@ void Client::post(const char* url, const char* data, size_t size) {
 
 
 
-
 ### Client::post
+
 ```cpp
 void post(const char* url, const char* s, size_t n);
 void post(const char* url, const char* s);
@@ -197,23 +176,20 @@ void post(const char* url, const char* s);
 
 
 
-
-
 ### Client::put
+
 ```cpp
-void put(const char* url, const char* s, size_t n);
-void put(const char* url, const char* s);
+void put(const char* url, const char* path);
 ```
 
-- HTTP **PUT** 请求，必须在协程中调用。
+- HTTP **PUT** 请求，用于上传文件到服务器，必须在协程中调用。
 - 参数 url 必须是 `'/'` 开头的字符串。
-- 参数 s 是 HTTP 请求的 body 数据，n 是 s 的长度，第 2 个版本 s 以 '\0' 结尾。
-
-
+- 参数 path 是需要上传的文件路径。
 
 
 
 ### Client::remove_header
+
 ```cpp
 void remove_header(const char* key);
 ```
@@ -222,9 +198,18 @@ void remove_header(const char* key);
 
 
 
+### Client::reset
+
+```cpp
+void reset(const char* serv_url);
+```
+
+- 重置 server url，关于 url 的规范详见 [Client::Client](#clientclient)。
+
 
 
 ### Client::response_code
+
 ```cpp
 int response_code() const;
 ```
@@ -235,35 +220,42 @@ int response_code() const;
 
 
 
+### Client::status
+
+```cpp
+int status() const;
+```
+
+- 与 [response_code()](#clientresponse_code) 等价，返回当前 HTTP 请求的响应吗。
+
 
 
 ### Client::strerror
+
 ```cpp
 const char* strerror() const;
-
 ```
 
 - 获取当前 HTTP 请求的错误信息。
 
 
 
-
-
 ### 代码示例
+
 ```cpp
 void f() {
     http::Client c("https://github.com");
     int r;
     
     c.get("/");
-    r = c.response_code();
-    LOG << "response code: " << r;
+    r = c.status();
+    LOG << "staus: " << r;
     LOG_IF(r == 0) << "error: " << c.strerror();
-    LOG << "body size: " << c.body_size();
+    LOG << "body size: " << c.body().size();
     LOG << c.header();
 
     c.get("/idealvin/co");
-    LOG << "body size: " << c.body_size();
+    LOG << "body size: " << c.body().size();
     LOG << "Content-Length: " << c.header("Content-Length");
     LOG << c.header();
 
@@ -276,17 +268,13 @@ go(f);
 
 
 
-
-
 ## http::Req
-
 
 `http::Req` 类是对 HTTP 请求的封装，用于实现 http::Server。
 
 
-
-
 ### Req::Req
+
 ```cpp
 Req() = default;
 ```
@@ -295,20 +283,18 @@ Req() = default;
 
 
 
-
-
 ### Req::body
+
 ```cpp
 const char* body() const;
 ```
 
-- 获取 HTTP 请求中的 body 数据，返回一个指针，用户需要调用 body_size() 方法获取它的长度。
-
-
+- 获取 HTTP 请求中的 body 数据，返回一个指针，用户需要调用 [body_size()](#reqbody_size) 方法获取它的长度。
 
 
 
 ### Req::body_size
+
 ```cpp
 size_t body_size() const;
 ```
@@ -317,20 +303,8 @@ size_t body_size() const;
 
 
 
-
-
-### Req::clear
-```cpp
-void clear();
-```
-
-- 清空 http::Req 对象，清空后用户可以继续使用。
-
-
-
-
-
 ### Req::header
+
 ```cpp
 const char* header(const char* key) const;
 ```
@@ -339,9 +313,8 @@ const char* header(const char* key) const;
 
 
 
-
-
 ### Req::is_method_xxx
+
 ```cpp
 bool is_method_get() const;
 bool is_method_head() const;
@@ -355,9 +328,18 @@ bool is_method_options() const;
 
 
 
+### Req::method
+
+```cpp
+Method method() const;
+```
+
+- 返回 HTTP 请求方法，返回值是 `kGet, kHead, kPost, kPut, kDelete, kOptions` 中的一种。
+
 
 
 ### Req::url
+
 ```cpp
 const fastring& url() const;
 ```
@@ -366,9 +348,8 @@ const fastring& url() const;
 
 
 
-
-
 ### Req::version
+
 ```cpp
 Version version() const;
 ```
@@ -377,19 +358,14 @@ Version version() const;
 
 
 
-
-
-
-
 ## http::Res
-
 
 `http::Res` 类是对 HTTP 响应的封装，用于实现 http::Server。
 
 
 
-
 ### Res::Res
+
 ```cpp
 Res();
 ```
@@ -398,45 +374,23 @@ Res();
 
 
 
-
-
 ### Res::add_header
+
 ```cpp
 void add_header(const char* key, const char* val);
+void add_header(const char* key, int val);
 ```
 
 - 添加 HTTP header。
 
 
 
-
-
-### Res::body_size
-```cpp
-size_t body_size() const
-```
-
-- 返回 HTTP 响应 body 的长度。
-
-
-
-
-
-### Res::clear
-```cpp
-void clear();
-```
-
-- 清空 http::Res 对象，清空后用户可以继续使用。
-
-
-
-
-
 ### Res::set_body
+
 ```cpp
 void set_body(const void* s, size_t n);
 void set_body(const char* s);
+void set_body(const fastring& s);
 ```
 
 - 设置 HTTP 响应的 body 部分。
@@ -444,9 +398,8 @@ void set_body(const char* s);
 
 
 
-
-
 ### Res::set_status
+
 ```cpp
 void set_status(int status);
 ```
@@ -456,41 +409,13 @@ void set_status(int status);
 
 
 
-
-### Res::set_version
-```cpp
-void set_version(Version v);
-```
-
-- 设置 HTTP 响应中的 HTTP 版本，默认使用 HTTP/1.1。
-- 用户一般不需要调用此方法。
-
-
-
-
-
-### Res::str
-```cpp
-fastring str() const;
-```
-
-- 将 HTTP 响应转化成字符串形式，该字符串可以发送到网络上。
-
-
-
-
-
-
-
 ## http::Server
-
 
 `http::Server` 是基于协程的 HTTP 服务器，它支持 HTTPS，使用 HTTPS 需要安装 openssl。
 
 
-
-
 ### Server::Server
+
 ```cpp
 Server();
 ```
@@ -499,23 +424,21 @@ Server();
 
 
 
-
-
 ### Server::on_req
+
 ```cpp
 void on_req(std::function<void(const Req&, Res&)>&& f);
 template<typename T> void on_req(void (T::*f)(const Req&, Res&), T* o);
 ```
 
-- 设置处理客户端 HTTP 请求的回调函数。
+- 设置处理客户端 HTTP 请求的 callback。
 - 第 2 个版本中，参数 f 是类中的方法，参数 o 是 T 类型的指针。
-- 服务端接收到 HTTP 请求时，会调用此方法设置的回调函数，处理该请求。
-
-
+- 服务端接收到 HTTP 请求时，会调用此方法设置的 callback，处理该请求。
 
 
 
 ### Server::start
+
 ```cpp
 void start(const char* ip="0.0.0.0", int port=80);
 void start(const char* ip, int port, const char* key, const char* ca);
@@ -526,8 +449,8 @@ void start(const char* ip, int port, const char* key, const char* ca);
 
 
 
-
 ### Server::exit
+
 ```cpp
 void exit();
 ```
@@ -538,10 +461,7 @@ void exit();
 
 
 
-
-
 ### 代码示例
-
 
 ```cpp
 http::Server s;
@@ -568,26 +488,20 @@ s.start("0.0.0.0", 7777);
 s.start("0.0.0.0", 7777, "privkey.pem", "certificate.pem");
 ```
 
-
-
-
 `co/test` 提供了一个简单的 [demo](https://github.com/idealvin/co/blob/master/test/so/http_serv.cc)，用户可以按下述方式编译运行:
 
-
-```sh
+```bash
 xmake -b http_serv
 xmake r http_serv
 ```
-
 
 启动 http server 后，可以在浏览器的地址栏中输入 `127.0.0.1/hello` 看结果。
 
 
 
 
-
-
 ## 静态 web server (so::easy)
+
 ```cpp
 void easy(const char* root_dir=".", const char* ip="0.0.0.0", int port=80);
 void easy(const char* root_dir, const char* ip, int port, const char* key, const char* ca);
@@ -599,18 +513,16 @@ void easy(const char* root_dir, const char* ip, int port, const char* key, const
 - 此方法会阻塞当前线程。
 
 
-
 - 示例
+
 ```cpp
 #include "co/flag.h"
-#include "co/log.h"
-#include "co/so.h"
+#include "co/http.h"
 
 DEF_string(d, ".", "root dir"); // root dir of web server
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
 
     so::easy(FLG_d.c_str()); // mum never have to worry again
 
@@ -621,14 +533,13 @@ int main(int argc, char** argv) {
 
 
 
-
-
 ## 配置项
 
-
+co/http 使用 [co/flag](../../flag/) 定义配置项，下面列出的是 co/http 内部定义的 flag。
 
 
 ### http_conn_timeout
+
 ```cpp
 DEF_uint32(http_conn_timeout, 3000, "#2 connect timeout in ms for http client");
 ```
@@ -637,9 +548,8 @@ DEF_uint32(http_conn_timeout, 3000, "#2 connect timeout in ms for http client");
 
 
 
-
-
 ### http_timeout
+
 ```cpp
 DEF_uint32(http_timeout, 3000, "#2 send or recv timeout in ms for http client");
 ```
@@ -648,9 +558,8 @@ DEF_uint32(http_timeout, 3000, "#2 send or recv timeout in ms for http client");
 
 
 
-
-
 ### http_recv_timeout
+
 ```cpp
 DEF_uint32(http_recv_timeout, 3000, "#2 recv timeout in ms for http server");
 ```
@@ -659,9 +568,8 @@ DEF_uint32(http_recv_timeout, 3000, "#2 recv timeout in ms for http server");
 
 
 
-
-
 ### http_send_timeout
+
 ```cpp
 DEF_uint32(http_send_timeout, 3000, "#2 send timeout in ms for http server");
 ```
@@ -670,9 +578,8 @@ DEF_uint32(http_send_timeout, 3000, "#2 send timeout in ms for http server");
 
 
 
-
-
 ### http_conn_idle_sec
+
 ```cpp
 DEF_uint32(http_conn_idle_sec, 180, "#2 http server may close the con...");
 ```
@@ -681,9 +588,8 @@ DEF_uint32(http_conn_idle_sec, 180, "#2 http server may close the con...");
 
 
 
-
-
 ### http_log
+
 ```cpp
 DEF_bool(http_log, true, "#2 enable http server log if true");
 ```
@@ -693,9 +599,8 @@ DEF_bool(http_log, true, "#2 enable http server log if true");
 
 
 
-
-
 ### http_max_idle_conn
+
 ```cpp
 DEF_uint32(http_max_idle_conn, 128, "#2 max idle connections for http server");
 ```
@@ -704,9 +609,8 @@ DEF_uint32(http_max_idle_conn, 128, "#2 max idle connections for http server");
 
 
 
-
-
 ### http_max_body_size
+
 ```cpp
 DEF_uint32(http_max_body_size, 8 << 20, "#2 max size of http body, default: 8M");
 ```
@@ -715,9 +619,8 @@ DEF_uint32(http_max_body_size, 8 << 20, "#2 max size of http body, default: 8M")
 
 
 
-
-
 ### http_max_header_size
+
 ```cpp
 DEF_uint32(http_max_header_size, 4096, "#2 max size of http header");
 ```

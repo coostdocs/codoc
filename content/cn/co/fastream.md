@@ -31,7 +31,7 @@ fastream(fastream&& s) noexcept;
 fastream s;               // 状态为空的 fastream, 未分配内存
 fastream s(1024);         // 预分配 1k 内存
 fastream x(std::move(s));  // move 构造函数, s 变成空对象
- ```
+```
 
 
 
@@ -385,11 +385,11 @@ s.swap(x);  // s: cap -> 64,  x: cap -> 32
 ```cpp
 fastream s;
 s.append("Hello");
-((fastring*)&s)->tolower();  // s -> "hello"
+((fastring&)s).tolower();  // s -> "hello"
 
 fastring x;
 void f(fastream&);
-f(*(fastream*)&x);
+f((fastream&)x);
 ```
 
 前面说到 fastream 的 append 操作不会检测内存重叠的情况，若有必要，可以转换成 fastring 再操作：
@@ -397,6 +397,6 @@ f(*(fastream*)&x);
 ```cpp
 fastream s;
 s.append("hello");
-((fastring*)&s)->append(s.c_str() + 1);
+((fastring&)s).append(s.c_str() + 1);
 ```
 

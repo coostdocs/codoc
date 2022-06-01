@@ -8,27 +8,21 @@ include: [co/str.h](https://github.com/idealvin/co/tree/master/include/co/str.h)
 
 ## split, strip, replace, 
 
-
 ### str::split
 
-
 ```cpp
-std::vector<fastring> split(const char* s, char c, uint32 n=0);
-std::vector<fastring> split(const fastring& s, char c, uint32 n=0);
-std::vector<fastring> split(const char* s, const char* c, uint32 n=0);
-std::vector<fastring> split(const fastring& s, const char* c, uint32 n=0);
+co::vector<fastring> split(const char* s, char c, uint32 n=0);
+co::vector<fastring> split(const fastring& s, char c, uint32 n=0);
+co::vector<fastring> split(const char* s, const char* c, uint32 n=0);
+co::vector<fastring> split(const fastring& s, const char* c, uint32 n=0);
 ```
-
 
 - This function splits the string into several substrings, the original string remains unchanged, and returns the split result.
 - Parameter s is a C string or fastring, parameter c is the separator, parameter n is the maximum number of splits, 0 or -1 means unlimited.
 - In the fourth version, s cannot contain '\0', because the internal implementation uses `strstr()` to search for substrings.
 
 
-
 - Example
-
-
 
 ```cpp
 str::split("x y z", '');   // -> ["x", "y", "z"]
@@ -40,9 +34,7 @@ str::split("xooy",'o', 1); // -> ["x", "oy"]
 
 
 
-
 ### str::strip
-
 
 ```cpp
 fastring strip(const char* s, const char* c=" \t\r\n", char d='b');
@@ -52,17 +44,13 @@ fastring strip(const fastring& s, char c, char d='b');
 fastring strip(const fastring& s, const fastring& c, char d='b');
 ```
 
-
 - This function removes the specified characters on the left or right sides of the string, the original string remains unchanged, and the result after strip is returned.
 - The parameter s is a C string or fastring, the parameter c is the character set to be removed, the parameter d is the direction, 'l' or 'L' for left side, 'r' or 'R' for right side, and the default is 'b' means  both sides.
 - The first and second versions remove the blank characters on both sides of the string by default.
 - In the 3rd and 4th versions, c is a single character.
 
 
-
 - Example
-
-
 
 ```cpp
 str::strip(" xx\r\n");         // -> "xx"
@@ -73,25 +61,19 @@ str::strip("abxxa", "ab",'r'); // -> "abxx"
 
 
 
-
 ### str::replace
-
 
 ```cpp
 fastring replace(const char* s, const char* sub, const char* to, uint32 n=0);
 fastring replace(const fastring& s, const char* sub, const char* to, uint32 n=0);
 ```
 
-
 - This function is used to replace substrings in the string, the original string remains unchanged, and the replaced result is returned.
 - Parameter s is a C string or fastring, substring sub in s will be replaced with to. Parameter n is the maximum number of replacements, 0 or -1 means unlimited.
 - In the second version, s cannot contain '\0', because the internal implementation uses `strstr()` to search for substrings.
 
 
-
 - Example
-
-
 
 ```cpp
 str::replace("xooxoox", "oo", "ee");    // -> "xeexeex"
@@ -100,8 +82,8 @@ str::replace("xooxoox", "oo", "ee", 1); // -> "xeexoox"
 
 
 
-
 ### str::cat
+
 ```cpp
 template <typename ...X>
 inline fastring cat(X&& ... x);
@@ -109,6 +91,7 @@ inline fastring cat(X&& ... x);
 
 - Added in v2.0.3. Concatenate any number of elements to make a string.
 - This function concatenates elements in the parameters to the string one by one through `operator<<`.
+
 
 - 示例
 
@@ -120,12 +103,9 @@ fastring s = str::cat("hello", ' ', 23, true);
 
 
 
-
 ## Convert string to built-in type
 
-
 ### str::to_bool
-
 
 ```cpp
 bool to_bool(const char* s);
@@ -133,16 +113,12 @@ bool to_bool(const fastring& s);
 bool to_bool(const std::string& s);
 ```
 
-
 - This function converts a string to bool type.
 - When s is equal to "0" or "false", false is returned; when s is equal to "1" or "true", true is returned.
 - **This functions returns false on error, and the errno will be EINVAL**.
 
 
-
 - Example
-
-
 
 ```cpp
 bool b = str::to_bool("true");  // x = true
@@ -151,9 +127,7 @@ bool x = str::to_bool("false"); // x = false
 
 
 
-
 ### str::to_double
-
 
 ```cpp
 double to_double(const char* s);
@@ -161,15 +135,11 @@ double to_double(const fastring& s);
 double to_double(const std::string& s);
 ```
 
-
 - This function converts a string to double type.
 - **This functions returns 0 on error, and the errno will be ERANGE or EINVAL**.
 
 
-
 - Example
-
-
 
 ```cpp
 double x = str::to_double("3.14"); // x = 3.14
@@ -177,9 +147,7 @@ double x = str::to_double("3.14"); // x = 3.14
 
 
 
-
 ### str::to_int
-
 
 ```cpp
 int32 to_int32(const char* s);
@@ -196,16 +164,12 @@ uint64 to_uint64(const fastring& s);
 uint64 to_uint64(const std::string& s);
 ```
 
-
 - These functions convert a string to integer types.
 - The parameter s can take an unit `k, m, g, t, p` at the end, which is not case sensitive.
 - **These functions return 0 on error, and the errno will be ERANGE or EINVAL**.
 
 
-
 - Example
-
-
 
 ```cpp
 int32 i32;
@@ -231,28 +195,20 @@ LOG << (errno == EINVAL);
 
 
 
-
-
 ## Convert built-in types to string
 
-
 ### str::from
-
 
 ```cpp
 template<typename T>
 inline fastring from(T t);
 ```
 
-
 - This function converts built-in types to a string.
 - T can be any built-in type, such as bool, int, double, void*, etc.
 
 
-
 - Example
-
-
 
 ```cpp
 fastring s;
@@ -266,26 +222,33 @@ s = str::from(3.14); // -> "3.14"
 
 ## Convert STL container to debug string
 
-
 ### str::dbg
 
-
 ```cpp
+template<typename T> fastring dbg(const co::vector<T>& v);
 template<typename T> fastring dbg(const std::vector<T>& v);
+template<typename T> fastring dbg(const co::set<T>& v);
 template<typename T> fastring dbg(const std::set<T>& v);
-template<typename T> fastring dbg(const std::unordered_set<T>& v)
-template<typename K, typename V> fastring dbg(const std::map<K, V>& v);
-template<typename K, typename V> fastring dbg(const std::unordered_map<K, V>& v);
-```
+template<typename T> fastring dbg(const co::unordered_set<T>& v);
+template<typename T> fastring dbg(const std::unordered_set<T>& v);
 
+template<typename K, typename V>
+fastring dbg(const co::map<K, V>& v);
+
+template<typename K, typename V>
+fastring dbg(const std::map<K, V>& v);
+
+template<typename K, typename V>
+fastring dbg(const co::unordered_map<K, V>& v);
+
+template<typename K, typename V>
+fastring dbg(const std::unordered_map<K, V>& v);
+```
 
 - This function converts a container to a debug string, which is generally for printing logs.
 
 
-
 - Example
-
-
 
 ```cpp
 std::vector<int> v {1, 2, 3 };

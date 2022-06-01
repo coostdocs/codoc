@@ -4,18 +4,17 @@ title: "TCP"
 ---
 
 
-include: [co/so/tcp.h](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h).
+include: [co/tcp.h](https://github.com/idealvin/co/blob/master/include/co/tcp.h).
 
 
 ## tcp::Connection
-
 
 `tcp::Connection` 类是对 TCP 连接的简单封装，用于实现 TCP server，客户端不需要用这个类。当服务端启用 SSL 时，tcp::Connection 会用 SSL 传输数据。
 
 
 
-
 ### Connection::Connection
+
 ```cpp
 Connection(int sock);
 Connection(void* ssl);
@@ -28,9 +27,8 @@ Connection(Connection&& c);
 
 
 
-
-
 ### Connection::~Connection
+
 ```cpp
 Connection::~Connection();
 ```
@@ -39,9 +37,8 @@ Connection::~Connection();
 
 
 
-
-
 ### Connection::close
+
 ```cpp
 int close(int ms = 0);
 ```
@@ -51,9 +48,8 @@ int close(int ms = 0);
 
 
 
-
-
 ### Connection::recv
+
 ```cpp
 int recv(void* buf, int n, int ms=-1);
 ```
@@ -64,9 +60,8 @@ int recv(void* buf, int n, int ms=-1);
 
 
 
-
-
 ### Connection::recvn
+
 ```cpp
 int recvn(void* buf, int n, int ms=-1);
 ```
@@ -76,9 +71,8 @@ int recvn(void* buf, int n, int ms=-1);
 
 
 
-
-
 ### Connection::reset
+
 ```cpp
 int reset(int ms = 0)
 ```
@@ -88,9 +82,8 @@ int reset(int ms = 0)
 
 
 
-
-
 ### Connection::send
+
 ```cpp
 int send(const void* buf, int n, int ms=-1);
 ```
@@ -100,9 +93,8 @@ int send(const void* buf, int n, int ms=-1);
 
 
 
-
-
 ### Connection::socket
+
 ```cpp
 int socket() const;
 ```
@@ -111,9 +103,8 @@ int socket() const;
 
 
 
-
-
 ### Connection::strerror
+
 ```cpp
 const char* strerror() const;
 ```
@@ -123,11 +114,7 @@ const char* strerror() const;
 
 
 
-
-
-
 ## tcp::Server
-
 
 `tcp::Server` 是基于协程的 TCP 服务端，它的特性如下：
 
@@ -148,9 +135,8 @@ Server();
 
 
 
-
-
 ### Server::on_connection
+
 ```cpp
 void on_connection(std::function<void(Connection)>&& f);
 void on_connection(const std::function<void(Connection)>& f);
@@ -164,8 +150,8 @@ template<typename T> void on_connection(void (T::*f)(Connection), T* o);
 - 服务端接收到新的客户端连接时，会新建一个协程，并在协程中调用此方法设置的回调函数，处理新连接上的数据。
 
 
-
 - 示例
+
 ```cpp
 void f(tcp::Connection conn);
 
@@ -185,8 +171,8 @@ void f(tcp::Connection conn) {
 
 
 
-
 ### Server::start
+
 ```cpp
 void start(const char* ip, int port, const char* key=0, const char* ca=0);
 ```
@@ -197,8 +183,8 @@ void start(const char* ip, int port, const char* key=0, const char* ca=0);
 
 
 
-
 ### Server::exit
+
 ```cpp
 void exit();
 ```
@@ -210,9 +196,7 @@ void exit();
 
 
 
-
 ## tcp::Client
-
 
 `tcp::Client` 是基于协程的 TCP 客户端，它有如下特性：
 
@@ -224,9 +208,8 @@ void exit();
 
 
 
-
-
 ### Client::Client
+
 ```cpp
 Client(const char* ip, int port, bool use_ssl=false);
 Client(const Client& c);
@@ -239,9 +222,8 @@ Client(const Client& c);
 
 
 
-
-
 ### Client::~Client
+
 ```cpp
 Client::~Client();
 ```
@@ -250,9 +232,8 @@ Client::~Client();
 
 
 
-
-
 ### Client::close
+
 ```cpp
 void close();
 ```
@@ -261,9 +242,8 @@ void close();
 
 
 
-
-
 ### Client::connect
+
 ```cpp
 bool connect(int ms);
 ```
@@ -274,9 +254,8 @@ bool connect(int ms);
 
 
 
-
-
 ### Client::connected
+
 ```cpp
 bool connected() const;
 ```
@@ -285,9 +264,8 @@ bool connected() const;
 
 
 
-
-
 ### Client::disconnect
+
 ```cpp
 void disconnect();
 ```
@@ -297,9 +275,8 @@ void disconnect();
 
 
 
-
-
 ### Client::recv
+
 ```cpp
 int recv(void* buf, int n, int ms=-1);
 ```
@@ -310,9 +287,8 @@ int recv(void* buf, int n, int ms=-1);
 
 
 
-
-
 ### Client::recvn
+
 ```cpp
 int recvn(void* buf, int n, int ms=-1);
 ```
@@ -323,9 +299,8 @@ int recvn(void* buf, int n, int ms=-1);
 
 
 
-
-
 ### Client::send
+
 ```cpp
 int send(const void* buf, int n, int ms=-1);
 ```
@@ -336,9 +311,8 @@ int send(const void* buf, int n, int ms=-1);
 
 
 
-
-
 ### Client::socket
+
 ```cpp
 int socket() const;
 ```
@@ -348,9 +322,8 @@ int socket() const;
 
 
 
-
-
 ### Client::strerror
+
 ```cpp
 const char* strerror() const;
 ```
@@ -360,11 +333,7 @@ const char* strerror() const;
 
 
 
-
-
-
 ## TCP 服务端代码示例
-
 
 ```cpp
 void on_connection(tcp::Connection conn) {
@@ -402,11 +371,7 @@ s.start("0.0.0.0", 7788, "privkey.pem", "certificate.pem");  // use ssl
 
 
 
-
-
-
 ## TCP 客户端代码示例
-
 
 ```cpp
 bool use_ssl = false;

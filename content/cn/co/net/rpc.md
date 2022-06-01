@@ -4,7 +4,7 @@ title: "RPC"
 ---
 
 
-include: [co/so/rpc.h](https://github.com/idealvin/co/blob/master/include/co/so/rpc.h).
+include: [co/rpc.h](https://github.com/idealvin/co/blob/master/include/co/rpc.h).
 
 
 co/rpc 是一个类似 [grpc](https://github.com/grpc/grpc) 的高性能 RPC 框架，它内部使用 **JSON** 格式传输数据，而不是 protobuf 等二进制协议。从 v3.0 开始，co/rpc 同时支持 HTTP 协议，可以用 HTTP 的 POST 方法调用 rpc 服务。
@@ -374,6 +374,9 @@ for (int i = 0; i < 8; ++i) {
 
 
 ## 配置项
+
+co/rpc 使用 [co/flag](../../flag/) 定义配置项，下面列出的是 co/rpc 内部定义的 flag。
+
 
 ### rpc_conn_idle_sec
 

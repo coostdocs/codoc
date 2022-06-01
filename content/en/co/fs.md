@@ -199,11 +199,11 @@ file(const std::string& path, char mode);
 - The first version is the default constructor, which creates an empty file object without opening a file.
 - The second version is the move constructor.
 - Version 3-5, open the specified file, the parameter path is the file path, and the parameter mode is the open mode.
-- mode is one of `'r'`, `'w'`, `'a'`, `'m'`, r for read, w for write, a for append, m for modify.
+- mode is one of `'r'`, `'w'`, `'a'`, `'m'` or `'+'`, r for read, w for write, a for append, m for modify, + for both read and write.
 - When mode is `'r'`, the file must exist, otherwise the file is not opened.
-- When mode is `'w'`, the file is automatically created if it does not exist, and the file data is cleared if it already exists.
-- When mode is `'a'`, the file will be created automatically when it does not exist, and the file data will not be cleared if it already exists.
-- When mode is `'m'`, the file will be created automatically if it does not exist, and the file data will not be cleared if the file already exists.
+- When mode is `'w'`, a new file will be created if it does not exist, and the file will be truncated if it already exists.
+- When mode is `'a'`, `'m'` or `'+'`, a new file will be created when it does not exist, and the file will not be truncated if it already exists.
+- `'+'` was added since v3.0. In this mode, read and write share the file pointer, therefore, you may need call the [seek()](#fileseek) method to set the offset before the read or write operation.
 
 
 
@@ -381,22 +381,28 @@ size_t write(char c);
 
 
 
-### Code example
+### Example
 
 
 ```cpp
-fs::file f; // empty file
-fs::file f("xx",'w');     // write mode
-f.open("xx",'m');         // reopen with modify mode
+fs::file f;               // empty file
+fs::file f("xx", 'w');    // write mode
+f.open("xx", 'm');        // reopen with modify mode
 
-f.open("xx",'r');         // read mode
+f.open("xx", 'r');        // read mode
 if (f) f.read(buf, 512);  // read at most 512 bytes
 fastring s = f.read(32);  // read at most 32 bytes and return fastring
 
-f.open("xx",'a');         // append mode
+f.open("xx", 'a');        // append mode
 if(f) f.write(buf, 32);   // write 32 bytes
 f.write("hello");         // write a C string
 f.write('c');             // write a single character
+
+f.open("xx", '+');        // read/write mode
+f.seek(0);                // seek to beginning before write
+f.write("hello");
+f.seek(0);                // seek to beginning before read 
+f.read(buf, 8);
 f.close();                // close the file
 ```
 

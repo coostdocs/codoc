@@ -3,7 +3,7 @@ weight: 14
 title: "TCP"
 ---
 
-include: [co/so/tcp.h](https://github.com/idealvin/co/blob/master/include/co/so/tcp.h).
+include: [co/tcp.h](https://github.com/idealvin/co/blob/master/include/co/tcp.h).
 
 
 ## tcp::Connection

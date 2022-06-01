@@ -317,17 +317,20 @@ s += "xx"; // s -> "cxx"
 ### fastring::find
 
 ```cpp
-size_t find(char c) const;
-size_t find(char c, size_t pos) const;
-size_t find(const char* s) const;
-size_t find(const char* s, size_t pos) const;
+1. size_t find(char c) const;
+2. size_t find(char c, size_t pos) const;
+3. size_t find(char c, size_t pos, size_t len) const;
+4. size_t find(const char* s) const;
+5. size_t find(const char* s, size_t pos) const;
 ```
 
-- The first version searches for the character c starting from position 0.
-- The second version looks for the character c starting at position pos.
-- The third version starts from position 0 to find the substring s, which is implemented internally based on `strstr()`, and does not apply to fastring containing '\0'.
-- The fourth version is like the third but searchs from position pos.
+- 1, searches for character c starting from position 0.
+- 2, searches for character c starting at position pos.
+- 3, added in v3.0, searches for character c in range `[pos, pos + len)`.
+- 4, starts from position 0 to find the substring s, which is implemented internally based on `strstr()`, and does not apply to fastring containing '\0'.
+- 5, like the 4th, but searchs from position pos.
 - This method returns the position of the character or substring when the search succeeds, otherwise it returns `fastring::npos`.
+
 
 - Example
 

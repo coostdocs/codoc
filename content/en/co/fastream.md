@@ -387,11 +387,11 @@ s.swap(x); // s: cap -> 64, x: cap -> 32
 ```cpp
 fastream s;
 s.append("Hello");
-((fastring*)&s)->tolower(); // s -> "hello"
+((fastring&)s).tolower(); // s -> "hello"
 
 fastring x;
 void f(fastream&);
-f(*(fastream*)&x);
+f((fastream&)x);
 ```
 
 As mentioned earlier, the append operation of fastream will not check memory overlap. If necessary, it can be converted to fastring to perform the operation safely:
@@ -399,6 +399,6 @@ As mentioned earlier, the append operation of fastream will not check memory ove
 ```cpp
 fastream s;
 s.append("hello");
-((fastring*)&s)->append(s.c_str() + 1);
+((fastring&)s).append(s.c_str() + 1);
 ```
 

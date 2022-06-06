@@ -37,15 +37,11 @@ co 协程库中 context 切换相关的代码，取自 [ruki](https://github.com
 ## 协程 API
 
 
-### ~~co::init~~
-弃用,只需要flag::init();
+### v3.0 删除的 API
 
-
-
-
-### ~~co::exit~~  
-弃用，不再需要主动调用。
-
+- **co::init**, v3.0 移除，从 co 3.0 开始，一般只需要在 main 函数开头调用 `flag::init(argc, argv)`。
+- **co::exit**, v3.0 移除。
+- **co::stop**, v3.0 移除。
 
 
 
@@ -211,12 +207,6 @@ void sleep(uint32 ms);
 
 
 
-### ~~co::stop~~
-已弃用，无需主动调用。
-
-
-
-
 ### co::timeout
 
 ```cpp
@@ -241,7 +231,6 @@ void f() {
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-   
     FLG_cout = true; // also log to terminal
 
     for (int i = 0; i < 32; ++i) go(f);
@@ -289,7 +278,7 @@ sock_t udp_socket(int domain=AF_INET);
 - 第 2 个函数创建一个 TCP socket。
 - 第 3 个函数创建一个 UDP socket。
 - 参数 domain 一般是 AF_INET 或 AF_INET6，前者表示 ipv4，后者表示 ipv6。
-- **这些函数返回一个 non-blocking socket**。发生错误时，返回值是 -1。
+- **这些函数返回一个 non-blocking socket**。发生错误时，返回值是 -1，可以调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -302,7 +291,7 @@ sock_t accept(sock_t fd, void* addr, int* addrlen);
 - 在指定 socket 上接收客户端连接，参数 fd 是之前调用 listen() 监听的 non-blocking socket，参数 addr 与 addrlen 用于接收客户端的地址信息，`*addrlen` 的初始值是 addr 所指向 buffer 的长度。如果用户不需要客户端地址信息，可以将 addr 与 addrlen 设置为 NULL。
 - 此函数**必须在协程中调用**。
 - 此函数会阻塞，直到有新的连接进来，或者发生错误。
-- 此函数成功时**返回一个 non-blocking socket**，发生错误时返回 -1。
+- 此函数成功时**返回一个 non-blocking socket**，发生错误时返回 -1，可以调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -313,7 +302,7 @@ int bind(sock_t fd, const void* addr, int addrlen);
 ```
 
 - 给 socket 绑定 ip 地址，参数 addr 与 addrlen 是地址信息，与原生 API 相同。
-- 此函数成功时返回 0，否则返回 -1。
+- 此函数成功时返回 0，否则返回 -1，可以调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -327,7 +316,7 @@ int close(sock_t fd, int ms=0);
 - 在 2.0.0 及之前的版本中，此函数必须在进行 I/O 操作的线程中调用。从 2.0.1 版本开始，此函数可以在协程或非协程中调用。
 - 参数 ms > 0 时，先调用 `co::sleep(ms)` 将当前协程挂起一段时间，再关闭 socket。一般只在 server 端设置 > 0 的参数，可以在一定程度上缓解非法的网络攻击。
 - 此函数内部已经处理了 `EINTR` 信号，用户无需考虑。
-- 此函数成功时返回 0，否则返回 -1。
+- 此函数成功时返回 0，否则返回 -1，可以调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -340,7 +329,7 @@ int connect(sock_t fd, const void* addr, int addrlen, int ms=-1);
 - 在指定 socket 上创建到指定地址的连接，参数 fd 必须是 non-blocking 的，参数 addr 与 addrlen 是地址信息，参数 ms 是超时时间，单位为毫秒，默认为 -1，永不超时。
 - 此函数**必须在协程中调用**。
 - 此函数会阻塞，直到连接完成，或者超时、发生错误。
-- 此函数成功时返回 0，超时或发生错误返回 -1，用户可以调用 co::timeout() 判断是否超时。
+- 此函数成功时返回 0，超时或发生错误返回 -1，用户可以调用 co::timeout() 判断是否超时，调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -351,7 +340,7 @@ int listen(sock_t fd, int backlog=1024);
 ```
 
 - 监听指定的 socket，参数 fd 是已经调用 bind() 绑定 ip 及端口的 socket。
-- 此函数成功时返回 0，否则返回 -1。
+- 此函数成功时返回 0，否则返回 -1，可以调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -365,7 +354,7 @@ int recv(sock_t fd, void* buf, int n, int ms=-1);
 - 此函数**必须在协程中调用**。
 - 在 Windows 平台，此函数只适用于 TCP 等 stream 类型的 socket。
 - 此函数会阻塞，直到有数据进来，或者超时、发生错误。
-- 此函数成功时返回接收的数据长度(可能小于 n)，对端关闭连接时返回 0，超时或发生错误返回 -1，用户可以调用 co::timeout() 判断是否超时。
+- 此函数成功时返回接收的数据长度(可能小于 n)，对端关闭连接时返回 0，超时或发生错误返回 -1，用户可以调用 co::timeout() 判断是否超时，调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -378,7 +367,7 @@ int recvn(sock_t fd, void* buf, int n, int ms=-1);
 - 在指定 socket 上接收指定长度的数据，参数 fd 必须是 non-blocking 的，参数 buf 是用于接收数据的 buffer，参数 n 是要接收数据的长度，参数 ms 是超时时间，单位为毫秒，默认为 -1，永不超时。
 - 此函数**必须在协程中调用**。
 - 此函数会阻塞，直到 n 字节的数据全部接收完，或者超时、发生错误。
-- 此函数成功时返回 n，对端关闭连接时返回 0，超时或发生错误返回 -1，用户可以调用 co::timeout() 检查是否超时。
+- 此函数成功时返回 n，对端关闭连接时返回 0，超时或发生错误返回 -1，用户可以调用 co::timeout() 检查是否超时，调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -403,7 +392,7 @@ int send(sock_t fd, const void* buf, int n, int ms=-1);
 - 此函数**必须在协程中调用**。
 - 在 Windows 平台，此函数只适用于 TCP 等 stream 类型的 socket。
 - 此函数会阻塞，直到 n 字节的数据全部发送完，或者超时、发生错误。
-- 此函数成功时返回 n，超时或发生错误返回 -1，用户可以调用 co::timeout() 检查是否超时。
+- 此函数成功时返回 n，超时或发生错误返回 -1，用户可以调用 co::timeout() 检查是否超时，调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
@@ -427,14 +416,14 @@ int shutdown(sock_t fd, char c='b');
 
 - 此函数一般用于半关闭 socket，参数 c 为 `'r'` 时表示关闭读，为 `'w'` 时表示关闭写，默认为 `'b'`，关闭读与写。
 - 一般建议在进行 IO 操作的线程中调用此函数。
-- 此函数成功时返回 0，否则返回 -1。
+- 此函数成功时返回 0，否则返回 -1，可以调用 `co::error()`, `co::strerror()` 获取错误信息。
 
 
 
 ### co::error
 
 ```cpp
-int error();
+int& error();
 ```
 
 - 返回当前的错误码。
@@ -452,15 +441,6 @@ const char* strerror();
 - 获取错误码对应的描述信息。此函数是线程安全的。
 - 第 2 个版本获取当前错误的描述信息，等价于 `strerror(co::error())`。
 
-
-
-### co::set_error
-
-```cpp
-void set_error(int err);
-```
-
-- 设置当前的错误码，用户一般不需要调用此方法。
 
 
 

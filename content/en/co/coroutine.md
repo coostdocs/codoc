@@ -38,44 +38,12 @@ The relevant code for context switching is taken from [tbox](https://github.com
 ## Coroutine API
 
 
-### co::init
+### APIs removed in v3.0
 
-```cpp
-void init();
-void init(int argc, char** argv);
-void init(const char* config);
-```
+- **co::init**, removed in v3.0, starting from co 3.0, we only need to call `flag::init(argc, argv)` at the beginning of the main function.
 
-- Added since v2.0.2, used to initialize the coroutine library.
-- The first version performs some initialization work inside the coroutine library.
-- The second version first calls `flag::init(argc, argv)` and `log::init()`, and then calls `co::init()` to initialize the coroutine library.
-- The third version first calls `flag::init(config)` and `log::init()`, and then calls `co::init()` to initialize the coroutine library.
-
-
-
-### co::exit
-
-```cpp
-void exit();
-```
-
-- Added in v2.0.2, stop the coroutine scheduling threads and reclaim system resources.
-- If `co::init(argc, argv)` or `co::init(config)` was called before, this function will also call `log::exit()` to stop the logging thread.
-- It is generally recommended to call this function at the end of the main() function.
-
-
-- Code example
-
-```cpp
-#include "co/co.h"
-
-int main(int argc, char** argv) {
-     co::init(argc, argv);
-     // user code
-     co::exit();
-     return 0;
-}
-```
+- **co::exit**, removed in v3.0.
+- **co::stop**, removed in v3.0.
 
 
 
@@ -242,17 +210,6 @@ void sleep(uint32 ms);
 
 
 
-### co::stop
-
-```cpp
-void stop();
-```
-
-- The same as `co::exit()`.
-- Deprecated since v2.0.2, use `co::exit()` instead.
-
-
-
 ### co::timeout
 
 ```cpp
@@ -277,7 +234,6 @@ void f() {
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
     FLG_cout = true; // also log to terminal
 
     for (int i = 0; i <32; ++i) go(f);
@@ -326,7 +282,7 @@ sock_t udp_socket(int domain=AF_INET);
 - The second function creates a TCP socket.
 - The third function creates a UDP socket.
 - The parameter domain is usually AF_INET or AF_INET6, the former means ipv4 and the latter means ipv6.
-- **These functions return a non-blocking socket**. When an error occurs, the return value is -1.
+- **These functions return a non-blocking socket**. When an error occurs, the return value is -1, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -339,7 +295,7 @@ sock_t accept(sock_t fd, void* addr, int* addrlen);
 - Receive the client connection on the specified socket, the parameter fd is a non-blocking socket, and the parameters addr and addrlen are used to receive the client's address information. The initial value of `*addrlen` is the length of the buffer pointed to by addr. If the user does not need the client address information, addr and addrlen should be set to NULL.
 - This function **must be called in the coroutine**.
 - This function will block until a new connection comes in or an error occurs.
-- This function **returns a non-blocking socket** on success, and returns -1 when an error occurs.
+- This function **returns a non-blocking socket** on success, and returns -1 when an error occurs, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -350,7 +306,7 @@ int bind(sock_t fd, const void* addr, int addrlen);
 ```
 
 - Bind the ip address to the socket, the parameters addr and addrlen are the address information, which is the same as the native API.
-- This function returns 0 on success, otherwise returns -1.
+- This function returns 0 on success, otherwise returns -1, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -364,7 +320,7 @@ int close(sock_t fd, int ms=0);
 - In CO v2.0.0 or before, a socket MUST be closed in the same thread that performed the I/O operation. Since v2.0.1, a socket can be closed anywhere.
 - When the parameter ms > 0, first call `co::sleep(ms)` to suspend the current coroutine for a period of time, and then close the socket. 
 - The **EINTR** signal has been processed internally in this function, and the user does not need to consider it.
-- This function returns 0 on success, otherwise it returns -1.
+- This function returns 0 on success, otherwise it returns -1, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -377,7 +333,7 @@ int connect(sock_t fd, const void* addr, int addrlen, int ms=-1);
 - Create a connection to the specified address on the specified socket, the parameter fd must be non-blocking,  the parameter ms is the timeout period in milliseconds, the default is -1, which will never time out.
 - This function **must be called in the coroutine**.
 - This function will block until the connection is completed, or timeout or an error occurs.
-- This function returns 0 on success, and returns -1 on timeout or an error occurs. The user can call co::timeout() to check whether it has timed out.
+- This function returns 0 on success, and returns -1 on timeout or an error occurs. The user can call co::timeout() to check whether it has timed out, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -388,7 +344,7 @@ int listen(sock_t fd, int backlog=1024);
 ```
 
 - Listenning on the specified socket.
-- This function returns 0 on success, otherwise it returns -1.
+- This function returns 0 on success, otherwise it returns -1, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -402,7 +358,7 @@ int recv(sock_t fd, void* buf, int n, int ms=-1);
 - This function **must be called in the coroutine**.
 - On Windows, this function only works with TCP-like stream socket.
 - This function will block until any data comes in, or timeout or any error occurs.
-- This function returns length of the data received (may be less than n) on success, returns 0 when the peer closes the connection, returns -1 when timeout or an error occurs, and users can call co::timeout() to check whether it has timed out.
+- This function returns length of the data received (may be less than n) on success, returns 0 when the peer closes the connection, returns -1 when timeout or an error occurs, and users can call co::timeout() to check whether it has timed out, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -415,7 +371,7 @@ int recvn(sock_t fd, void* buf, int n, int ms=-1);
 - Receive data of the specified length on the specified socket, the parameter fd must be non-blocking, the parameter ms is the timeout period in milliseconds, the default is -1, never timeout.
 - This function **must be called in the coroutine**.
 - This function will block until all n bytes of data are received, or timeout or an error occurs.
-- This function returns n on success, returns 0 when the peer closes the connection, and returns -1 when timeout or an error occurs. The user can call co::timeout() to check whether it has timed out.
+- This function returns n on success, returns 0 when the peer closes the connection, and returns -1 when timeout or an error occurs. The user can call co::timeout() to check whether it has timed out, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -440,7 +396,7 @@ int send(sock_t fd, const void* buf, int n, int ms=-1);
 - This function **must be called in the coroutine**.
 - On Windows, this function only works with TCP-like stream socket.
 - This function will block until all n bytes of data are sent, or timeout or an error occurs.
-- This function returns n on success, and returns -1 on timeout or an error occurs. The user can call co::timeout() to check whether it has timed out.
+- This function returns n on success, and returns -1 on timeout or an error occurs. The user can call co::timeout() to check whether it has timed out, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
@@ -464,14 +420,14 @@ int shutdown(sock_t fd, char c='b');
 
 - This function is generally used to half-close the socket. The parameter c is a hint, `'r'` for read, `'w'` for write, the default is `'b'`, which means both reading and writing are closed.
 - It is better to call this function in the same thread that performed the I/O operation.
-- This function returns 0 on success, otherwise it returns -1.
+- This function returns 0 on success, otherwise it returns -1, and `co::error()`, `co::strerror()` can be called to get the error message.
 
 
 
 ### co::error
 
 ```cpp
-int error();
+int& error();
 ```
 
 - Return the current error code.
@@ -489,15 +445,6 @@ const char* strerror();
 - Get the error string corresponding to the error code. It is thread safe.
 - The second version gets the description information of the current error, which is equivalent to `strerror(co::error())`.
 
-
-
-### co::set_error
-
-```cpp
-void set_error(int err);
-```
-
-- Set the current error code, users generally do not need to call this function.
 
 
 

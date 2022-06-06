@@ -115,7 +115,7 @@ bool to_bool(const std::string& s);
 
 - This function converts a string to bool type.
 - When s is equal to "0" or "false", false is returned; when s is equal to "1" or "true", true is returned.
-- **This functions returns false on error, and the errno will be EINVAL**.
+- If the conversion is successful, the error code is 0. Otherwise, the error code is set to EINVAL, and false is returned. Call `co::error()` to get the error code
 
 
 - Example
@@ -136,7 +136,7 @@ double to_double(const std::string& s);
 ```
 
 - This function converts a string to double type.
-- **This functions returns 0 on error, and the errno will be ERANGE or EINVAL**.
+- If the conversion is successful, the error code is 0. Otherwise, the error code is set to ERANGE or EINVAL, and 0 is returned. Call `co::error()` to get the error code.
 
 
 - Example
@@ -166,7 +166,7 @@ uint64 to_uint64(const std::string& s);
 
 - These functions convert a string to integer types.
 - The parameter s can take an unit `k, m, g, t, p` at the end, which is not case sensitive.
-- **These functions return 0 on error, and the errno will be ERANGE or EINVAL**.
+- If the conversion is successful, the error code is 0. Otherwise, the error code is set to ERANGE or EINVAL, and 0 is returned. Call `co::error()` to get the error code.
 
 
 - Example

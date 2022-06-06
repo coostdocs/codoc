@@ -114,7 +114,7 @@ bool to_bool(const std::string& s);
 
 - 此函数将字符串转换为 bool 类型。
 - 当 s 等于 "0" 或 "false"，返回 false；当 s 等于 "1" 或 "true"，返回 true。
-- 此函数**转换失败时返回 false，并将 errno 设置为 EINVAL**。
+- 此函数转换成功时 error code 为 0，转换失败时返回 false，并将 error code 设置为 EINVAL，可以用 `co::error()` 获取错误码。
 
 
 - 示例
@@ -135,7 +135,7 @@ double to_double(const std::string& s);
 ```
 
 - 此函数将字符串转换为 double 类型。
-- 此函数**转换失败时返回 0，并设置 errno 为 ERANGE 或 EINVAL**。
+- 此函数转换成功时 error code 为 0，转换失败时返回 0，并设置 error code 为 ERANGE 或 EINVAL，可以用 `co::error()` 获取错误码。
 
 
 - 示例
@@ -165,7 +165,7 @@ uint64 to_uint64(const std::string& s);
 
 - 这些函数将字符串转换为整数类型。
 - 参数 s 末尾可以带一个单位 `k, m, g, t, p`，不区分大小写。
-- 这些函数**转换失败时返回 0，并设置 errno 为 ERANGE 或 EINVAL**。
+- 这些函数转换成功时 error code 为 0，转换失败时返回 0，并设置 error code 为 ERANGE 或 EINVAL，可以用 `co::error()` 获取错误码。
 
 
 - 示例
@@ -184,11 +184,11 @@ u64 = str::to_int64("1P");   // 1ULL << 50
 
 i32 = str::to_int32("8g");
 LOG << (i32 == 0);
-LOG << (errno == ERANGE);
+LOG << (co::error() == ERANGE);
 
 i32 = str::to_int32("abx");
 LOG << (i32 == 0);
-LOG << (errno == EINVAL);
+LOG << (co::error() == EINVAL);
 ```
 
 

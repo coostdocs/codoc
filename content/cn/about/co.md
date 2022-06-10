@@ -43,7 +43,7 @@ xmake -a
 xmake 会自动从网络安装 libcurl 与 openssl，视网络情况，这个过程可能会较慢。`xmake -a` 会构建 [libco](https://github.com/idealvin/co/tree/master/src), [gen](https://github.com/idealvin/co/tree/master/gen), [co/unitest](https://github.com/idealvin/co/tree/master/unitest) 以及 [co/test](https://github.com/idealvin/co/tree/master/test) 下面的所有测试代码。用户可以执行下面的命令，运行 CO 中的测试程序：
 
 ```sh
-xmake r unitest -a
+xmake r unitest
 xmake r flag
 xmake r log -cout
 xmake r co
@@ -62,14 +62,12 @@ DEF_string(s, "nice", "");
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
-
     LOG << FLG_s;
     return 0;
 }
 ```
 
-上面是一个简单的例子，main 函数前两行分别用于初始化 flag 与 log 库。CO 中的部分组件会用 flag 定义配置项，用 log 打印日志，因此，一般需要在 main 函数开头调用 `flag::init()` 与 `log::init()` 进行初始化。
+上面是一个简单的例子，main 函数第一行用于解析命令行参数及配置文件。CO 中的部分组件会用 flag 定义配置项，因此，一般需要在 main 函数开头调用 `flag::init()` 进行初始化。
 
 用户也可以用宏 `DEF_main` 定义 main 函数：
 
@@ -84,7 +82,7 @@ DEF_main(argc, argv) {
 }
 ```
 
-DEF_main 在内部已经调用了 `flag::init()` 与 `log::init()`，用户无需再次调用。另外，DEF_main 会将 main 函数中的代码放到协程中运行，与 golang 保持一致，golang 中的 main 函数也在协程中。CO 中部分协程相关的组件必须在协程中使用，用 CO 开发基于协程的应用程序时，一般建议用 DEF_main 定义 main 函数。
+DEF_main 在内部已经调用了 `flag::init()` 用户无需再次调用。另外，DEF_main 会将 main 函数中的代码放到协程中运行，与 golang 保持一致，golang 中的 main 函数也在协程中。CO 中部分协程相关的组件必须在协程中使用，用 CO 开发基于协程的应用程序时，一般建议用 DEF_main 定义 main 函数。
 
 
 
@@ -101,7 +99,7 @@ co/flag 为每个配置项提供一个默认值，在没有配置参数的情况
 ```cpp
 // xx.cc
 #include "co/flag.h"
-#include "co/log.h"
+#include "co/cout.h"
 
 DEF_bool(x, false, "bool x");
 DEF_bool(y, false, "bool y");
@@ -354,17 +352,13 @@ CO 提供了一套协程化的 [socket API](../../co/coroutine/#协程化的-soc
 
 ```cpp
 #include "co/flag.h"
-#include "co/log.h"
-#include "co/so.h"
+#include "co/http.h"
 
 DEF_string(d, ".", "root dir"); // Specify the root directory of the web server
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
-
     so::easy(FLG_d.c_str()); // mum never have to worry again
-
     return 0;
 }
 ```

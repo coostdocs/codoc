@@ -42,7 +42,7 @@ The default memory order of atomic operations in co is `mo_seq_cst`.
 
 ```cpp
 template<typename T>
-inline T atomic_load(T* p, memory_order_t mo = mo_seq_cst);
+inline T atomic_load(const T* p, memory_order_t mo = mo_seq_cst);
 ```
 
 - This function gets the value of the variable pointed to by p, T is any built-in type (including pointer type) with a length of 1, 2, 4, 8 bytes.

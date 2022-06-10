@@ -419,12 +419,15 @@ Server();
 ### Server::on_req
 
 ```cpp
-void on_req(std::function<void(const Req&, Res&)>&& f);
-template<typename T> void on_req(void (T::*f)(const Req&, Res&), T* o);
+Server& on_req(std::function<void(const Req&, Res&)>&& f);
+Server& on_req(const std::function<void(const Req&, Res&)>& f)
+
+template<typename T>
+Server& on_req(void (T::*f)(const Req&, Res&), T* o);
 ```
 
 - Set a callback for processing a HTTP request.
-- In the second version, the parameter f is a method in class T, and the parameter o is a pointer to type T.
+- In the third version, the parameter f is a method in class T, and the parameter o is a pointer to type T.
 - When the server receives an HTTP request, it will call the callback set by this method to process the request.
 
 
@@ -439,6 +442,7 @@ void start(const char* ip, int port, const char* key, const char* ca);
 - Start the HTTP server, this method will not block the current thread.
 - The parameter ip is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
 - The parameter **key** is path of a **PEM** file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. If key or ca is NULL or empty string, SSL will be disabled.
+- Starting from v3.0, the server no longer depends on the `http::Server` object after startup.
 
 
 
@@ -450,7 +454,7 @@ void exit();
 
 - Added since v2.0.2.
 - Exit the HTTP server, close the listening socket, and no longer receive new connections.
-- This method will not close the connections that has been established before.
+- Since v3.0, after the HTTP server exits, previously established connections will be reset in the future.
 
 
 
@@ -518,9 +522,7 @@ DEF_string(d, ".", "root dir"); // root dir of web server
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-
     so::easy(FLG_d.c_str()); // mum never have to worry again
-
     return 0;
 }
 ```

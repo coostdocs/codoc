@@ -45,7 +45,7 @@ xmake -a
 Xmake will automatically install libcurl and openssl from the network. Depending on the network, this process may be slow. `xmake -a` will build [libco](https://github.com/idealvin/co/tree/master/src), [gen](https://github.com/idealvin/co/tree/master/gen), [co/unitest](https://github.com/idealvin/co/tree/master/unitest) and [co/test](https://github.com/idealvin/co/tree/master/test). Users can run test programs in CO with the following commands:
 
 ```sh
-xmake r unitest -a
+xmake r unitest
 xmake r flag
 xmake r log -cout
 xmake r co
@@ -64,14 +64,12 @@ DEF_string(s, "nice", "");
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
-
     LOG << FLG_s;
     return 0;
 }
 ```
 
-The above is a simple example. The first two lines of the main function are used to initialize the flag and log libraries. Some components in CO use co/flag to define config items and use co/log to print logs. Therefore, it is generally necessary to call `flag::init()` and `log::init()` at the beginning of the main function for initialization.
+The above is a simple example. The first line of the main function is used to parse the command-line flags and the config file. Some components in CO use co/flag to define config items. Therefore, it is generally necessary to call `flag::init()` at the beginning of the main function for initialization.
 
 Users can also use the macro `DEF_main` to define the main function:
 
@@ -86,7 +84,7 @@ DEF_main(argc, argv) {
 }
 ```
 
-DEF_main has already called `flag::init()` and `log::init()` internally, and users do not need to call them again. In addition, DEF_main makes code in the main function also run in coroutine, which is consistent with golang. Some coroutine-related components in CO must be used in coroutine. When CO is used to develop coroutine-based applications, it is recommended to define the main function with DEF_main.
+DEF_main has already called `flag::init()` internally, and users do not need to call it again. In addition, DEF_main makes code in the main function also run in coroutine, which is consistent with golang. Some coroutine-related components in CO must be used in coroutine. When CO is used to develop coroutine-based applications, it is recommended to define the main function with DEF_main.
 
 
 
@@ -103,7 +101,7 @@ co/flag provides a default value for each config item. Without config parameters
 ```cpp
 // xx.cc
 #include "co/flag.h"
-#include "co/log.h"
+#include "co/cout.h"
 
 DEF_bool(x, false, "bool x");
 DEF_bool(y, false, "bool y");
@@ -356,17 +354,13 @@ CO provides a set of coroutineized [socket APIs](../../co/coroutine/#coroutineiz
 
 ```cpp
 #include "co/flag.h"
-#include "co/log.h"
-#include "co/so.h"
+#include "co/http.h"
 
 DEF_string(d, ".", "root dir"); // Specify the root directory of the web server
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-    log::init();
-
     so::easy(FLG_d.c_str()); // mum never have to worry again
-
     return 0;
 }
 ```

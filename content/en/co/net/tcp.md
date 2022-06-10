@@ -176,15 +176,25 @@ Server();
 
 
 
+### Server::conn_num
+
+```cpp
+uint32 conn_num() const;
+```
+
+- Returns number of client connections.
+
 
 
 ### Server::on_connection
 
 
 ```cpp
-void on_connection(std::function<void(Connection)>&& f);
-void on_connection(const std::function<void(Connection)>& f);
-template<typename T> void on_connection(void (T::*f)(Connection), T* o);
+Server& on_connection(std::function<void(Connection)>&& f);
+Server& on_connection(const std::function<void(Connection)>& f);
+
+template<typename T>
+Server& on_connection(void (T::*f)(Connection), T* o);
 ```
 
 
@@ -219,6 +229,15 @@ void f(tcp::Connection conn) {
 
 
 
+### Server::on_exit
+
+```cpp
+Server& on_exit(std::function<void()>&& cb);
+```
+
+- Set a callback which will be called when the server exits.
+
+
 
 ### Server::start
 
@@ -231,6 +250,15 @@ void start(const char* ip, int port, const char* key=0, const char* ca=0);
 - Start the TCP server, this method will not block the current thread.
 - The parameter ip is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
 - The parameter **key** is path of a **PEM** file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
+- Starting from v3.0, the server no longer depends on the `tcp::Server` object after it is started.
+
+
+- Example
+
+```cpp
+void f(tcp::Connection conn);
+tcp::Server().on_connection(f).start("0.0.0.0", 7788);
+```
 
 
 
@@ -243,6 +271,8 @@ void exit();
 - Added since v2.0.2.
 - Exit the TCP server, close the listening socket, and no longer receive new connections.
 - This method will not close the connections that has been established before.
+- If you need to close the previously established connections after the server exits, you can refer to [test/tcp2.cc](https://github.com/idealvin/cocoyaxi/blob/master/test/so/tcp2.cc) or implementations of `http::Server` and `rpc::Server` in co.
+
 
 
 

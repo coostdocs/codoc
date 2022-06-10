@@ -127,6 +127,7 @@ const char* strerror() const;
 
 
 ### Server::Server
+
 ```cpp
 Server();
 ```
@@ -135,12 +136,24 @@ Server();
 
 
 
+### Server::conn_num
+
+```cpp
+uint32 conn_num() const;
+```
+
+- 返回当前的客户端连接数。
+
+
+
 ### Server::on_connection
 
 ```cpp
-void on_connection(std::function<void(Connection)>&& f);
-void on_connection(const std::function<void(Connection)>& f);
-template<typename T> void on_connection(void (T::*f)(Connection), T* o);
+Server& on_connection(std::function<void(Connection)>&& f);
+Server& on_connection(const std::function<void(Connection)>& f);
+
+template<typename T>
+Server& on_connection(void (T::*f)(Connection), T* o);
 ```
 
 - 设置处理客户端连接的回调函数。
@@ -171,6 +184,16 @@ void f(tcp::Connection conn) {
 
 
 
+### Server::on_exit
+
+```cpp
+Server& on_exit(std::function<void()>&& cb);
+```
+
+- 设置一个 callback，它将在 server 退出时被调用。
+
+
+
 ### Server::start
 
 ```cpp
@@ -180,6 +203,15 @@ void start(const char* ip, int port, const char* key=0, const char* ca=0);
 - 启动 TCP server，此方法不会阻塞当前线程。
 - 参数 ip 是服务器 ip，可以是 IPv4 或 IPv6 地址，参数 port 是服务器端口。
 - 参数 key 是存放 SSL private key 的 PEM 文件路径，参数 ca 是存放 SSL 证书的 PEM 文件路径，默认 key 和 ca 是 NULL，不启用 SSL。
+- 从 v3.0 开始，server 启动后就不再依赖于 tcp::Server 对象。
+
+
+- 示例
+
+```cpp
+void f(tcp::Connection conn);
+tcp::Server().on_connection(f).start("0.0.0.0", 7788);
+```
 
 
 
@@ -191,7 +223,8 @@ void exit();
 
 - v2.0.2 新增。
 - 退出 TCP server，关闭 listening socket，不再接收新的连接。
-- 此方法不会关闭之前已经建立的连接。
+- **此方法不会关闭之前已经建立的连接**。
+- 若需要在 server 退出后，关闭之前建立的连接，可以参考 [test/tcp2.cc](https://github.com/idealvin/cocoyaxi/blob/master/test/so/tcp2.cc) 或 co 中 `http::Server` 与 `rpc::Server` 的实现。
 
 
 

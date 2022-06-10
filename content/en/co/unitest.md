@@ -204,20 +204,9 @@ xmake -b unitest
 
 ### Run all test cases
 
-
-```cpp
-DEF_bool(a, false, ".Run all tests if true");
-```
-
-
-- `FLG_a` is a flag variable defined inside co/unitest. When the value is true, all test cases are enabled.
-- You can use `-a` on the command line to specify to run all test cases.
-
-
-
 ```bash
 # Run all test cases
-xmake r unitest -a
+xmake r unitest
 ```
 
 

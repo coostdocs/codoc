@@ -42,7 +42,7 @@ enum memory_order_t {
 
 ```cpp
 template <typename T>
-inline T atomic_load(T* p, memory_order_t mo = mo_seq_cst);
+inline T atomic_load(const T* p, memory_order_t mo = mo_seq_cst);
 
 ```
 

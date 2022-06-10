@@ -49,8 +49,8 @@ Server();
 ### Server::add_service
 
 ```cpp
-void add_service(Service* s);
-void add_service(const std::shared_ptr<rpc::Service>& s);
+Server& add_service(rpc::Service* s);
+Server& add_service(const std::shared_ptr<rpc::Service>& s);
 ```
 
 - Add a service, the parameter s must be dynamically created with operator new.
@@ -72,6 +72,7 @@ void start(
 - The parameter ip is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
 - The parameter url is the url of the HTTP service, and must start with `/`.
 - The parameter **key** is path of a **PEM**file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
+- Starting from v3.0, the server no longer depends on the `rpc::Server` object after startup.
 
 
 
@@ -83,7 +84,7 @@ void exit();
 
 - Added since v2.0.2.
 - Exit the RPC server, close the listening socket, and no longer receive new connections.
-- This method will not close the connections that has been established before.
+- Since v3.0, after the RPC server exits, previously established connections will be reset in the future.
 
 
 

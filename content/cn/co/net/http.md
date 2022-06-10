@@ -427,12 +427,15 @@ Server();
 ### Server::on_req
 
 ```cpp
-void on_req(std::function<void(const Req&, Res&)>&& f);
-template<typename T> void on_req(void (T::*f)(const Req&, Res&), T* o);
+Server& on_req(std::function<void(const Req&, Res&)>&& f);
+Server& on_req(const std::function<void(const Req&, Res&)>& f)
+
+template<typename T>
+Server& on_req(void (T::*f)(const Req&, Res&), T* o);
 ```
 
 - 设置处理客户端 HTTP 请求的 callback。
-- 第 2 个版本中，参数 f 是类中的方法，参数 o 是 T 类型的指针。
+- 第 3 个版本中，参数 f 是类中的方法，参数 o 是 T 类型的指针。
 - 服务端接收到 HTTP 请求时，会调用此方法设置的 callback，处理该请求。
 
 
@@ -446,6 +449,7 @@ void start(const char* ip, int port, const char* key, const char* ca);
 
 - 启动 HTTP server，此方法不会阻塞当前线程。
 - 参数 key 是存放 SSL private key 的 PEM 文件路径，参数 ca 是存放 SSL 证书的 PEM 文件路径，默认 key 和 ca 是 NULL，不启用 SSL。
+- 从 v3.0 开始，server 启动后就不再依赖于 `http::Server` 对象。
 
 
 
@@ -457,7 +461,7 @@ void exit();
 
 - v2.0.3 新增。
 - 退出 HTTP server，关闭 listening socket，不再接收新的连接。
-- 此方法不会关闭之前已经建立的连接。
+- 从 v3.0 开始，HTTP server 退出后，之前已经建立的连接将在未来被重置。
 
 
 
@@ -523,9 +527,7 @@ DEF_string(d, ".", "root dir"); // root dir of web server
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-
     so::easy(FLG_d.c_str()); // mum never have to worry again
-
     return 0;
 }
 ```

@@ -49,8 +49,8 @@ Server();
 ### Server::add_service
 
 ```cpp
-void add_service(rpc::Service* s);
-void add_service(const std::shared_ptr<rpc::Service>& s);
+Server& add_service(rpc::Service* s);
+Server& add_service(const std::shared_ptr<rpc::Service>& s);
 ```
 
 - 添加 service，参数 s 必须是用 operator new 动态创建的。
@@ -72,6 +72,7 @@ void start(
 - 参数 ip 是服务器 ip，可以是 IPv4 或 IPv6 地址，参数 port 是服务器端口。
 - 参数 url 是 HTTP 服务的 url，必须以 `/` 开头。
 - 参数 key 是存放 SSL private key 的 PEM 文件路径，参数 ca 是存放 SSL 证书的 PEM 文件路径，默认 key 和 ca 是 NULL，不启用 SSL。
+- 从 v3.0 开始，server 启动后就不再依赖于 `rpc::Server` 对象。
 
 
 
@@ -83,7 +84,7 @@ void exit();
 
 - v2.0.3 新增。
 - 退出 RPC server，关闭 listening socket，不再接收新的连接。
-- 此方法不会关闭之前已经建立的连接。
+- 从 v3.0 开始，RPC server 退出后，之前已经建立的连接将在未来被重置。
 
 
 

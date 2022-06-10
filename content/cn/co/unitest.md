@@ -184,21 +184,16 @@ xmake -b unitest
 
 
 ### 运行所有的测试用例
-```cpp
-DEF_bool(a, false, ".Run all tests if true");
-```
 
-- `FLG_a` 是 co/unitest 内部定义的 flag 变量，值为 true 时，即运行所有的测试用例。
-- 命令行中可以用 `-a` 指定运行所有的测试用例。
 ```bash
-# 运行所有测试用例
-xmake r unitest -a
+xmake r unitest
 ```
 
 
 
 
 ### 运行指定测试单元中的测试用例
+
 ```bash
 # 仅运行 os 测试单元中的测试用例
 xmake r unitest -os

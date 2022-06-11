@@ -281,6 +281,23 @@ const char* as_string() const;
 
 
 
+### Json::set
+
+```cpp
+template <class T>
+inline Json& set(T&& v) {
+    return *this = Json(std::forward<T>(v));
+}
+
+template <class A, class B,  class ...X>
+inline Json& set(A&& a, B&& b, X&& ... x);
+```
+
+- 设置 JSON 对象的值。
+- `set` 方法最后一个参数是所设置的值，其他参数是 index 或者 key。
+
+
+
 ### 代码示例
 
 ```cpp
@@ -296,6 +313,12 @@ r.get("b").as_bool();   // false
 r.get("s").as_string(); // "xx"
 r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
+
+// x -> {"a":1,"b":[0,1,2],"c":{"d":["oo"]}}
+Json x;
+x.set("a", 1);
+x.set("b", Json({0,1,2}));
+x.set("c", "d", 0, "oo");
 ```
 
 

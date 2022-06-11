@@ -281,6 +281,23 @@ const char* as_string() const;
 
 
 
+### Json::set
+
+```cpp
+template <class T>
+inline Json& set(T&& v) {
+    return *this = Json(std::forward<T>(v));
+}
+
+template <class A, class B,  class ...X>
+inline Json& set(A&& a, B&& b, X&& ... x);
+```
+
+- Set the value of the JSON object.
+- The last parameter of `set` is the value to be set, other parameters are index or key.
+
+
+
 ### Example
 
 ```cpp
@@ -296,6 +313,12 @@ r.get("b").as_bool();   // false
 r.get("s").as_string(); // "xx"
 r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
+
+// x -> {"a":1,"b":[0,1,2],"c":{"d":["oo"]}}
+Json x;
+x.set("a", 1);
+x.set("b", Json({0,1,2}));
+x.set("c", "d", 0, "oo");
 ```
 
 

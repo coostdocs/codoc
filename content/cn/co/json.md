@@ -226,7 +226,10 @@ bool is_object() const;
 bool as_bool() const;
 ```
 
-- 获取 bool 类型的值，若调用此方法的 Json 对象不是 bool 类型，返回值为 false。
+- 获取 bool 类型的值。
+- 对于 int 或 double 类型，若值为 0，返回 false，否则返回 true。
+- 对于 string 类型，若值为 `"true"` 或 `"1"`，返回 true，否则返回 false。
+- 对于其他非 bool 类型，返回 false。
 
 
 
@@ -238,7 +241,9 @@ int32 as_int32() const;
 int64 as_int64() const;
 ```
 
-- 获取整数类型的值，若调用这些方法的 Json 对象不是整数类型，返回值为 0。
+- 获取整数类型的值。
+- 对于 bool, double 或 string 类型，结果自动转换为整数类型。
+- 对于其他非整数类型，返回 0。
 
 
 
@@ -248,18 +253,31 @@ int64 as_int64() const;
 double as_double() const;
 ```
 
-- 获取 double 类型的值，若调用此方法的 Json 对象不是 double 类型，返回值是 0。
+- 获取 double 类型的值。
+- 对于 bool, int 或 string 类型，结果自动转换为 double 类型。
+- 对于其他非 double 类型，返回 0。
 
 
 
 ### Json::as_string
 
 ```cpp
-const char* as_string() const;
+fastring as_string() const;
 ```
 
-- 获取字符串类型的值，若调用此方法的 Json 对象不是字符串类型，返回值是空字符串。
-- 此方法返回 `'\0'` 结尾的 C 字符串，用户还可以调用 `string_size()` 方法获取字符串的长度。
+- 获取字符串类型的值，返回 fastring。
+- 对于非 string 类型，此方法等价于 [Json::str()](#jsonstr)，结果将自动转换为 string 类型。
+
+
+
+### Json::as_c_str
+
+```cpp
+const char* as_c_str() const;
+```
+
+- 返回 `\0` 结尾的 C 风格字符串，可以用 [string_size()](#jsonstring_size) 获取其长度，一般用于对性能要求较高的地方。
+- 对于非 string 类型，返回空字符串。
 
 
 
@@ -305,12 +323,13 @@ Json r = {
     { "a", 7 },
     { "b", false },
     { "c", { 1, 2, 3 } },
-    { "s", "xx" },
+    { "s", "23" },
 };
 
 r.get("a").as_int();    // 7
 r.get("b").as_bool();   // false
-r.get("s").as_string(); // "xx"
+r.get("s").as_string(); // "23"
+r.get("s").as_int();    // 23
 r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
 
@@ -676,8 +695,7 @@ iterator begin() const;
 ```
 
 - 返回指向 Json 对象的 beginning iterator。
-- 调用此方法的 Json 对象必须是 array, object 或 null。
-- 当 Json 对象为空时，此方法返回值等于 `Json::end()`。
+- 若调用此方法的 Json 对象不是 array 或 object 类型，返回值等于 [Json::end()](#jsonend)。
 
 
 
@@ -806,10 +824,9 @@ Json r = {
 };
 ```
 
-object 类型内部实际上是以数组的形式存储的，`operator[]` 会与数组中的 key 一一比较，可能较慢。在特别注重性能的场合，建议将 operator[] 的结果缓存起来，不要对同一个 key 多次调用 operator[] 操作。
+对于只读操作，建议用 [get()](#jsonget) 取代 `operator[]`，前者无副作用。
 
 ```cpp
 Json r = {{"a", 1}};
-Json& a = r["a"];
-if (a.is_int()) LOG << a.get_int();
+r.get("a").as_int(); // 1
 ```

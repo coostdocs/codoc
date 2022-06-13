@@ -226,7 +226,10 @@ bool is_object() const;
 bool as_bool() const;
 ```
 
-- Get value of bool type. Return false if the Json calling this method is not bool type.
+- Get value of bool type.
+- For int or double types, returns false if the value is 0, otherwise returns true.
+- For string type, returns true if the value is `"true"` or `"1"`, otherwise returns false.
+- For other non-bool types, return false.
 
 
 
@@ -238,7 +241,9 @@ int32 as_int32() const;
 int64 as_int64() const;
 ```
 
-- Get value of integer type. Return 0 if the Json calling these methods is not integer type.
+- Get value of integer type.
+- For bool, double or string types, the result is automatically converted to an integer.
+- For other non-integer types, 0 is returned.
 
 
 
@@ -249,6 +254,9 @@ double as_double() const;
 ```
 
 - Get value of double type. Return 0 if the Json object calling this method is not double type.
+- Get value of double type.
+- For bool, int or string types, the result is automatically converted to double type.
+- For other non-double types, 0 is returned.
 
 
 
@@ -258,8 +266,20 @@ double as_double() const;
 const char* as_string() const;
 ```
 
-- Get value of string type. Return an empty string if the Json calling this method is not string type.
 - This method returns a C-style string ending with `'\0'`, and the user can also call the `string_size()` method to get the length of the string.
+- Get value of string type, return fastring.
+- For non-string types, this method is equal to [Json::str()](#jsonstr), and the result will be automatically converted to string type.
+
+
+
+### Json::as_c_str
+
+```cpp
+const char* as_c_str() const;
+```
+
+- Returns a null-terminated C-style string, [string_size()](#jsonstring_size) can be called to get its length.
+- For non-string types, return an empty string.
 
 
 
@@ -305,12 +325,13 @@ Json r = {
     { "a", 7 },
     { "b", false },
     { "c", { 1, 2, 3 } },
-    { "s", "xx" },
+    { "s", "23" },
 };
 
 r.get("a").as_int();    // 7
 r.get("b").as_bool();   // false
-r.get("s").as_string(); // "xx"
+r.get("s").as_string(); // "23"
+r.get("s").as_int();    // 23
 r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
 
@@ -678,6 +699,7 @@ iterator begin() const;
 - Returns the beginning iterator.
 - The Json calling this method must be array, object or null.
 - When the Json is empty, the return value is equal to `Json::end()`.
+- If the Json calling this method is not array or object type, the return value is equal to [Json::end()](#jsonend).
 
 
 
@@ -806,10 +828,9 @@ Json r = {
 };
 ```
 
-The elements of object type is actually stored in an array, and `operator[]` will compare with the keys in the array one by one. In occasions where performance is particularly important, it is recommended to cache the result of operator[] instead of calling operator[] multiple times for the same key.
+For read-only operations, it is recommended to replace `operator[]` with [get()](#jsonget), which has no side effects.
 
 ```cpp
 Json r = {{"a", 1}};
-Json& a = r["a"];
-if (a.is_int()) LOG << a.get_int();
+r.get("a").as_int(); // 1
 ```

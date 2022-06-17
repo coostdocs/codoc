@@ -406,8 +406,8 @@ x["s"] == "xx";  // true
 ### Json::add_member
 
 ```cpp
-void add_member(const char* key, Json&& v);
-void add_member(const char* key, Json& v);
+Json& add_member(const char* key, Json&& v);
+Json& add_member(const char* key, Json& v);
 ```
 
 - Add a key-value pair to a Json of object type (null automatically becomes object after calling this method).
@@ -420,12 +420,14 @@ void add_member(const char* key, Json& v);
 
 ```cpp
 Json r;
-r.add_member("a", 1);     // r -> {"a":1}
-r.add_member("d", 3.3);   // r -> {"a":1, "d":3.3}
-r.add_member("s", "xx");  // r -> {"a":1, "d":3.3, "s":"xx"}
+r.add_member("a", 1);    // r -> {"a":1}
+r.add_member("d", 3.3);  // r -> {"a":1, "d":3.3}
+r.add_member("s", "xx"); // r -> {"a":1, "d":3.3, "s":"xx"}
 
 Json x;
-x.add_member("xx", r); // r -> null
+x.add_member("xx", r);                        // r -> null
+r.add_member("o", Json().add_member("x", 3)); // r -> {"o":{"x":3}}
+Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
 ```
 
 
@@ -433,8 +435,8 @@ x.add_member("xx", r); // r -> null
 ### Json::push_back
 
 ```cpp
-void push_back(Json&& v);
-void push_back(Json& v);
+Json& push_back(Json&& v);
+Json& push_back(Json& v);
 ```
 
 - Add elements to an array (null automatically becomes an array after calling this method).
@@ -450,7 +452,8 @@ r.push_back(3.3);  // r -> [1, 3.3]
 r.push_back("xx"); // r -> [1, 3.3, "xx"]
 
 Json x;
-x.push_back(r);    // r -> null, x -> [[1, 3.3, "xx"]]
+x.push_back(r);  // r -> null, x -> [[1, 3.3, "xx"]]
+r.push_back(Json().push_back(1).push_back(2)); // r -> [[1,2]]
 ```
 
 

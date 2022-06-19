@@ -410,7 +410,8 @@ Json& add_member(const char* key, Json&& v);
 Json& add_member(const char* key, Json& v);
 ```
 
-- Add a key-value pair to a Json of object type (null automatically becomes object after calling this method).
+- Add a key-value pair to a Json of object type (non-object Json automatically becomes object after calling this method).
+- This method will reserve the order in which keys were added, and keys may appear repeatedly.
 - The parameter key is a C string ending in `'\0'`, and the parameter v is the value.
 - **`v` is moved and becomes null after this operation**.
 - **NOTE**: for performance reasons, it is required that the key cannot contain double quotes.
@@ -439,7 +440,7 @@ Json& push_back(Json&& v);
 Json& push_back(Json& v);
 ```
 
-- Add elements to an array (null automatically becomes an array after calling this method).
+- Add elements to an array (non-array Json automatically becomes an array after calling this method).
 - **`v` is moved and becomes null after this operation**.
 
 

@@ -408,7 +408,8 @@ Json& add_member(const char* key, Json&& v);
 Json& add_member(const char* key, Json& v);
 ```
 
-- 向 object 类型的 Json 中添加 key-value 键值对 (null 调用此方法后自动变成 object)。
+- 向 object 类型的 Json 中添加 key-value 键值对 (非 object 对象调用此方法后自动变成 object)。
+- 此方法将保持 key 的添加顺序，key 可能重复出现。
 - 参数 key 是 `'\0'` 结尾的 C 字符串，参数 v 是所添加的值。
 - 参数 v 执行 move 语义，调用此方法后，v 变为 null 对象。
 - **NOTE：** co/json 出于性能上的考虑，要求 key 中不能包含双引号。
@@ -437,7 +438,7 @@ Json& push_back(Json&& v);
 Json& push_back(Json& v);
 ```
 
-- 向 array 类型的 Json 中添加元素(null 调用此方法后自动变成 array)。
+- 向 array 类型的 Json 中添加元素(非 array 对象调用此方法后自动变成 array)。
 - 参数 v 执行 move 语义，调用此方法后，v 变为 null 对象。
 
 

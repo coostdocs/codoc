@@ -461,28 +461,26 @@ void exit();
 ### Example
 
 ```cpp
-http::Server s
-
-s.on_req(
-    [](const http::Req& req, http::Res& res) {
-        if (req.is_method_get()) {
-            if (req.url() == "/hello") {
-                res.set_status(200);
-                res.set_body("hello world");
-            } else {
-                res.set_status(404);
-            }
+void cb(const http::Req& req, http::Res& res) {
+    if (req.is_method_get()) {
+        if (req.url() == "/hello") {
+            res.set_status(200);
+            res.set_body("hello world");
         } else {
-            res.set_status(405);
+            res.set_status(404);
         }
+    } else {
+        res.set_status(405); // method not allowed
     }
+}
+
+// http
+http::Server().on_req(cb).start("0.0.0.0", 80);
+
+// https
+http::Server().on_req(cb).start(
+    "0.0.0.0", 443, "privkey.pem", "certificate.pem"
 );
-
-// start as a http server
-s.start("0.0.0.0", 7777);
-
-// start as a https server
-s.start("0.0.0.0", 7777, "privkey.pem", "certificate.pem");
 ```
 
 

@@ -211,14 +211,9 @@ class HelloWorldImpl : public HelloWorld {
 int main(int argc, char** argv) {
     flag::init(argc, argv);
 
-    rpc::Server s;
-    s.add_service(new xx::HelloWorldImpl);
-
-    // without ssl
-    s.start("127.0.0.1", 7788, "/xx");
-
-    // with ssl
-    //s.start("127.0.0.1", 7788, "/xx", "privkey.pem", "certificate.pem");
+    rpc::Server()
+        .add_service(new xx::HelloWorldImpl)
+        .start("127.0.0.1", 7788, "/xx");
 
     for (;;) sleep::sec(80000);
     return 0;

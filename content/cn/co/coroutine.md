@@ -42,6 +42,7 @@ co 协程库中 context 切换相关的代码，取自 [ruki](https://github.com
 - **co::init**, v3.0 移除，从 co 3.0 开始，一般只需要在 main 函数开头调用 `flag::init(argc, argv)`。
 - **co::exit**, v3.0 移除。
 - **co::stop**, v3.0 移除。
+- **co::all_schedulers**, v3.0 重命名为 [co::schedulers](#coschedulers)。
 
 
 
@@ -102,16 +103,6 @@ DEF_main(argc, argv) {
 
 
 
-### co::all_schedulers
-
-```cpp
-const std::vector<Scheduler*>& all_schedulers();
-```
-
-- 返回 Scheduler 列表的引用，一个 Scheduler 对应一个调度线程。
-
-
-
 ### co::scheduler
 
 ```cpp
@@ -120,6 +111,16 @@ Scheduler* scheduler();
 
 - 返回当前线程的 scheduler 指针，如果当前线程不是调度线程，返回值是 NULL。
 - 此函数一般在协程中调用，用于获取当前协程所在的 scheduler。
+
+
+
+### co::schedulers
+
+```cpp
+const co::vector<Scheduler*>& schedulers();
+```
+
+- 返回 Scheduler 列表的引用，一个 Scheduler 对应一个调度线程。
 
 
 
@@ -154,7 +155,7 @@ int scheduler_num();
 - 示例
 
 ```cpp
-std::vector<T> v(co::scheduler_num());
+co::vector<T> v(co::scheduler_num());
 
 void f() {
     // get object for the current scheduler

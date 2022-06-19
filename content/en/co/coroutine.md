@@ -44,6 +44,7 @@ The relevant code for context switching is taken from [tbox](https://github.com
 
 - **co::exit**, removed in v3.0.
 - **co::stop**, removed in v3.0.
+- **co::all_schedulers**, renamed to [co::schedulers](#coschedulers) in v3.0.
 
 
 
@@ -104,16 +105,6 @@ DEF_main(argc, argv) {
 
 
 
-### co::all_schedulers
-
-```cpp
-const std::vector<Scheduler*>& all_schedulers();
-```
-
-- Return a reference to the Scheduler list, one Scheduler corresponds to one scheduling thread.
-
-
-
 ### co::scheduler
 
 
@@ -123,6 +114,16 @@ Scheduler* scheduler();
 
 - Return the scheduler pointer of the current thread. If the current thread is not a scheduling thread, the return value is NULL.
 - This function is generally called in a coroutine to get the scheduler where it runs in.
+
+
+
+### co::schedulers
+
+```cpp
+const co::vector<Scheduler*>& schedulers();
+```
+
+- Return a reference to the Scheduler list, one Scheduler corresponds to one scheduling thread.
 
 
 
@@ -157,7 +158,7 @@ int scheduler_num();
 - Example
 
 ```cpp
-std::vector<T> v(co::scheduler_num());
+co::vector<T> v(co::scheduler_num());
 
 void f() {
     // get object for the current scheduler

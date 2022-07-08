@@ -400,3 +400,26 @@ s.append("hello");
 ((fastring&)s).append(s.c_str() + 1);
 ```
 
+### 控制浮点数精度
+
+对于浮点数，fastream 与 fastring 的 `operator<<` 操作默认最多保留 6 位小数，可以通过 `maxdp()` 方法或 `co::maxdp` 算子设置最大小数位数：
+
+```cpp
+fastream s;
+s << 3.14159; // "3.14159"
+
+s.clear();
+s.maxdp(3) << 3.14159; // "3.141"
+
+s.clear();
+s << co::maxdp(2) << 3.14159; // "3.14"
+```
+
+由于 co/log 基于 `fastream` 实现，因此上述方法也可用于日志中：
+
+```cpp
+double x = 3.14159;
+LOG << co::maxdp(3) << x << co::maxdp(2) << x;
+```
+
+`maxdp` 作用域仅限于它所在的语句，语句结束后即失效。

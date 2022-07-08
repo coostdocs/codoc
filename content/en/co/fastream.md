@@ -402,3 +402,27 @@ s.append("hello");
 ((fastring&)s).append(s.c_str() + 1);
 ```
 
+
+### Precision control of floating point numbers
+
+For floating-point numbers, the `operator<<` operators of `fastream` and `fastring` retain up to 6 decimal places by default. You can set the maximum number of decimal places through the `maxdp()` method or the `co::maxdp` operator:
+
+````cpp
+fastream s;
+s << 3.14159; // "3.14159"
+
+s.clear();
+s.maxdp(3) << 3.14159; // "3.141"
+
+s.clear();
+s << co::maxdp(2) << 3.14159; // "3.14"
+````
+
+Since co/log is implemented based on `fastream`, the above method can also be used in logging:
+
+````cpp
+double x = 3.14159;
+LOG << co::maxdp(3) << x << co::maxdp(2) << x;
+````
+
+`maxdp` is only valid in the current statement, and expires after the statement ends.

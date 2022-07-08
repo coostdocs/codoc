@@ -601,24 +601,25 @@ uint32 object_size() const;
 ### Json::str
 
 ```cpp
-fastream& str(fastream& s) const;
-fastring& str(fastring& s) const;
-fastring str(uint32 cap=256) const;
+fastream& str(fastream& s, int mdp=16) const;
+fastring& str(fastring& s, int mdp=16) const;
+fastring str(int mdp=16) const;
 ```
 
 - 将 Json 对象转换成字符串。
 - 第 1 个版本将 JSON 字符串追加到 fastream 中，返回值与参数 s 相同。
 - 第 2 个版本将 JSON 字符串追加到 fastring 中，返回值与参数 s 相同。
-- 第 3 个版本直接返回 JSON 字符串，参数 cap 是字符串初始容量，默认为 256，设置为合适的值可以减少内存重分配。
+- 第 3 个版本直接返回 JSON 字符串。
+- 参数 `mdp` 是 `max decimal places` 的缩写，表示最多保留多少位小数。
 
 
 
 ### Json::pretty
 
 ```cpp
-fastream& pretty(fastream& s) const;
-fastring& pretty(fastring& s) const;
-fastring pretty(uint32 cap=256) const;
+fastream& pretty(fastream& s, int mdp=16) const;
+fastring& pretty(fastring& s, int mdp=16) const;
+fastring pretty(int mdp=16) const;
 ```
 
 - 将 Json 对象转换成更漂亮的 JSON 字符串，除了结果好看点，其他与 `Json::str()` 一样。
@@ -628,9 +629,9 @@ fastring pretty(uint32 cap=256) const;
 ### Json::dbg
 
 ```cpp
-fastream& dbg(fastream& s) const;
-fastring& dbg(fastring& s) const;
-fastring dbg(uint32 cap=256) const;
+fastream& dbg(fastream& s, int mdp=16) const;
+fastring& dbg(fastring& s, int mdp=16) const;
+fastring dbg(int mdp=16) const;
 ```
 
 - 将 Json 对象转换成 debug 字符串，当 string 类型的值长度超过 512 字节时，截断取前 32 字节，其他与 `Json::str()` 一样。

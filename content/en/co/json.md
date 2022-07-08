@@ -603,24 +603,25 @@ uint32 object_size() const;
 ### Json::str
 
 ```cpp
-fastream& str(fastream& s) const;
-fastring& str(fastring& s) const;
-fastring str(uint32 cap=256) const;
+fastream& str(fastream& s, int mdp=16) const;
+fastring& str(fastring& s, int mdp=16) const;
+fastring str(int mdp=16) const;
 ```
 
 - Convert Json to a string.
 - The 1st version appends the JSON string to a fastream, and the return value is the same as the parameter s.
 - The 2nd version appends the JSON string to a fastring, and the return value is the same as the parameter s.
-- The 3rd version returns a JSON string. The parameter cap is the initial capacity of the string, and the default is 256. Setting it to an appropriate value may reduce memory reallocation.
+- The 3rd version returns a JSON string.
+- The parameter `mdp` is short for `max decimal places`, which means the maximum number of decimal places for float point numbers.
 
 
 
 ### Json::pretty
 
 ```cpp
-fastream& pretty(fastream& s) const;
-fastring& pretty(fastring& s) const;
-fastring pretty(uint32 cap=256) const;
+fastream& pretty(fastream& s, int mdp=16) const;
+fastring& pretty(fastring& s, int mdp=16) const;
+fastring pretty(int mdp=16) const;
 ```
 
 - Like the str(), but convert Json to a more beautiful JSON string.
@@ -630,9 +631,9 @@ fastring pretty(uint32 cap=256) const;
 ### Json::dbg
 
 ```cpp
-fastream& dbg(fastream& s) const;
-fastring& dbg(fastring& s) const;
-fastring dbg(uint32 cap=256) const;
+fastream& dbg(fastream& s, int mdp=16) const;
+fastring& dbg(fastring& s, int mdp=16) const;
+fastring dbg(int mdp=16) const;
 ```
 
 - Convert Json to a debug string, like `Json::str()`, but will truncate string type to the first 32 bytes if its length exceeds 512 bytes.

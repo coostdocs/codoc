@@ -103,6 +103,40 @@ DEF_main(argc, argv) {
 
 
 
+### co::coroutine
+
+```cpp
+void* coroutine();
+```
+
+- 返回当前的 coroutine 指针，若在非协程中调用此函数，则返回值是 NULL。
+- 此函数的返回值，可作为 [co::resume()](#coresume) 的参数，用于唤醒协程。
+
+
+
+### co::resume
+
+```cpp
+void resume(void* p);
+```
+
+- 唤醒指定的协程，参数 `p` 是 [co::coroutine()](#cocoroutine) 的返回值。
+- 此函数是线程安全的，可在任意地方调用。
+
+
+
+### co::yield
+
+```cpp
+void yield();
+```
+
+- 挂起当前协程，必须在协程中调用。
+- 此函数配合 [co::coroutine()](#cocoroutine) 与 [co::resume()](#coresume)，可以手动控制协程的调度，详情参考 [test/yield.cc](https://github.com/idealvin/coost/blob/master/test/yield.cc)。
+
+
+
+
 ### co::scheduler
 
 ```cpp

@@ -105,8 +105,40 @@ DEF_main(argc, argv) {
 
 
 
-### co::scheduler
+### co::coroutine
 
+````cpp
+void* coroutine();
+````
+
+- Get the current coroutine pointer. If it is not called in coroutine, the return value is NULL.
+- The return value of this function can be passed to [co::resume()](#coresume) to wake up the coroutine.
+
+
+
+### co::resume
+
+````cpp
+void resume(void* p);
+````
+
+- Wake up the specified coroutine, the parameter `p` is the return value of [co::coroutine()](#cocoroutine).
+- This function is thread-safe and can be called anywhere.
+
+
+
+### co::yield
+
+````cpp
+void yield();
+````
+
+- Suspend the current coroutine, must be called in a coroutine.
+- This function can be used with [co::coroutine()](#cocoroutine) and [co::resume()](#coresume) to manually control the scheduling of coroutines. See [test/yield.cc](https://github.com/idealvin/coost/blob/master/test/yield.cc) for details.
+
+
+
+### co::scheduler
 
 ```cpp
 Scheduler* scheduler();

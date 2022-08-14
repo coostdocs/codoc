@@ -433,6 +433,19 @@ Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
 
 
 
+### Json::erase
+
+```cpp
+void erase(uint32 i);
+void erase(int i);
+void erase(const char* key);
+```
+
+- The first two, erase the ith element from an array.
+- The third, erase the element by `key` from an object.
+
+
+
 ### Json::push_back
 
 ```cpp
@@ -456,6 +469,21 @@ Json x;
 x.push_back(r);  // r -> null, x -> [[1, 3.3, "xx"]]
 r.push_back(Json().push_back(1).push_back(2)); // r -> [[1,2]]
 ```
+
+
+
+### Json::remove
+
+```cpp
+void remove(uint32 i);
+void remove(int i);
+void remove(const char* key);
+```
+
+- The first two, remove the ith element from an array.
+- The third, remove the element by `key` from an object.
+- The last element will be moved to the position where the element was removed.
+
 
 
 

@@ -2,7 +2,7 @@
 
 #baseURL = 'http://localhost:1313/'
 baseURL = 'https://coostdocs.github.io/'
-title = "Docs for Coost"
+title = "Documents for Coost"
 theme = 'hugo-book'
 defaultContentLanguage = "cn"
 defaultContentLanguageInSubdir = true

@@ -431,6 +431,19 @@ Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
 
 
 
+### Json::erase
+
+```cpp
+void erase(uint32 i);
+void erase(int i);
+void erase(const char* key);
+```
+
+- 前两个版本删除 array 中的第 i 个元素。
+- 第 3 个版本删除 object 中 `key` 对应的元素。
+
+
+
 ### Json::push_back
 
 ```cpp
@@ -454,6 +467,20 @@ Json x;
 x.push_back(r);  // r -> null, x -> [[1, 3.3, "xx"]]
 r.push_back(Json().push_back(1).push_back(2)); // r -> [[1,2]]
 ```
+
+
+
+### Json::remove
+
+```cpp
+void remove(uint32 i);
+void remove(int i);
+void remove(const char* key);
+```
+
+- 前两个版本移除 array 中的第 i 个元素。
+- 第 3 个版本移除 object 中 `key` 对应的元素。
+- `remove` 操作会将最后一个元素移动到删除的元素所在的位置。
 
 
 

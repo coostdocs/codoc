@@ -778,14 +778,16 @@ ev.wait(100);  // wait for 100 ms
 ### WaitGroup::WaitGroup
 
 ```cpp
+explicit WaitGroup(uint32 n);
 WaitGroup();
 WaitGroup(WaitGroup&& wg);
 WaitGroup(const WaitGroup& wg);
 ```
 
-- 第 1 个是默认构造函数。
-- 第 2 个是 move 构造函数，支持将 co::WaitGroup 放入 STL 容器中。
-- 第 3 个是拷贝构造函数，仅将内部引用计数加 1。
+- 第 1 个构造函数，将内部计数器初始化为 `n`。
+- 第 2 个是默认构造函数，将内部计数器初始化为 0。
+- 第 3 个是 move 构造函数，支持将 co::WaitGroup 放入 STL 容器中。
+- 第 4 个是拷贝构造函数，仅将内部引用计数加 1。
 
 
 

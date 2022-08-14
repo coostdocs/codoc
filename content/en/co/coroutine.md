@@ -781,14 +781,16 @@ ev.wait(100);  // wait for 100 ms
 ### WaitGroup::WaitGroup
 
 ```cpp
+explicit WaitGroup(uint32 n);
 WaitGroup();
 WaitGroup(WaitGroup&& wg);
 WaitGroup(const WaitGroup& wg);
 ```
 
-- The first is the default constructor.
-- The second is the move constructor, which supports putting co::WaitGroup into the STL container.
-- The third is the copy constructor, which only increases the internal reference count by one.
+- In the first constructor, the internal counter is initialized as `n`.
+- The second is the default constructor, the internal counter is initialized as 0.
+- The third is the move constructor, which supports putting co::WaitGroup into STL containers.
+- The fourth is the copy constructor, which only increases the internal reference count by one.
 
 
 

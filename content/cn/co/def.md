@@ -125,3 +125,15 @@ if (unlikey(v == 0)) {
 ```
 
 
+
+### __fname__ 与 __fnlen__
+
+`__fname__` 宏用于在编译期获取 `__FILE__` 中的文件名部分，不包含文件路径。`__fnlen__` 宏则用于在编译期获取 `__fname__` 的长度，不包含 `\0`。
+
+- 示例
+
+```cpp
+// test/xx.cc
+static_assert(__fname__[0] == 'x', "");
+static_assert(__fnlen__ == 5, "");
+```

@@ -6,20 +6,15 @@ title: "Sponsor💕"
 
 ## Sponsor
 
-CO is a personal project. If you are interested in sponsoring CO, you can contact with Alvin (idealvin@qq.com), we'll display your logo, website and other information here, and also provide you with better technical services. Thank you very much🙏
-
-
-- Github Sponsor
-
-  <iframe src="https://github.com/sponsors/idealvin/card" title="Sponsor idealvin" height="225" width="600" style="border: 0;"></iframe>
+**coost** is a personal project. If you are interested in sponsoring it, you may contact with Alvin (idealvin at qq.com), we'll display your logo, website and other information here, and also provide you with better technical services. Thank you very much🙏
 
 
 ### Special sponsors
 
-CO is specially sponsored by the following companies, thank you very much!
+coost is specially sponsored by the following companies, thank you very much!
 
 <a href="https://www.oneflow.org/index.html">
-<img src="/images/sponsor/oneflow.png" width="210" height="150">
+<img src="/images/sponsor/oneflow.png" width="175" height="125">
 </a>
 
 
@@ -27,19 +22,18 @@ CO is specially sponsored by the following companies, thank you very much!
 
 ## Coffee
 
-If you like CO, you may also buy the author a cup of coffee, thanks🙏
+If you like coost, you may also buy the author a cup of coffee, thanks🙏
 
 - Paypal
 
   idealvin@qq.com
 
 
-- Wechat
+- Wechat & Alipay
 
-  ![wx.png](/images/wx.png)
+  ![wxzfb.png](/images/wxzfb.png)
 
 
-- Alipay
+- Github Sponsor
 
-  ![zfb.png](/images/zfb.png)
-
+  <iframe src="https://github.com/sponsors/idealvin/card" title="Sponsor idealvin" height="225" width="600" style="border: 0;"></iframe>

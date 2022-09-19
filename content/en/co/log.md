@@ -284,7 +284,7 @@ CHECK(it != m.end()); // Cannot use CHECK_NE(it, m.end()), the compiler will rep
 
 `co/log` will print the function call stack when `CHECK` assertion failed, or an abnormal signal like `SIGSEGV` was caught. See details below:
 
-![stack](https://idealvin.github.io/images/stack.png)(https://asciinema.org/a/435894)
+![stack](https://coostdocs.github.io/images/stack.png)(https://asciinema.org/a/435894)
 
 To get the stack trace, you should compile with debug symbols (compile with `-g` for gcc, etc). And on linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system. On linux, `libbacktrace` may have been installed within a newer version of gcc. You may find it in a directory like `/usr/lib/gcc/x86_64-linux-gnu/9`. Otherwise, you can install it by yourself as follow:
 

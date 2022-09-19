@@ -223,18 +223,16 @@ DEF_string(s, "", "xx");
 
 int main(int argc, char** argv) {
     flag::init(argc, argv);
-
     COUT << "x: " << FLG_x;
     COUT << "y: " << FLG_y;
     COUT << "debug: " << FLG_debug;
     COUT << "u: " << FLG_u;
     COUT << FLG_s << "|" << FLG_s.size();
-
     return 0;
 }
 ```
 
-上面是一个使用 flag 的例子，代码中 `DEF_` 开头的宏定义了 4 个 flag，每个 flag 对应一个全局变量，变量名是 `FLG_` 加 flag 名，其中 flag `debug` 还有一个别名 `d`。上述代码编译后，可以按如下方式运行：
+上述代码中 `DEF_` 开头的宏定义了 4 个 flag，每个 flag 对应一个全局变量，变量名是 `FLG_` 加 flag 名，其中 flag `debug` 还有一个别名 `d`。上述代码编译后，可以按如下方式运行：
 
 ```sh
 ./xx                  # 按默认配置运行
@@ -418,9 +416,9 @@ for (auto& s : co::schedulers()) {
 
 coost 提供了一套基于协程的网络编程框架，大致可以分为三个部分：
 
-- **协程化的 [socket API](../../co/coroutine/#协程化的-socket-api)**，形式上与系统 socket API 类似，熟悉 socket 编程的用户，可以轻松的用同步的方式写出高性能的网络程序。
+- **[协程化的 socket API](../../co/coroutine/#协程化的-socket-api)**，形式上与系统 socket API 类似，熟悉 socket 编程的用户，可以轻松的用同步的方式写出高性能的网络程序。
 - [TCP](../../co/net/tcp/)、[HTTP](../../co/net/http/)、[RPC](../../co/net/rpc/) 等高层网络编程组件，兼容 IPv6，同时支持 SSL，用起来比 socket API 更方便。
-- **系统 API hook**，支持在协程中使用一般的三方网络库。
+- **[系统 API hook](../../co/coroutine/#%E7%B3%BB%E7%BB%9F-api-hook)**，支持在协程中使用一般的三方网络库。
 
 
 **RPC server**
@@ -442,7 +440,7 @@ int main(int argc, char** argv) {
 }
 ```
 
-**rpc::Server 同时支持 HTTP 协议**，可以用 HTTP 的 POST 方法调用 RPC 服务：
+rpc::Server 同时支持 HTTP 协议，可以用 HTTP 的 POST 方法调用 RPC 服务：
 
 ```sh
 curl http://127.0.0.1:7788/xx --request POST --data '{"api":"ping"}'

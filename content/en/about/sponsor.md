@@ -9,15 +9,6 @@ title: "Sponsor💕"
 **coost** is a personal project. If you are interested in sponsoring it, you may contact with Alvin (idealvin at qq.com), we'll display your logo, website and other information here, and also provide you with better technical services. Thank you very much🙏
 
 
-### Special sponsors
-
-coost is specially sponsored by the following companies, thank you very much!
-
-<a href="https://www.oneflow.org/index.html">
-<img src="/images/sponsor/oneflow.png" width="175" height="125">
-</a>
-
-
 
 
 ## Coffee

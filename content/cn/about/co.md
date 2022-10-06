@@ -14,8 +14,8 @@ title: "简介"
 
 coost 原名为 co，后改为 cocoyaxi，前者过短，后者过长，取中庸之道，又改为 coost。它曾被称为小型 [boost](https://www.boost.org/) 库，与 boost 相比，coost 小而精美，在 **linux 与 mac 上编译出来的静态库仅 1M 左右大小**，却包含了不少强大的功能：
 
-<table>
-<tr><td width=33% valign=top>
+
+{{< columns >}}
 
 - 命令行与配置文件解析(flag)
 - **高性能日志库(log)**
@@ -25,7 +25,7 @@ coost 原名为 co，后改为 cocoyaxi，前者过短，后者过长，取中�
 - 高效 JSON 库
 - **基于 JSON 的 RPC 框架**
 
-</td><td width=34% valign=top>
+<--->
 
 - 原子操作(atomic)
 - **高效字符流(fastream)**
@@ -35,7 +35,7 @@ coost 原名为 co，后改为 cocoyaxi，前者过短，后者过长，取中�
 - 线程库(thread)
 - 定时任务调度器
 
-</td><td valign=top>
+<--->
 
 - **面向玄学编程**
 - LruMap
@@ -45,8 +45,7 @@ coost 原名为 co，后改为 cocoyaxi，前者过短，后者过长，取中�
 - 系统操作(os)
 - **高性能内存分配器**
 
-</td></tr>
-</table>
+{{< /columns >}}
 
 
 

@@ -14,8 +14,8 @@ title: "Introduction"
 
 The original name of coost is **co** or cocoyaxi. It is like [boost](https://www.boost.org/), but more lightweight, **the static library built on linux or mac is only about 1MB in size**. However, it still provides enough powerful features:
 
-<table>
-<tr><td width=33% valign=top>
+
+{{< columns >}}
 
 - Command line and config file parser (flag)
 - **High performance log library (log)**
@@ -25,7 +25,7 @@ The original name of coost is **co** or cocoyaxi. It is like [boost](https://www
 - Efficient JSON library
 - **JSON RPC framework**
 
-</td><td width=34% valign=top>
+<--->
 
 - Atomic operation (atomic)
 - **Efficient stream (fastream)**
@@ -35,7 +35,7 @@ The original name of coost is **co** or cocoyaxi. It is like [boost](https://www
 - Thread library (thread)
 - Timed Task Scheduler
 
-</td><td valign=top>
+<--->
 
 - **God-oriented programming**
 - LruMap
@@ -45,8 +45,7 @@ The original name of coost is **co** or cocoyaxi. It is like [boost](https://www
 - System operations (os)
 - **Fast memory allocator**
  
-</td></tr>
-</table>
+{{< /columns >}}
 
 
 

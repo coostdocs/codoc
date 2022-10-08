@@ -4,7 +4,7 @@ title: "RPC"
 ---
 
 
-include: [co/rpc.h](https://github.com/idealvin/co/blob/master/include/co/rpc.h).
+include: [co/rpc.h](https://github.com/idealvin/coost/blob/master/include/co/rpc.h).
 
 
 co/rpc 是一个类似 [grpc](https://github.com/grpc/grpc) 的高性能 RPC 框架，它内部使用 **JSON** 格式传输数据，而不是 protobuf 等二进制协议。从 v3.0 开始，co/rpc 同时支持 HTTP 协议，可以用 HTTP 的 POST 方法调用 rpc 服务。
@@ -114,7 +114,7 @@ service HelloWorld {
 
 ### 生成 service 代码
 
-[gen](https://github.com/idealvin/co/tree/master/gen) 是 co 提供的 RPC 代码生成器，它可以生成 service 相关代码。
+[gen](https://github.com/idealvin/coost/tree/master/gen) 是 co 提供的 RPC 代码生成器，它可以生成 service 相关代码。
 
 ```bash
 xmake -b gen             # 构建 gen

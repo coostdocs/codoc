@@ -111,7 +111,7 @@ xmake -v
 
 #### Android and IOS support
 
-CO can also be built on Android and IOS platforms, see [Github Actions](https://github.com/idealvin/co/actions) for details. Since the author has no front-end development experience, it has not been tested on Android and IOS.
+CO can also be built on Android and IOS platforms, see [Github Actions](https://github.com/idealvin/coost/actions) for details. Since the author has no front-end development experience, it has not been tested on Android and IOS.
 
 - android
 
@@ -131,7 +131,7 @@ xmake -v
 
 ### Build and run unitest code
 
-[co/unitest](https://github.com/idealvin/co/tree/master/unitest) contains some unit test code, run the following commands to build and run the test program:
+[co/unitest](https://github.com/idealvin/coost/tree/master/unitest) contains some unit test code, run the following commands to build and run the test program:
 
 ```bash
 xmake -b unitest       # build unitest
@@ -144,7 +144,7 @@ xmake r unitest -json  # run unit test: json
 
 ### Build and run test code
 
-[co/test](https://github.com/idealvin/co/tree/master/test) contains some test code, add `xx.cc` source file in the co/test directory or its subdirectories, and then run `xmake -b xx` in the root directory of CO to build it.
+[co/test](https://github.com/idealvin/coost/tree/master/test) contains some test code, add `xx.cc` source file in the co/test directory or its subdirectories, and then run `xmake -b xx` in the root directory of CO to build it.
 
 ```bash
 xmake -b flag      # compile test/flag.cc
@@ -171,7 +171,7 @@ cp gen /usr/local/bin/
 gen hello_world.proto
 ```
 
-The proto file format can refer to [hello_world.proto](https://github.com/idealvin/co/blob/master/test/so/rpc/hello_world.proto).
+The proto file format can refer to [hello_world.proto](https://github.com/idealvin/coost/blob/master/test/so/rpc/hello_world.proto).
 
 
 

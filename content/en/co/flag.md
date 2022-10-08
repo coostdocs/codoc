@@ -3,7 +3,7 @@ weight: 5
 title: "co/flag"
 ---
 
-include: [co/flag.h](https://github.com/idealvin/co/blob/master/include/co/flag.h).
+include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/flag.h).
 
 
 ## Basic concepts

@@ -3,7 +3,7 @@ weight: 11
 title: "Coroutine"
 ---
 
-include: [co/co.h](https://github.com/idealvin/co/blob/master/include/co/co.h).
+include: [co/co.h](https://github.com/idealvin/coost/blob/master/include/co/co.h).
 
 
 ## Basic concepts
@@ -1259,7 +1259,7 @@ IoEvent(sock_t fd, int n=0); // for windows only
 
 - Constructor, linux and mac platforms only provide the first version, windows platform also provides the second version.
 - In the first version, the **parameter fd is a non-blocking socket**, and the parameter ev is an I/O event, which is one of co::ev_read or co::ev_write. Calling the wait() method will wait for the I/O event specified by ev on the socket. When wait() returns successfully, users need to call recv, send or other I/O functions to complete the I/O operation. **On windows, fd must be a TCP socket**(For UDP, it is difficult to simulate the behavior of epoll or kqueue with IOCP).
-- The second version is only applicable to windows. Unlike the first version, fd can be a UDP socket, but users must manually call WSARecvFrom, WSASendTo or other functions to post an overlapped I/O operation to IOCP, and then call the wait() method. When wait() returns successfully, it means that IOCP has completed the I/O operation. See details in source code of [co::IoEvent](https://github.com/idealvin/co/blob/master/include/co/co/io_event.h), and implementation of [co::accept, co::connect, co::recvfrom, co::sendto](https://github.com/idealvin/co/blob/master/src/co/sock_win.cc) on windows.
+- The second version is only applicable to windows. Unlike the first version, fd can be a UDP socket, but users must manually call WSARecvFrom, WSASendTo or other functions to post an overlapped I/O operation to IOCP, and then call the wait() method. When wait() returns successfully, it means that IOCP has completed the I/O operation. See details in source code of [co::IoEvent](https://github.com/idealvin/coost/blob/master/include/co/co/io_event.h), and implementation of [co::accept, co::connect, co::recvfrom, co::sendto](https://github.com/idealvin/coost/blob/master/src/co/sock_win.cc) on windows.
 
 
 
@@ -1403,7 +1403,7 @@ go(server_fun);
 - In one coroutine, call `co::accept()` to accept client connections.
 - When a connection is accepted, create a new coroutine to handle the connection.
 - `on_connection()` is the coroutine function for handling connections, receiving, processing and sending data are performed in a synchronous manner in the coroutine, and we do not need any asynchronous callback.
-- For complete implementation, please refer to [Test code in CO](https://github.com/idealvin/co/blob/master/test/so/tcp2.cc).
+- For complete implementation, please refer to [Test code in CO](https://github.com/idealvin/coost/blob/master/test/so/tcp2.cc).
 
 
 
@@ -1425,7 +1425,7 @@ go(client_fun);
 
 - Connecting, sending, recving and processing data are performed in a synchronous manner in the coroutine.
 
-- For complete implementation, please refer to [Test code in CO](https://github.com/idealvin/co/blob/master/test/so/tcp2.cc).
+- For complete implementation, please refer to [Test code in CO](https://github.com/idealvin/coost/blob/master/test/so/tcp2.cc).
 
 
 In actual applications, **co::Pool** is generally used as a connection pool to avoid creating too many connections:

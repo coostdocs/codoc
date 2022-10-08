@@ -3,7 +3,7 @@ weight: 6
 title: "co/log"
 ---
 
-include: [co/log.h](https://github.com/idealvin/co/blob/master/include/co/log.h).
+include: [co/log.h](https://github.com/idealvin/coost/blob/master/include/co/log.h).
 
 
 ## Introduction
@@ -477,4 +477,4 @@ xmake r log -min_log_level=1    # 0-4: debug,info,warning,error,fatal
 xmake r log -perf               # performance test
 ```
 
-- Run `xmake -b log` in the co root directory to compile [test/log.cc](https://github.com/idealvin/co/blob/master/test/log.cc), and a binary program named log or log.exe will be generated.
+- Run `xmake -b log` in the co root directory to compile [test/log.cc](https://github.com/idealvin/coost/blob/master/test/log.cc), and a binary program named log or log.exe will be generated.

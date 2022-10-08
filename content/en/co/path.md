@@ -3,7 +3,7 @@ weight: 21
 title: "Path"
 ---
 
-include: [co/path.h](https://github.com/idealvin/co/blob/master/include/co/path.h).
+include: [co/path.h](https://github.com/idealvin/coost/blob/master/include/co/path.h).
 
 
 ## path

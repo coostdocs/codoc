@@ -3,7 +3,7 @@ weight: 5
 title: "命令行参数与配置文件解析"
 ---
 
-include: [co/flag.h](https://github.com/idealvin/co/blob/master/include/co/flag.h).
+include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/flag.h).
 
 
 ## 基本概念

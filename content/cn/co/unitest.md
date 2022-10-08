@@ -3,7 +3,7 @@ weight: 7
 title: "单元测试框架"
 ---
 
-include: [co/unitest.h](https://github.com/idealvin/co/blob/master/include/co/unitest.h).
+include: [co/unitest.h](https://github.com/idealvin/coost/blob/master/include/co/unitest.h).
 
 
 ## 基本概念
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
 xmake -b unitest
 ```
 
-- 在 co 根目录执行上述命令，即可编译 [co/unitest](https://github.com/idealvin/co/tree/master/unitest) 目录下的单元测试代码，并生成 `unitest` 二进制程序。
+- 在 co 根目录执行上述命令，即可编译 [co/unitest](https://github.com/idealvin/coost/tree/master/unitest) 目录下的单元测试代码，并生成 `unitest` 二进制程序。
 
 
 

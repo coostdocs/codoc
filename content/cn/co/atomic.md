@@ -3,12 +3,12 @@ weight: 2
 title: "原子操作"
 ---
 
-include: [co/atomic.h](https://github.com/idealvin/co/tree/master/include/co/atomic.h).
+include: [co/atomic.h](https://github.com/idealvin/coost/tree/master/include/co/atomic.h).
 
 
 ## Memory Order
 
-co 从 v3.0 开始，增加了对 memory order 的支持。co 中的 6 种 memory order 定义如下：
+coost 从 v3.0 开始，增加了对 memory order 的支持。coost 中的 6 种 memory order 定义如下：
 
 ```cpp
 enum memory_order_t {
@@ -21,7 +21,7 @@ enum memory_order_t {
 };
 ```
 
-为了保持兼容性，co 中的原子操作默认的 memory order 均为 `mo_seq_cst`。
+为了保持兼容性，coost 中的原子操作默认的 memory order 均为 `mo_seq_cst`。
 
 
 

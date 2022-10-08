@@ -3,7 +3,7 @@ weight: 4
 title: "String utilities"
 ---
 
-include: [co/str.h](https://github.com/idealvin/co/tree/master/include/co/str.h).
+include: [co/str.h](https://github.com/idealvin/coost/tree/master/include/co/str.h).
 
 
 ## split, strip, replace, 

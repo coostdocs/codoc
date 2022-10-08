@@ -3,7 +3,7 @@ weight: 11
 title: "协程"
 ---
 
-include: [co/co.h](https://github.com/idealvin/co/blob/master/include/co/co.h).
+include: [co/co.h](https://github.com/idealvin/coost/blob/master/include/co/co.h).
 
 
 ## 基本概念
@@ -1269,7 +1269,7 @@ IoEvent(sock_t fd, int n=0);  // for windows only
 
 - 构造函数，linux 与 mac 平台只提供第 1 个版本，windows 平台还提供第 2 个版本。
 - 第 1 个版本中，**参数 fd 是一个 non-blocking socket**，参数 ev 是 I/O 事件类型，只能是 co::ev_read 或 co::ev_write 中的一种。调用 wait() 方法会在 socket 上等待 ev 指定的 I/O 事件，wait() 成功返回时，需要用户调用 recv, send 等函数完成 I/O 操作。**在 windows 平台，fd 必须是 TCP socket**(对于 UDP，很难用 IOCP 模拟 epoll 或 kqueue 的行为)。
-- 第 2 个版本仅适用于 windows，与第 1 个版本不同，fd 可以是 UDP socket，但用户需要手动调用 WSARecvFrom, WSASendTo 等函数向 IOCP 发送 overlapped I/O 请求，然后调用 wait() 方法，当 wait() 成功返回时，表示 IOCP 已经帮用户完成了 I/O 操作。具体的用法此处不详述，代码中有详细的注释，建议直接参考 [co::IoEvent 的源码](https://github.com/idealvin/co/blob/master/include/co/co/io_event.h)，以及 windows 上 [co::accept, co::connect, co::recvfrom, co::sendto 的实现](https://github.com/idealvin/co/blob/master/src/co/sock_win.cc)。
+- 第 2 个版本仅适用于 windows，与第 1 个版本不同，fd 可以是 UDP socket，但用户需要手动调用 WSARecvFrom, WSASendTo 等函数向 IOCP 发送 overlapped I/O 请求，然后调用 wait() 方法，当 wait() 成功返回时，表示 IOCP 已经帮用户完成了 I/O 操作。具体的用法此处不详述，代码中有详细的注释，建议直接参考 [co::IoEvent 的源码](https://github.com/idealvin/coost/blob/master/include/co/co/io_event.h)，以及 windows 上 [co::accept, co::connect, co::recvfrom, co::sendto 的实现](https://github.com/idealvin/coost/blob/master/src/co/sock_win.cc)。
 
 
 
@@ -1415,7 +1415,7 @@ go(server_fun);
 - 在一个协程中，调用 `co::accept()` 接受客户端连接。
 - 有连接到来时，创建一个新的协程，在协程中处理连接上的数据。
 - `on_connection()` 是处理连接的协程函数，接收、处理与发送数据，在该协程中以完全同步的方式进行，不需要任何异步回调。
-- 完整的实现可以参考 [co 中的测试代码](https://github.com/idealvin/co/blob/master/test/so/tcp2.cc)。
+- 完整的实现可以参考 [co 中的测试代码](https://github.com/idealvin/coost/blob/master/test/so/tcp2.cc)。
 
 
 
@@ -1436,7 +1436,7 @@ go(client_fun);
 ```
 
 - 建立连接，发送、接收、处理数据，在协程中以完全同步的方式进行。
-- 完整的实现可以参考 [co 中的测试代码](https://github.com/idealvin/co/blob/master/test/so/tcp2.cc)。
+- 完整的实现可以参考 [co 中的测试代码](https://github.com/idealvin/coost/blob/master/test/so/tcp2.cc)。
 
 
 实际应用中，一般使用 **co::Pool** 作为连接池，以避免创建过多的连接：

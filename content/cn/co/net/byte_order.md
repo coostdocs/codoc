@@ -4,7 +4,7 @@ title: "字节序"
 ---
 
 
-include: [co/byte_order.h](https://github.com/idealvin/co/blob/master/include/co/byte_order.h).
+include: [co/byte_order.h](https://github.com/idealvin/coost/blob/master/include/co/byte_order.h).
 
 
 计算机中的数据在内存中是以字节(8 bit)为基本单位进行存储的，大端机采用大端字节序，即高位字节在低地址，低位字节在高地址，小端机则采用小端字节序，即低位字节在低地址，高位字节在高地址。

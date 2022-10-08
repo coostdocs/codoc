@@ -3,7 +3,7 @@ weight: 6
 title: "日志"
 ---
 
-include: [co/log.h](https://github.com/idealvin/co/blob/master/include/co/log.h).
+include: [co/log.h](https://github.com/idealvin/coost/blob/master/include/co/log.h).
 
 
 ## 简介
@@ -474,5 +474,5 @@ xmake r log -min_log_level=1   # 0-4: debug,info,warning,error,fatal
 xmake r log -perf              # performance test
 ```
 
-- 在 co 根目录执行 `xmake -b log` 即可编译 [test/log.cc](https://github.com/idealvin/co/blob/master/test/log.cc) 测试代码，并生成 `log` 二进制文件。
+- 在 co 根目录执行 `xmake -b log` 即可编译 [test/log.cc](https://github.com/idealvin/coost/blob/master/test/log.cc) 测试代码，并生成 `log` 二进制文件。
 

@@ -4,7 +4,7 @@ title: "HTTP"
 ---
 
 
-include: [co/http.h](https://github.com/idealvin/co/blob/master/include/co/http.h).
+include: [co/http.h](https://github.com/idealvin/coost/blob/master/include/co/http.h).
 
 
 ## http::Client
@@ -490,7 +490,7 @@ http::Server().on_req(cb).start(
 );
 ```
 
-`co/test` 提供了一个简单的 [demo](https://github.com/idealvin/co/blob/master/test/so/http_serv.cc)，用户可以按下述方式编译运行:
+`co/test` 提供了一个简单的 [demo](https://github.com/idealvin/coost/blob/master/test/so/http_serv.cc)，用户可以按下述方式编译运行:
 
 ```bash
 xmake -b http_serv

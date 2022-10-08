@@ -3,7 +3,7 @@ weight: 20
 title: "Hash"
 ---
 
-include: [co/hash.h](https://github.com/idealvin/co/blob/master/include/co/hash.h).
+include: [co/hash.h](https://github.com/idealvin/coost/blob/master/include/co/hash.h).
 
 
 ## Hash

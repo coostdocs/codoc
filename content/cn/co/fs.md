@@ -4,7 +4,7 @@ title: "文件系统"
 ---
 
 
-include: [co/fs.h](https://github.com/idealvin/co/blob/master/include/co/fs.h).
+include: [co/fs.h](https://github.com/idealvin/coost/blob/master/include/co/fs.h).
 
 
 `co/fs.h` 最小限度的实现了常用的文件系统操作，不同平台路径分隔符建议统一使用 `'/'`。

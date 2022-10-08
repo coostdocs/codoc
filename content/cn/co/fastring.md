@@ -3,7 +3,7 @@ weight: 2
 title: "字符串(fastring)"
 ---
 
-include: [co/fastring.h](https://github.com/idealvin/co/blob/master/include/co/fastring.h).
+include: [co/fastring.h](https://github.com/idealvin/coost/blob/master/include/co/fastring.h).
 
 
 ## fastring

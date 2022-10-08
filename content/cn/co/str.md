@@ -3,7 +3,7 @@ weight: 4
 title: "字符串操作"
 ---
 
-include: [co/str.h](https://github.com/idealvin/co/tree/master/include/co/str.h).
+include: [co/str.h](https://github.com/idealvin/coost/tree/master/include/co/str.h).
 
 
 ## 切分、修剪、替换、连接

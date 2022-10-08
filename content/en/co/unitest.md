@@ -3,7 +3,7 @@ weight: 7
 title: "Unitest"
 ---
 
-include: [co/unitest.h](https://github.com/idealvin/co/blob/master/include/co/unitest.h).
+include: [co/unitest.h](https://github.com/idealvin/coost/blob/master/include/co/unitest.h).
 
 
 ## Basic concepts
@@ -196,7 +196,7 @@ xmake -b unitest
 ```
 
 
-- Execute the above command in the co root directory to compile the unit test code in the [co/unitest](https://github.com/idealvin/co/tree/master/unitest) directory and generate the `unitest` binary program .
+- Execute the above command in the co root directory to compile the unit test code in the [co/unitest](https://github.com/idealvin/coost/tree/master/unitest) directory and generate the `unitest` binary program .
 
 
 

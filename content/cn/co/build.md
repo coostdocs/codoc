@@ -128,7 +128,7 @@ xmake -v
 
 #### Android 与 IOS 支持
 
-CO 在 Android 与 IOS 平台也能编译，详情见 [Github Actions](https://github.com/idealvin/co/actions)。由于作者没有前端开发的经验，暂时未在 Android 与 IOS 上测试。
+CO 在 Android 与 IOS 平台也能编译，详情见 [Github Actions](https://github.com/idealvin/coost/actions)。由于作者没有前端开发的经验，暂时未在 Android 与 IOS 上测试。
 
 - android
 
@@ -148,7 +148,7 @@ xmake -v
 
 ### 构建及运行 unitest 代码
 
-[co/unitest](https://github.com/idealvin/co/tree/master/unitest) 是单元测试代码，可以执行下述命令构建及运行：
+[co/unitest](https://github.com/idealvin/coost/tree/master/unitest) 是单元测试代码，可以执行下述命令构建及运行：
 
 ```bash
 xmake -b unitest        # build unitest
@@ -161,7 +161,7 @@ xmake r unitest -json   # 执行单元测试 json
 
 ### 构建及运行 test 代码
 
-[co/test](https://github.com/idealvin/co/tree/master/test) 是一些测试代码，在 co/test 目录或其子目录下增加 `xx.cc` 源文件，然后在 CO 根目录下执行 `xmake -b xx` 即可构建。
+[co/test](https://github.com/idealvin/coost/tree/master/test) 是一些测试代码，在 co/test 目录或其子目录下增加 `xx.cc` 源文件，然后在 CO 根目录下执行 `xmake -b xx` 即可构建。
 
 ```bash
 xmake -b flag                # 编译 test/flag.cc
@@ -188,7 +188,7 @@ cp gen /usr/local/bin/
 gen hello_world.proto
 ```
 
-proto 文件格式可以参考 [hello_world.proto](https://github.com/idealvin/co/blob/master/test/so/rpc/hello_world.proto)。
+proto 文件格式可以参考 [hello_world.proto](https://github.com/idealvin/coost/blob/master/test/so/rpc/hello_world.proto)。
 
 
 

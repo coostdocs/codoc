@@ -3,7 +3,7 @@ weight: 8
 title: "JSON"
 ---
 
-include: [co/json.h](https://github.com/idealvin/co/blob/master/include/co/json.h).
+include: [co/json.h](https://github.com/idealvin/coost/blob/master/include/co/json.h).
 
 
 `co/json` 是一个类似 [rapidjson](https://github.com/Tencent/rapidjson) 的 JSON 库，与 rapidjson 相比，它既有性能上的优势，同时又更简单易用。

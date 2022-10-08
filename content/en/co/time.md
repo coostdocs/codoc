@@ -3,7 +3,7 @@ weight: 9
 title: "Time"
 ---
 
-include: [co/time.h](https://github.com/idealvin/co/blob/master/include/co/time.h).
+include: [co/time.h](https://github.com/idealvin/coost/blob/master/include/co/time.h).
 
 
 ## epoch time

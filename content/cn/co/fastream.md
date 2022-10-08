@@ -3,7 +3,7 @@ weight: 3
 title: "字符流(fastream)"
 ---
 
-include: [co/fastream.h](https://github.com/idealvin/co/blob/master/include/co/fastream.h).
+include: [co/fastream.h](https://github.com/idealvin/coost/blob/master/include/co/fastream.h).
 
 
 ## fastream

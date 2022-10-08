@@ -3,7 +3,7 @@ weight: 8
 title: "JSON"
 ---
 
-include: [co/json.h](https://github.com/idealvin/co/blob/master/include/co/json.h).
+include: [co/json.h](https://github.com/idealvin/coost/blob/master/include/co/json.h).
 
 
 `co/json` is a JSON library similar to [rapidjson](https://github.com/Tencent/rapidjson). Compared with rapidjson, it has better performance and is easier to use. 

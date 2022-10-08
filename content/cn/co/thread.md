@@ -3,7 +3,7 @@ weight: 10
 title: "线程"
 ---
 
-include: [co/thread.h](https://github.com/idealvin/co/blob/master/include/co/thread.h).
+include: [co/thread.h](https://github.com/idealvin/coost/blob/master/include/co/thread.h).
 
 
 ## 线程(Thread)

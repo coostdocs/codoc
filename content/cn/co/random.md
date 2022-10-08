@@ -3,7 +3,7 @@ weight: 18
 title: "随机数"
 ---
 
-include: [co/random.h](https://github.com/idealvin/co/blob/master/include/co/random.h).
+include: [co/random.h](https://github.com/idealvin/coost/blob/master/include/co/random.h).
 
 
 ## Random

@@ -4,7 +4,7 @@ title: "RPC"
 ---
 
 
-include: [co/rpc.h](https://github.com/idealvin/co/blob/master/include/co/rpc.h).
+include: [co/rpc.h](https://github.com/idealvin/coost/blob/master/include/co/rpc.h).
 
 
 co/rpc is a high-performance RPC framework similar to [grpc](https://github.com/grpc/grpc), it uses **JSON** as the data exchange format, which is different from binary protocols such as protobuf.
@@ -113,7 +113,7 @@ service HelloWorld {
 
 ### Generate code for RPC service
 
-[gen](https://github.com/idealvin/co/tree/master/gen) is the RPC code generator provided by co, which can be used to generate code for RPC service.
+[gen](https://github.com/idealvin/coost/tree/master/gen) is the RPC code generator provided by co, which can be used to generate code for RPC service.
 
 ```bash
 xmake -b gen             # build gen

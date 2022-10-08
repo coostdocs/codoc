@@ -3,7 +3,7 @@ weight: 19
 title: "LruMap"
 ---
 
-include: [co/lru_map.h](https://github.com/idealvin/co/blob/master/include/co/lru_map.h).
+include: [co/lru_map.h](https://github.com/idealvin/coost/blob/master/include/co/lru_map.h).
 
 
 ## LruMap

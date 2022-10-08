@@ -4,7 +4,7 @@ title: "文件路径(path)"
 ---
 
 
-include: [co/path.h](https://github.com/idealvin/co/blob/master/include/co/path.h).
+include: [co/path.h](https://github.com/idealvin/coost/blob/master/include/co/path.h).
 
 
 ## path

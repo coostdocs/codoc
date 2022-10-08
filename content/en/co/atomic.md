@@ -442,9 +442,9 @@ template<typename T, typename V>
 inline T atomic_xor(T* p, V v, memory_order_t mo = mo_seq_cst);
 ```
 
-- Atomic bitwise X0R operation, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
+- Atomic bitwise XOR operation, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
 
-- This function performs a bitwise X0R operation on the integer pointed to by p and v, and returns the result of the operation.
+- This function performs a bitwise XOR operation on the integer pointed to by p and v, and returns the result of the operation.
 
 
 - Example
@@ -465,7 +465,7 @@ template<typename T, typename V>
 inline T atomic_fetch_xor(T* p, V v, memory_order_t mo = mo_seq_cst);
 ```
 
-- The same as [atomic_xor](#atomic_xor), but returns the value before the bitwise X0R operation.
+- The same as [atomic_xor](#atomic_xor), but returns the value before the bitwise XOR operation.
 
 
 - Example

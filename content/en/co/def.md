@@ -123,17 +123,3 @@ if (unlikey(v == 0)) {
     cout << "v == 0" << endl;
 }
 ```
-
-
-
-### `__fname__` and `__fnlen__`
-
-The `__fname__` macro is used to get the filename component of `__FILE__` at compile time. The `__fnlen__` macro is used to get the length of `__fname__` at compile time, `\0` not included.
-
-- Example
-
-````cpp
-//test/xx.cc
-static_assert(__fname__[0] == 'x', "");
-static_assert(__fnlen__ == 5, "");
-````

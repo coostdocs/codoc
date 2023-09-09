@@ -1,6 +1,6 @@
 ---
-weight: 5
-title: "命令行参数与配置文件解析"
+weight: 4
+title: "配置"
 ---
 
 include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/flag.h).
@@ -8,25 +8,25 @@ include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/fl
 
 ## 基本概念
 
-`co/flag` 是一个类似 [google gflags](https://github.com/gflags/gflags) 的命令行参数及配置文件解析库，其原理很简单，代码中定义全局变量，然后在程序启动时解析命令行参数或配置文件，修改这些全局变量的值。
+**co.flag** 是一个命令行参数及配置文件解析库，其原理很简单，代码中定义全局变量，然后在程序启动时解析命令行参数或配置文件，修改这些全局变量的值。
 
 
 
 ### flag 变量
 
-co/flag 中的宏定义的全局变量，称为 **flag 变量**。如下面的代码定义了一个 flag 变量，变量名是 `FLG_x`。
+co.flag 中的宏定义的全局变量，称为 **flag 变量**。如下面的代码定义了一个 flag 变量，变量名是 `FLG_x`。
 
 ```cpp
-DEF_bool(x, false, "xxx"); // bool FLG_x = false;
+DEF_int32(x, 0, "xxx"); // int32 FLG_x = 0;
 ```
 
-co/flag 支持 7 种类型的 flag 变量：
+co.flag 支持 7 种类型的 flag 变量：
 
 ```cpp
 bool, int32, int64, uint32, uint64, double, string
 ```
 
-每个 flag 变量都有一个默认值，用户可以通过命令行参数或配置文件修改 flag 变量的值。如前面定义的 `FLG_x`，在命令行中可以用 `-x=true`，在配置文件中可以用 `x = true`，设置一个新的值。
+每个 flag 变量都有一个默认值，用户可以通过命令行参数或配置文件修改 flag 变量的值。如前面定义的 `FLG_x`，在命令行中可以用 `-x=23`，在配置文件中可以用 `x = 23`，设置一个新的值。
 
 
 
@@ -34,7 +34,7 @@ bool, int32, int64, uint32, uint64, double, string
 
 命令行参数中，以 `-x=y` 的形式出现，其中 `x` 被称为一个 **command line flag**(以下简称为 flag)。命令行中的 flag `x` 对应代码中的全局变量 `FLG_x`，命令行中的 `-x=y` 就相当于将 `FLG_x` 的值设置为 `y`。为了方便，下面可能将 flag 与 flag 变量统一称为 flag。
 
-co/flag 为了简便易用，设计得非常灵活：
+co.flag 为了简便易用，设计得非常灵活：
 
 - `-x=y` 可以省略前面的 `-`，简写为 `x=y`.
 - `-x=y` 也可以写成 `-x y`.
@@ -51,17 +51,17 @@ co/flag 为了简便易用，设计得非常灵活：
 
 
 
-## API
+## APIs
 
-### flag::init
+### flag::parse
 
 ```cpp
-co::vector<fastring> init(int argc, const char** argv);
-co::vector<fastring> init(int argc, char** argv);
-void init(const fastring& path);
+co::vector<fastring> parse(int argc, char** argv);
+void parse(const fastring& path);
 ```
 
-- 前两个 init 函数，解析命令行参数及配置文件，并更新 flag 变量的值。**此函数一般需要在 main 函数开头调用一次**。大致流程如下：
+- v3.0.1 新增。
+- 第 1 个 parse 函数，解析命令行参数及配置文件，并更新 flag 变量的值。**此函数一般需要在 main 函数开头调用一次**。大致流程如下：
   - 对命令行参数进行预处理，此过程中可能会更新 `FLG_config` 的值。
   - 如果 `FLG_config` 非空，解析由它指定的配置文件，更新 flag 变量的值。
   - 解析其他命令行参数，更新 flag 变量的值。
@@ -70,8 +70,12 @@ void init(const fastring& path);
   - 遇到任何错误时，输出错误信息，并立即退出程序。
   - 若未发生任何错误，返回 non-flag 列表。如执行 `./exe x y` 时，此函数将返回 `["x", "y"]`。
 
-- 最后一个 init 函数，解析配置文件，并更新 flag 变量的值。参数 `path` 是配置文件的路径。遇到错误时，会输出错误信息，并退出程序。
+- 第 2 个 parse 函数，解析配置文件，并更新 flag 变量的值。参数 `path` 是配置文件的路径。遇到错误时，会输出错误信息，并退出程序。
 
+{{< hint warning >}}
+**flag::init**  
+v3.0.1 中，`flag::init()` 被标记为 deprecated，请使用 `flag::parse()`。
+{{< /hint >}}
 
 - 示例
 
@@ -79,7 +83,7 @@ void init(const fastring& path);
 #include "co/flag.h"
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
 }
 ```
 
@@ -101,9 +105,13 @@ fastring set_value(const fastring& name, const fastring& value)
 DEF_bool(b, false, "");
 DEF_int32(i, 0, "");
 DEF_string(s, "", "");
-flag::set_value("b", "true"); // FLG_b -> true
-flag::set_value("i", "23");   // FLG_i -> 23
-flag::set_value("s", "xx");   // FLG_s -> "xx"
+
+int main(int argc, char** argv) {
+    flag::set_value("b", "true"); // FLG_b -> true
+    flag::set_value("i", "23");   // FLG_i -> 23
+    flag::set_value("s", "xx");   // FLG_s -> "xx"
+    flag::parse(argc, argv);
+}
 ```
 
 
@@ -115,7 +123,7 @@ bool alias(const char* name, const char* new_name);
 ```
 
 - v3.0 新增，给 flag 取别名，在**命令行参数或配置文件中**可以用别名取代原名。
-- 此函数非线程安全，需要在 `flag::init()` 之前调用。
+- 此函数非线程安全，需要在 `flag::parse()` 之前调用。
 
 
 - 示例
@@ -125,7 +133,7 @@ DEF_bool(all, false, "");
 
 int main(int argc, char** argv) {
     flag::alias("all", "a");
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
 }
 ```
 
@@ -163,8 +171,13 @@ DEF_int64(i64, 64, "comments"); // int64 FLG_i64 = 64;
 DEF_uint32(u32, 0, "comments"); // uint32 FLG_u32 = 0;
 DEF_uint64(u64, 0, "comments"); // uint64 FLG_u64 = 0;
 DEF_double(d, 2.0, "comments"); // double FLG_d = 2.0;
-DEF_string(s, "x", "comments"); // fastring FLG_s = "x";
+DEF_string(s, "x", "comments"); // fastring& FLG_s = ...;
 ```
+
+{{< hint info >}}
+v3.0.1 中，`DEF_string` 实际上定义了一个 `fastring` 类型的引用。
+{{< /hint >}}
+
 
 
 
@@ -211,7 +224,7 @@ DEC_int64(i64);  // extern int64 FLG_i64;
 DEC_uint32(u32); // extern uint32 FLG_u32;
 DEC_uint64(u64); // extern uint64 FLG_u64;
 DEC_double(d);   // extern double FLG_d;
-DEC_string(s);   // extern fastring FLG_s;
+DEC_string(s);   // extern fastring& FLG_s;
 ```
 
 
@@ -227,7 +240,7 @@ DEC_bool(b);
 DEF_string(s, "hello", "xxx");
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     
     if (!FLG_b) std::cout << "b is false" << std::endl;
     FLG_s += " world";
@@ -281,7 +294,7 @@ DEF_string(s, "nice", "string");
 
 ### 查看帮助信息(--help)
 
-co/flag 支持用 `--help` 命令查看程序的帮助信息，该命令会显示 usage 信息及用户定义的 flag 列表。
+co.flag 支持用 `--help` 命令查看程序的帮助信息，该命令会显示 usage 信息及用户定义的 flag 列表。
 
 ```bash
 $ ./xx --help
@@ -304,7 +317,7 @@ flags:
 
 ### 查看 flag 列表(--)
 
-co/flag 可以用 `--` 命令查看程序中定义的全部 flag 列表(包括co内部定义的flags)：
+co.flag 可以用 `--` 命令查看程序中定义的全部 flag 列表(包括co内部定义的flags)：
 
 ```bash
 $ ./xx --
@@ -312,20 +325,17 @@ flags:
     -boo  bool flag
         type: bool        default: false
         from: test/flag.cc
-    -co_debug_log  enable debug log for coroutine library
-        type: bool        default: false
-        from: src/co/scheduler.cc
     -co_sched_num  number of coroutine schedulers, default: os::cpunum()
         type: uint32      default: os::cpunum()
-        from: src/co/scheduler.cc
+        from: src/co/sched.cc
 ```
 
 
 
 ### 查看程序版本信息
 
-- `version` 是 co/flag 内部定义的 flag，命令行中可以使用 `--version` 命令查看版本信息。
-- `version` 默认值为空，用户需要在调用 `flag::init()` 前，修改其值。
+- `version` 是 coost 内部定义的 flag，命令行中可以使用 `-version` 命令查看版本信息。
+- `version` 默认值为空，用户需要在调用 `flag::parse()` 前，修改其值。
 
 
 - 示例
@@ -335,13 +345,13 @@ flags:
 
 int main(int argc, char** argv) {
     FLG_version = "v3.0.0";
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     return 0;
 }
 ```
 
 ```bash
-$ ./xx --version
+$ ./xx -version
 v3.0.0
 ```
 
@@ -353,7 +363,7 @@ v3.0.0
 
 ### 配置文件格式
 
-co/flag 的配置文件格式比较灵活：
+co.flag 的配置文件格式比较灵活：
 
 - 一行一个配置项，每个配置项对应一个 flag，形式统一为 `x = y`，看起来一目了然。
 - `#` 或 `//` 表示注释，支持行尾注释。
@@ -389,7 +399,7 @@ co/flag 的配置文件格式比较灵活：
 
 ### 自动生成配置文件
 
-- `mkconf` 是 co/flag 内部定义的 flag，它是自动生成配置文件的开关。
+- `mkconf` 是 coost 内部定义的 flag，它是自动生成配置文件的开关。
 - 命令行中可以用 `-mkconf` 自动生成配置文件。
 
 ```bash
@@ -430,9 +440,9 @@ DEF_string(s, "good", "");
 DEF_string(config, "", ".path of config file", conf);
 ```
 
-- `config` 是 co/flag 内部定义的 flag，表示配置文件的路径，它有一个别名 `conf`。
+- `config` 是 coost 内部定义的 flag，表示配置文件的路径，它有一个别名 `conf`。
 - 命令行中可以用 `-config` 或 `-conf` 指定配置文件。
-- 代码中可以在调用 `flag::init()` 之前，修改 `FLG_config` 的值，以指定配置文件。
+- 代码中可以在调用 `flag::parse()` 之前，修改 `FLG_config` 的值，以指定配置文件。
 
 ```bash
 ./xx -config xx.conf
@@ -449,9 +459,9 @@ DEF_string(config, "", ".path of config file", conf);
 
 ## 自定义帮助信息
 
-- `help` 是 co/flag 内部定义的 flag，命令行中可以使用 `--help` 命令查看帮助信息。
-- `FLG_help` 默认为空，使用 co/flag 内部提供的默认帮助信息。
-- 用户想自定义帮助信息时，可以在调用 `flag::init()` 前，修改 `FLG_help` 的值。
+- `help` 是 coost 内部定义的 flag，命令行中可以使用 `--help` 命令查看帮助信息。
+- `FLG_help` 默认为空，使用 coost 内部提供的默认帮助信息。
+- 用户想自定义帮助信息时，可以在调用 `flag::parse()` 前，修改 `FLG_help` 的值。
 
 
 - 示例
@@ -462,7 +472,7 @@ DEF_string(config, "", ".path of config file", conf);
 int main(int argc, char** argv) {
     FLG_help << "usage:\n"
              << "\t./xx -ip 127.0.0.1 -port 7777\n";
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     return 0;
 }
 ```
@@ -472,7 +482,7 @@ int main(int argc, char** argv) {
 
 ## 让程序在后台运行
 
-- `daemon` 是 co/flag 内部定义的 flag，若为 true，程序将在后台运行，仅支持 linux 平台。
+- `daemon` 是 coost 内部定义的 flag，若为 true，程序将在后台运行，仅支持 linux 平台。
 
 - 命令行中可以用 `-daemon` 指定程序以 daemon 形式在后台运行。
 

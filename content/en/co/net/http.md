@@ -1,5 +1,5 @@
 ---
-weight: 15
+weight: 6
 title: "HTTP"
 ---
 
@@ -8,7 +8,7 @@ include: [co/http.h](https://github.com/idealvin/coost/blob/master/include/co/ht
 
 ## http::Client
 
-`http::Client` is a coroutine-based http client, which is implemented based on [libcurl](https://curl.se/libcurl/). 
+`http::Client` is a coroutine-based HTTP client, which is implemented based on [libcurl](https://curl.se/libcurl/). 
 
 
 
@@ -18,12 +18,12 @@ include: [co/http.h](https://github.com/idealvin/coost/blob/master/include/co/ht
 explicit Client(const char* serv_url);
 ```
 
-- Constructor, the parameter serv_url is the url address of the server, and its form is `protocol://host:port`, the following server urls are all ok:
+- Constructor, the parameter `serv_url` is the url address of the server, and its form is `protocol://host:port`, the following server urls are all ok:
    - "github.com"
    - "https://github.com"
    - "http://127.0.0.1:7788"
    - "http://[::1]:8888"
-- Like the tcp::Client, connection is not established in the constructor.
+- Connection is not established in the constructor.
 
 
 
@@ -46,7 +46,7 @@ void add_header(const char* key, int val);
 
 - Add a HTTP header.
 - Users can use this method to add headers before performing HTTP requests, and the added headers will be present in all subsequent requests.
-- In the second version, the parameter val is an integer, which is automatically converted into a string internally.
+- In the second version, the parameter val is an integer, which is automatically converted to string internally.
 
 
 
@@ -66,8 +66,8 @@ const fastring& body() const;
 void close();
 ```
 
-- Close the HTTP connection, must be called in the coroutine.
-- Once this method is called, the http::Client object can no longer be used until you reset the server url by calling [reset()](#clientreset).
+- Close the HTTP connection, must be called in coroutine.
+- Once this method is called, the `http::Client` object can no longer be used until you reset the server url by calling [reset()](#clientreset).
 
 
 
@@ -79,9 +79,9 @@ void del(const char* url, const char* s);
 void del(const char* url);
 ```
 
-- HTTP **DELETE** request, must be called in the coroutine.
-- The parameter url must be a string beginning with `'/'`.
-- The first two versions are suitable for DELETE requests with a body, and parameter s is a pointer to the body data.
+- HTTP **DELETE** request, must be called in coroutine.
+- The parameter `url` must be a string beginning with `'/'`.
+- The first two versions are suitable for DELETE requests with a body, and parameter `s` is a pointer to the body data.
 - The third version is for DELETE requests without body.
 
 
@@ -102,8 +102,8 @@ void* easy_handle() const;
 void get(const char* url);
 ```
 
-- HTTP **GET** request, must be called in the coroutine.
-- The parameter url must be a string beginning with `'/'`.
+- HTTP **GET** request, must be called in coroutine.
+- The parameter `url` must be a string beginning with `/`.
 
 
 
@@ -113,8 +113,8 @@ void get(const char* url);
 void head(const char* url);
 ```
 
-- HTTP **HEAD** request, must be called in the coroutine.
-- The parameter url must be a string beginning with `'/'`.
+- HTTP **HEAD** request, must be called in coroutine.
+- The parameter `url` must be a string beginning with `/`.
 
 
 
@@ -126,8 +126,7 @@ const fastring& header() const;
 ```
 
 - The first version gets value of a HTTP header. If the header does not exist, an empty string is returned.
-- The second version gets the entire HTTP header part.
-
+- The second version gets the entire HTTP header part (include the start line).
 
 - Example
 
@@ -146,8 +145,7 @@ void perform();
 ```
 
 - Perform a HTTP request, get, post and other methods are actually implemented based on this method.
-- Users generally don't need to call this method. Only when the get, post and other methods provided by http::Client can't meet their needs, should they consider using this method to customize HTTP requests.
-
+- Users generally don't need to call this method. Only when the get, post and other methods provided by `http::Client` can't meet their needs, should they consider using this method to customize HTTP requests.
 
 - Example
 
@@ -170,8 +168,8 @@ void post(const char* url, const char* s, size_t n);
 void post(const char* url, const char* s);
 ```
 
-- HTTP **POST** request, must be called in the coroutine.
-- The parameter url must be a string beginning with `'/'`.
+- HTTP **POST** request, must be called in coroutine.
+- The parameter `url` must be a string beginning with `/`.
 
 
 
@@ -181,9 +179,9 @@ void post(const char* url, const char* s);
 void put(const char* url, const char* path);
 ```
 
-- HTTP **PUT** request, used to upload a file, must be called in the coroutine.
-- The parameter url must be a string beginning with `'/'`.
-- The parameter path is path of the file to be uploaded.
+- HTTP **PUT** request, used to upload a file, must be called in coroutine.
+- The parameter `url` must be a string beginning with `/`.
+- The parameter `path` is path of the file to be uploaded.
 
 
 
@@ -193,7 +191,17 @@ void put(const char* url, const char* path);
 void remove_header(const char* key);
 ```
 
-- The headers added by [add_header()](#clientadd_header) method will apply to all subsequent HTTP requests. If the user does not want a header to appear in a subsequent request, this method can be used to remove the header.
+- The headers added by [add_header()](#clientadd_header) method will apply to all subsequent HTTP requests. If users do not want a header to appear in subsequent requests, this method can be called to remove the header.
+
+
+
+### Client::reset
+
+```cpp
+void reset(const char* serv_url);
+```
+
+- Reset the server url.
 
 
 
@@ -205,7 +213,7 @@ int response_code() const;
 
 - Get the response code of the current HTTP request.
 - Normally, the return value is a value between 100 and 511.
-- If the HTTP request is not sent due to network error or other reasons, or no response from the server was received within the timeout period, this method returns 0.
+- If the HTTP request is not sent due to network error or other reasons, or no response from the server was received within the timeout period, this method returns 0, and [strerror()](#clientstrerror) can be called to get the error message.
 
 
 
@@ -225,12 +233,11 @@ int status() const;
 const char* strerror() const;
 ```
 
-- Get the error information of the current HTTP request. 
+- Get the error message of the current HTTP request.
 
 
 
 ### Example
-
 
 ```cpp
 void f() {
@@ -260,7 +267,7 @@ go(f);
 
 ## http::Req
 
-`http::Req` is an encapsulation of HTTP request, it is used in http::Server. 
+`http::Req` is an encapsulation of HTTP request, it is used in [http::Server](#httpserver). 
 
 
 ### Req::Req
@@ -279,9 +286,8 @@ Req() = default;
 const char* body() const;
 ```
 
-
 - Get the body data in the HTTP request.
-- It returns a pointer, **not null-terminated**. Users need call [body_size()](#reqbody_size) to get its length.
+- It returns a pointer, **not null-terminated**. Users must call [body_size()](#reqbody_size) to get its length.
 
 
 
@@ -291,7 +297,7 @@ const char* body() const;
 size_t body_size() const;
 ```
 
-- Returns the length of the HTTP request body.
+- Returns length of the HTTP request body.
 
 
 
@@ -346,14 +352,14 @@ const fastring& url() const;
 Version version() const;
 ```
 
-- Returns the HTTP version in the HTTP request. The return value is one of `http::kHTTP10` or `http::kHTTP11`. Currently, HTTP/2.0 is not supported.
+- Returns version in the HTTP request. The return value is one of `http::kHTTP10` or `http::kHTTP11`. Currently, HTTP/2.0 is not supported.
 
 
 
 
 ## http::Res
 
-`http::Res` class is the encapsulation of HTTP response, it is used in http::Server. 
+`http::Res` class is the encapsulation of HTTP response, it is used in [http::Server](#httpserver). 
 
 
 ### Res::Res
@@ -386,7 +392,7 @@ void set_body(const fastring& s);
 ```
 
 - Set the body part of the HTTP response.
-- The parameter s is the body data, and the parameter n is the length of s. In the second version, s ends with `'\0'`.
+- The parameter `s` is the body data, and the parameter `n` is the length of `s`. In the second version, `s` ends with `'\0'`.
 
 
 
@@ -426,9 +432,9 @@ template<typename T>
 Server& on_req(void (T::*f)(const Req&, Res&), T* o);
 ```
 
-- Set a callback for processing a HTTP request.
-- In the third version, the parameter f is a method in class T, and the parameter o is a pointer to type T.
-- When the server receives an HTTP request, it will call the callback set by this method to process the request.
+- Set a callback for handling a HTTP request.
+- In the third version, the parameter `f` is a method in class `T`, and the parameter `o` is a pointer to type `T`.
+- When the server receives a HTTP request, it will call the callback set by this method to handle the request.
 
 
 
@@ -440,8 +446,8 @@ void start(const char* ip, int port, const char* key, const char* ca);
 ```
 
 - Start the HTTP server, this method will not block the current thread.
-- The parameter ip is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
-- The parameter **key** is path of a **PEM** file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. If key or ca is NULL or empty string, SSL will be disabled.
+- The parameter `ip` is the server ip, which can be an IPv4 or IPv6 address, and the parameter `port` is the server port. 
+- The parameter `key` is the path of a PEM file which stores the SSL private key, and the parameter `ca` is the path of a PEM file which stores the SSL certificate. If `key` or `ca` is NULL or empty string, SSL will be disabled.
 - Starting from v3.0, the server no longer depends on the `http::Server` object after startup.
 
 
@@ -484,29 +490,18 @@ http::Server().on_req(cb).start(
 ```
 
 
-There is a simple http::Server demo in co/test, the user can build and run it like this:
-
-```sh
-xmake -b http_serv
-xmake r http_serv
-```
-
-After starting the http server, you can enter `127.0.0.1/hello` in the address bar of the browser to see the result. 
 
 
-
-
-## Static web server (so::easy)
+## Static web server
 
 ```cpp
 void easy(const char* root_dir=".", const char* ip="0.0.0.0", int port=80);
 void easy(const char* root_dir, const char* ip, int port, const char* key, const char* ca);
 ```
 
-- Start a static web server, the parameter root_dir is the root directory of the web server.
-- The parameter ip can be an IPv4 or IPv6 address.
-- The second version supports HTTPS, the parameter key is the SSL private key, the parameter ca is the SSL certificate, and both key and ca are files in pem format.
-- When key or ca is NULL or an empty string, HTTPS is not used.
+- Start a static web server, the parameter `root_dir` is the root directory of the web server.
+- The parameter `ip` can be an IPv4 or IPv6 address.
+- The second version supports HTTPS, the parameter `key` is the SSL private key, the parameter `ca` is the SSL certificate, and both `key` and `ca` are files in pem format. When `key` or `ca` is NULL or an empty string, HTTPS is disabled.
 - This method will block the current thread.
 
 
@@ -519,7 +514,7 @@ void easy(const char* root_dir, const char* ip, int port, const char* key, const
 DEF_string(d, ".", "root dir"); // root dir of web server
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     so::easy(FLG_d.c_str()); // mum never have to worry again
     return 0;
 }
@@ -530,7 +525,7 @@ int main(int argc, char** argv) {
 
 ## Config items
 
-co/http uses [co/flag](../../flag/) to define config items. The flags defined in co/http are listed below.
+Coost uses [co.flag](../../flag/) to define config items for HTTP.
 
 
 ### http_conn_timeout

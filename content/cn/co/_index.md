@@ -1,4 +1,4 @@
 ---
 weight: 3
-title: "CO 参考文档"
+title: "参考文档"
 ---

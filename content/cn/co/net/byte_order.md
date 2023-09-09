@@ -1,8 +1,7 @@
 ---
-weight: 13
+weight: 1
 title: "字节序"
 ---
-
 
 include: [co/byte_order.h](https://github.com/idealvin/coost/blob/master/include/co/byte_order.h).
 
@@ -12,22 +11,22 @@ include: [co/byte_order.h](https://github.com/idealvin/coost/blob/master/include
 
 单个字节在大、小端机器上是完全相同的，而多个字节的基本数据类型，在大、小端机器上有着不同的字节序。这里说的基本数据类型是指像 `int`, `double` 这样的内置类型，字符串不在此列，它是由单字节构成的序列，在大、小端机器上有着相同的存储形式。
 
-
 网络上传输的数据采用大端字节序，所谓的网络字节序也就是大端字节序。发送数据到网络上时，需要将其中的多字节基本类型转换成网络字节序，而从网络上接收数据时，则需要转换成所在主机的字节序。
 
 
 `byte_order.h` 定义了如下的方法：
+
 ```cpp
 ntoh16  ntoh32  ntoh64
 hton16  hton32  hton64
 ```
+
 这些方法分别适用于长度为 2, 4, 8 字节的整数，其中 `ntoh` 系列将网络字节序转换成主机字节序，`hton` 系列则将主机字节序转换成网络字节序。
 
 
 - 代码示例
+
 ```cpp
 uint32 h = 777;
 uint32 n = hton32(h);
 ```
-
-

@@ -11,7 +11,7 @@ include: [co/def.h](https://github.com/idealvin/coost/blob/master/include/co/def
 
 ### 定长整数类型
 
-`def.h` 定义了如下的 8 种整数类型：
+`co/def.h` 定义了如下的 8 种整数类型：
 
 ```cpp
 typedef int8_t  int8;

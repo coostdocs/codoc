@@ -17,7 +17,7 @@ The compilers required are as follows:
 
 ## xmake
 
-CO recommends using [xmake](https://github.com/xmake-io/xmake) as the build tool. 
+Coost recommends using [xmake](https://github.com/xmake-io/xmake) as the build tool. 
 
 
 
@@ -25,17 +25,11 @@ CO recommends using [xmake](https://github.com/xmake-io/xmake) as the build tool
 
 For Windows, mac and debian/ubuntu, you can go directly to the [release page of xmake](https://github.com/xmake-io/xmake/releases) to get the installation package. For other systems, please refer to xmake's [Installation instructions](https://xmake.io/#/guide/installation).
 
-Xmake disables compiling as root by default on Linux. [ruki](https://github.com/waruqi) says it is not safe. You can add the following line to `~/.bashrc` to enable it:
-
-```cpp
-export XMAKE_ROOT=y
-```
-
 
 
 ### Build
 
-Run commands below in the root directory of CO to build libco and other projects:
+Run commands below in the root directory of co to build libco and other projects:
 
 ```sh
 xmake -a   # build all projects (libco, gen, test, unitest)
@@ -50,7 +44,7 @@ xmake -a
 
 Xmake may install libcurl and openssl from the network, which may be slow.
 
-`-a` in the command line means to build all projects in CO. If `-a` is not added, only libco will be built by default. In addition, users may use `-v` or `-vD` to print more detailed compiling information:
+`-a` in the command line means to build all projects in coost. If `-a` is not added, only libco will be built by default. In addition, users may use `-v` or `-vD` to print more detailed compiling information:
 
 ```sh
 xmake -v -a
@@ -76,8 +70,6 @@ xmake -v
 xmake f -k shared
 xmake -v
 ```
-
-Note that dynamic library is not supported on Windows.
 
 
 #### Build 32-bit libco
@@ -111,7 +103,7 @@ xmake -v
 
 #### Android and IOS support
 
-CO can also be built on Android and IOS platforms, see [Github Actions](https://github.com/idealvin/coost/actions) for details. Since the author has no front-end development experience, it has not been tested on Android and IOS.
+Coost can also be built on Android and IOS platforms, see [Github Actions](https://github.com/idealvin/coost/actions) for details. Coost has not been tested on Android and IOS yet.
 
 - android
 
@@ -171,8 +163,6 @@ cp gen /usr/local/bin/
 gen hello_world.proto
 ```
 
-The proto file format can refer to [hello_world.proto](https://github.com/idealvin/coost/blob/master/test/so/rpc/hello_world.proto).
-
 
 
 ### Install libco
@@ -190,7 +180,7 @@ xmake i -o /usr/local  # install to /usr/local
 ### Install libco from xmake repo
 
 ```cpp
-xrepo install -f "openssl=true,libcurl=true" co
+xrepo install -f "openssl=true,libcurl=true" coost
 ```
 
 
@@ -238,13 +228,3 @@ cmake .. -DBUILD_ALL=ON -DWITH_LIBCURL=ON -DWITH_OPENSSL=ON
 make -j8
 ```
 
-
-
-### Install libco from vcpkg
-
-```sh
-vcpkg install co:x64-windows
-
-# HTTP & SSL support
-vcpkg install co[libcurl,openssl]:x64-windows
-```

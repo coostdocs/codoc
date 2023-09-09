@@ -12,7 +12,7 @@ title: "Introduction"
 
 **[coost](https://github.com/idealvin/coost)** is an elegant and efficient cross-platform C++ base library. Its goal is to create a sword of C++ to make C++ programming easy and enjoyable.
 
-The original name of coost is **co** or cocoyaxi. It is like [boost](https://www.boost.org/), but more lightweight, **the static library built on linux or mac is only about 1MB in size**. However, it still provides enough powerful features:
+Coost, **co** for short, is like [boost](https://www.boost.org/), but more lightweight, **the static library built on linux or mac is only about 1MB in size**. However, it still provides enough powerful features:
 
 
 {{< columns >}}
@@ -20,9 +20,9 @@ The original name of coost is **co** or cocoyaxi. It is like [boost](https://www
 - Command line and config file parser (flag)
 - **High performance log library (log)**
 - Unit testing framework
+- Benchmark testing framework
 - **go-style coroutine**
 - Coroutine-based network library
-- Efficient JSON library
 - **JSON RPC framework**
 
 <--->
@@ -38,9 +38,9 @@ The original name of coost is **co** or cocoyaxi. It is like [boost](https://www
 <--->
 
 - **God-oriented programming**
-- LruMap
-- hash library
-- path library
+- Efficient JSON library
+- Hash library
+- Path library
 - File utilities (fs)
 - System operations (os)
 - **Fast memory allocator**
@@ -104,13 +104,13 @@ The simplest, you can directly include [co/all.h](https://github.com/idealvin/co
 DEF_string(s, "nice", "");
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     LOG << FLG_s;
     return 0;
 }
 ```
 
-The above is a simple example. The first line of the main function is used to parse the command-line flags and the config file. Some components in coost use co/flag to define config items. Therefore, it is generally necessary to call `flag::init()` at the beginning of the main function for initialization.
+The above is a simple example. The first line of the main function is used to parse the command-line flags and the config file. Some components in coost use co/flag to define config items. Therefore, it is generally necessary to call `flag::parse()` at the beginning of the main function for initialization.
 
 Users can also use the macro `DEF_main` to define the main function:
 
@@ -125,7 +125,7 @@ DEF_main(argc, argv) {
 }
 ```
 
-`DEF_main` puts code in the main function into a coroutine, and `flag::init()` has been called internally, and users needn't call it manually.
+`DEF_main` puts code in the main function into a coroutine, and `flag::parse()` has been called internally, and users needn't call it manually.
 
 
 
@@ -227,7 +227,7 @@ DEF_uint32(u, 0, "xxx");
 DEF_string(s, "", "xx");
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     COUT << "x: " << FLG_x;
     COUT << "y: " << FLG_y;
     COUT << "debug: " << FLG_debug;
@@ -263,7 +263,7 @@ log supports two types of logs: one is level log, which is divided into 5 levels
 #include "co/log.h"
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
 
     TLOG("xx") << "s" << 23; // topic log
     DLOG << "hello " << 23;  // debug
@@ -335,7 +335,7 @@ The above is a simple example. The `DEF_test` macro defines a test unit, which i
 #include "co/unitest.h"
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     unitest::run_all_tests();
     return 0;
 }
@@ -347,6 +347,42 @@ The directory [unitest](https://github.com/idealvin/coost/tree/master/unitest) c
 xmake r unitest -a   # Run all test cases
 xmake r unitest -os  # Run test cases in the os unit
 ```
+
+
+
+### Benchmark
+
+[benchmark](../../co/benchmark/) is a simple and easy-to-use benchmark testing framework.
+
+```cpp
+#include "co/benchmark.h"
+#include "co/mem.h"
+
+BM_group(malloc) {
+     void* p;
+
+     BM_add(::malloc)(
+         p = ::malloc(32);
+     );
+     BM_use(p);
+
+     BM_add(co::alloc)(
+         p = co::alloc(32);
+     );
+     BM_use(p);
+}
+
+int main(int argc, char** argv) {
+     flag::parse(argc, argv);
+     bm::run_benchmarks();
+     return 0;
+}
+```
+
+In the above example, `BM_group` defines a test group, `BM_add` adds two test cases that need to be compared, and `BM_use` prevents the compiler from optimizing out the test code.
+
+The benchmark results are output as a markdown table, as shown below:
+![bm.png](/images/bm.png)
 
 
 
@@ -395,15 +431,15 @@ coost has implemented a [go-style](https://github.com/golang/go) coroutine, whic
 - Support multi-thread scheduling, the default number of threads is the number of system CPU cores.
 - Shared stack, coroutines in the same thread share several stacks (the default size is 1MB), and the memory usage is low.
 - There is a flat relationship between coroutines, and new coroutines can be created from anywhere (including in coroutines).
-- Support coroutine synchronization events, coroutine locks, channels, and waitgroups.
+- Support coroutine sync event, coroutine locks, channels, and waitgroups.
 
 ```cpp
 #include "co/co.h"
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
 
-    co::WaitGroup wg;
+    co::wait_group wg;
     wg.add(2);
 
     go([wg](){
@@ -421,16 +457,16 @@ int main(int argc, char** argv) {
 }
 ```
 
-In the above code, the coroutines created by `go()` will be evenly distributed to different scheduling threads. Users can also control the scheduling of coroutines by themselves:
+In the above code, the coroutines created by `go()` will be distributed to different scheduling threads. Users can also control the scheduling of coroutines by themselves:
 
 ```cpp
 // run f1 and f2 in the same scheduler
-auto s = co::next_scheduler();
+auto s = co::next_sched();
 s->go(f1);
 s->go(f2);
 
 // run f in all schedulers
-for (auto& s : co::schedulers()) {
+for (auto& s : co::scheds()) {
     s->go(f);
 }
 ```
@@ -439,11 +475,10 @@ for (auto& s : co::schedulers()) {
 
 ### network programming
 
-coost provides a coroutine-based network programming framework, which can be roughly divided into 3 parts:
+Coost provides a coroutine-based network programming framework:
 
-- **[coroutineized socket API](../../co/coroutine/#coroutineized-socket-api)**, similar in form to the system socket API, users familiar with socket programming can easily write high-performance network programs in a synchronous manner.
+- **[coroutineized socket API](../../co/net/sock/)**, similar in form to the system socket API, users familiar with socket programming can easily write high-performance network programs in a synchronous manner.
 - [TCP](../../co/net/tcp/), [HTTP](../../co/net/http/), [RPC](../../co/net/rpc/) and other high-level network programming components, compatible with IPv6, also support SSL, it is more convenient to use than socket API.
-- **[System API hook](../../co/coroutine/#system-api-hook)**, with which, third-party network libraries can be used directly in coroutines.
 
 
 **RPC server**
@@ -454,7 +489,7 @@ coost provides a coroutine-based network programming framework, which can be rou
 #include "co/time.h"
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
 
     rpc::Server()
         .add_service(new xx::HelloWorldImpl)
@@ -481,7 +516,7 @@ curl http://127.0.0.1:7788/xx --request POST --data '{"api":"ping"}'
 DEF_string(d, ".", "root dir"); // docroot for the web server
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     so::easy(FLG_d.c_str()); // mum never have to worry again
     return 0;
 }

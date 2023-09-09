@@ -63,6 +63,10 @@ aside nav ul {
   ul {
     padding-inline-start: $padding-16;
   }
+
+  span {
+    font-weight: bold;
+  }
 }
 
 ul.pagination {
@@ -98,7 +102,7 @@ ul.pagination {
 .book-menu {
   flex: 0 0 $menu-width;
   font-size: $font-size-14;
-  line-height: 1.5;
+  line-height: 1.25;
 
   .justify-between {
     justify-content: initial;
@@ -137,8 +141,8 @@ ul.pagination {
   }
 
   input.toggle + label::before {
-    width: 0.875rem;
-    margin-left: -0.875rem;
+    width: 0.75rem;
+    margin-left: -0.75rem;
     content: "▸";
   }
 

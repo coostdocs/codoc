@@ -1,6 +1,6 @@
 ---
 weight: 1
-title: "Basic definitions"
+title: "Basic Definitions"
 ---
 
 include: [co/def.h](https://github.com/idealvin/coost/blob/master/include/co/def.h).
@@ -11,7 +11,7 @@ include: [co/def.h](https://github.com/idealvin/coost/blob/master/include/co/def
 
 ### Fixed-length integer type
 
-`def.h` defines the following 8 types of integers:
+`co/def.h` defines the following 8 types of integers:
 
 ```cpp
 typedef int8_t   int8;

@@ -1,6 +1,6 @@
 ---
-weight: 6
-title: "co/log"
+weight: 5
+title: "log"
 ---
 
 include: [co/log.h](https://github.com/idealvin/coost/blob/master/include/co/log.h).
@@ -8,15 +8,12 @@ include: [co/log.h](https://github.com/idealvin/coost/blob/master/include/co/log
 
 ## Introduction
 
-`co/log` is a C++ streaming log library similar to [google glog](https://github.com/google/glog), which prints logs like this:
-
+**co.log** is a high-performance log library provided by coost. It supports two types of logs, level log and topic log (TLOG). It prints logs as follows:
 
 ```cpp
 LOG << "hello world" << 23;     // level log
 TLOG("topic") << "hello" << 23; // topic log
 ```
-
-co/log supports two types of logs, level log and topic log (TLOG).
 
 
 
@@ -24,7 +21,9 @@ co/log supports two types of logs, level log and topic log (TLOG).
 
 Level log is divided into 5 levels: debug, info, warning, error, fatal, and provides a series of macros to print logs of different levels.
 
-**A fatal log will terminate the program**, and co/log will also print the stack information before the program exits.
+{{< hint warning >}}
+**A fatal log will terminate the program**, and `co.log` will also try to print the stack information before the program exits.
+{{< /hint >}}
 
 Different levels of logs are written to the same file. It is usually used to print debugging information.
 
@@ -40,9 +39,9 @@ Topic logs are written into different files according to the topic, and is gener
 
 ### Performance
 
-co/log uses an asynchronous implementation. The log is first written to the cache, and after a certain amount or more than a certain period of time, the background thread writes all data in the cache to the file at a time. The performance has improved by about 20 to 150 times compared with glog on different platforms. The following table shows the test results of printing 1 million info logs (about 50 bytes each) by a single-thread on different platforms:
+`co.log` is internally implemented in an asynchronous manner. The logs are first written into the cache. After reaching a certain amount or exceeding a certain period of time, the background thread writes the file at one time. The performance is improved by about 20 to 150 times compared with glog on different platforms. The following table shows the test results of continuously printing 1 million info logs (about 50 bytes each) in a single thread on different platforms:
 
-| platform | google glog | co/log |
+| platform | glog | co.log |
 | --- | --- | --- |
 | win2012 HHD | 1.6MB/s | 180MB/s |
 | win10 SSD | 3.7MB/s | 560MB/s |
@@ -61,9 +60,9 @@ void exit();
 ```
 
 - Write logs in the cache to the file and exit the log thread.
-- This function is automatically called by co/log when the program exits normally.
+- This function is automatically called by `co.log` when the program exits normally.
 - It is safe to call this function multiple times.
-- When co/log captures `SIGINT, SIGTERM, SIGQUIT` and other signals, this function will be called before the program exits.
+- When `co.log` captures `SIGINT, SIGTERM, SIGQUIT` or other similar signals, this function will be called before the program exits.
 
 
 
@@ -80,7 +79,7 @@ void set_write_cb(
 );
 ```
 
-- By default, co/log writes logs to a local file. Users can set a callback to write logs to different destinations through this API.
+- By default, `co.log` writes logs to a local file. Users can set a callback to write logs to different destinations through this API.
 - The parameter `cb` is the callback. In the first version (for level log), cb has 2 parameters, a pointer to the log buffer and its length. In the second version (for TLOG), cb has 3 parameters, the first is the topic, the last two parameters are the same as in the 1st version. The buffer may contain multiple logs.
 - The parameter `flags` is new in v3.0, the default is 0, it can be a combination of the following options:
    - `log::log2local`, also write logs to local file.
@@ -89,7 +88,7 @@ void set_write_cb(
 
 ### APIs removed in v3.0
 
-- **log::init**, removed in v3.0, starting from co 3.0, we only need to call `flag::init(argc, argv)` at the beginning of the main function.
+- **log::init**, removed in v3.0, starting from v3.0, we only need to call `flag::parse(argc, argv)` at the beginning of the main function.
 
 - **log::set_single_write_cb**, removed in v3.0.
 
@@ -110,7 +109,7 @@ DLOG  LOG  WLOG  ELOG  FLOG
 - These macros are actually references to [fastream](../fastream/), so any type supported by `fastream::operator<<` can be printed.
 - These macros will automatically add a '\n' at the end of each log, and users do not need to manually enter a newline character.
 - The first 4 types will only print the log when the `FLG_min_log_level` is not greater than the current log level. The user can set FLG_min_log_level to a larger value to disable low-level logs.
-- Print a fatal level log, which means that the program has a fatal error. co/log will print the stack information of the current thread and terminate the program.
+- Print a fatal level log, which means that the program has a fatal error. coost will print the stack information of the current thread and terminate the program.
 
 
 - Example
@@ -137,7 +136,11 @@ FLOG << "this is FATAL log "<< 23;
 
 - The above 5 macros accept a conditional parameter cond, and only print the log when cond is true.
 - The parameter cond can be any expression whose value is of type bool.
-- Since the condition is judged in the first place, even if the log of the corresponding level is disabled, these macros will ensure that the cond expression is executed.
+
+{{< hint warning >}}
+Since the condition is checked in the first place, even if the log of the corresponding level is disabled, these macros will ensure that the cond expression is executed.
+{{< /hint >}}
+
 
 
 - Example
@@ -162,9 +165,8 @@ FLOG_IF(s == -1) << "create socket ko: "<< s;
 #define ELOG_EVERY_N(n) _LOG_EVERY_N(n, ELOG)
 ```
 
-- The above macro prints the log once every n entries, internally counted by [atomic operation](../atomic/), which is **thread safe**.
-- The parameter n must be an integer greater than 0, and generally should not exceed the maximum value of the int type.
-- When the parameter n is a power of 2, the log will be printed exactly once every n entries, otherwise there may be very few cases when it is not printed once every n entries.
+- The above macros print the log once every n entries.
+- The parameter n must be an integer greater than 0.
 - The first log will always be printed.
 - The program will terminate as soon as the fatal log is printed, so FLOG_EVERY_N is not provided.
 
@@ -190,7 +192,7 @@ ELOG_EVERY_N(32) << "this is ERROR log "<< 23;
 #define ELOG_FIRST_N(n) _LOG_FIRST_N(n, ELOG)
 ```
 
-- The above macro prints the first n logs, internally counted by [atomic operation](../atomic/), which is **thread safe**.
+- The above macros print the first n logs.
 - The parameter n is an integer not less than 0 (no log will be printed when it is equal to 0). Generally, it should not exceed the maximum value of the int type.
 - In general, do not use complex expressions for the parameter n.
 - The program will terminate as soon as the fatal log is printed, so FLOG_FIRST_N is not provided.
@@ -247,7 +249,7 @@ TLOG_IF("xx", true) << "hello " << 23;
 #define CHECK_LT(a, b) _CHECK_OP(a, b, <)
 ```
 
-- The above macros can be regarded as an enhanced version of assert, and they will not be cleared in DEBUG mode.
+- The above macros can be regarded as an enhanced version of `assert`, and they will not be cleared in DEBUG mode.
 - These macros are similar to `FLOG` and can print fatal level logs.
 - `CHECK` asserts that the condition cond is true, and cond can be any expression with a value of type bool.
 - `CHECK_NOTNULL` asserts that the pointer is not NULL.
@@ -259,7 +261,7 @@ TLOG_IF("xx", true) << "hello " << 23;
 - `CHECK_LT` asserts `a < b`.
 - It is generally recommended to use `CHECK_XX(a, b)` first, they provide more information than `CHECK(cond)`, and will print out the values of parameters a and b.
 - Types not supported by `fastream::operator<<`, such as iterator type of STL containers, cannot use the `CHECK_XX(a, b)` macros.
-- When the assertion fails, the log library first calls `log::close()`, then prints the function call stack information of the current thread, and then exits the program.
+- When the assertion fails, `co.log` calls `log::exit()` at first, then prints the stack information of the current thread, and then exits the program.
 
 
 - Example
@@ -282,11 +284,11 @@ CHECK(it != m.end()); // Cannot use CHECK_NE(it, m.end()), the compiler will rep
 
 ## Stack trace
 
-`co/log` will print the function call stack when `CHECK` assertion failed, or an abnormal signal like `SIGSEGV` was caught. See details below:
+`co.log` will print the stack information when `CHECK` assertion failed, or an abnormal signal like `SIGSEGV` was caught. See details below:
 
 ![stack](https://coostdocs.github.io/images/stack.png)(https://asciinema.org/a/435894)
 
-To get the stack trace, you should compile with debug symbols (compile with `-g` for gcc, etc). And on linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system. On linux, `libbacktrace` may have been installed within a newer version of gcc. You may find it in a directory like `/usr/lib/gcc/x86_64-linux-gnu/9`. Otherwise, you can install it by yourself as follow:
+To get the stack trace, you should compile with debug symbols (compile with `-g` for gcc, etc). And on linux and macosx, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required, make sure you have installed it on your system. On linux, `libbacktrace` may have been installed within gcc. You may find it in a directory like `/usr/lib/gcc/x86_64-linux-gnu/9`. Otherwise, you can install it by yourself as follow:
 
 ```sh
 git clone https://github.com/ianlancetaylor/libbacktrace.git
@@ -301,26 +303,18 @@ sudo make install
 
 ## Configuration
 
-co/log uses [co/flag](../flag/) to define config items. The flags defined inside co/log are listed below. These config items are valid for both level log and TLOG unless otherwise specified.
+`co.log` uses [co.flag](../flag/) to define config items. The flags defined inside `co.log` are listed below. These config items are valid for both level log and TLOG unless otherwise specified.
 
 
 ### log_dir
 
-```cpp
-DEF_string(log_dir, "logs", "#0 log dir, will be created if not exists");
-```
-
 - Specify the log directory. The default is the `logs` directory under the current directory. If it does not exist, it will be created automatically.
-- log_dir can be an absolute path or a relative path, and the path separator can be either '/' or '\'. It is generally recommended to use '/'.
+- log_dir can be an absolute path or a relative path, and the path separator can be either '/' or '\\'. It is generally recommended to use '/'.
 - When the program starts, make sure that the current user has sufficient permissions, otherwise the creation of the log directory may fail.
 
 
 
 ### log_file_name
-
-```cpp
-DEF_string(log_file_name, "", "#0 name of log file, using exename if empty");
-```
 
 - Specify the log file name (without path), the default is empty, use the program name (`.exe` at the end will be removed), for example, the log file name corresponding to program `xx` or `xx.exe` is `xx.log`.
 - If the log file name does not end with `.log`, co/log automatically adds `.log` to the end of it.
@@ -329,40 +323,23 @@ DEF_string(log_file_name, "", "#0 name of log file, using exename if empty");
 
 ### min_log_level
 
-```cpp
-DEF_int32(min_log_level, 0, "#0 write logs at or above this level, 0-4 (debug|info|warning|error|fatal)");
-```
-
 - For level log only. Specify the minimum level of logs to be printed, which can be used to disable low-level logs, the default is 0, and all levels of logs are printed.
 
 
 
 ### max_log_size
 
-```cpp
-DEF_int32(max_log_size, 4096, "#0 max size of a single log");
-```
-
 - Specify the maximum size of a single log, the default is 4k. A log will be truncated if its size is larger than this value.
-- This value cannot exceed half of **max_log_buffer_size**.
 
 
 
 ### max_log_file_size
 
-```cpp
-DEF_int64(max_log_file_size, 256 << 20, "#0 max size of log file, default: 256MB");
-```
-
-- Specify the maximum size of a log file. The default is 256M. If this size is exceeded, a new log file will be generated, and the old log file will be renamed.
+- Specify the maximum size of a log file. The default is 256M. If this size is exceeded, a new log file will be created, and the old log file will be renamed.
 
 
 
 ### max_log_file_num
-
-```cpp
-DEF_uint32(max_log_file_num, 8, "#0 max number of log files");
-```
 
 - Specify the maximum number of log files. The default is 8. If this value is exceeded, old log files will be deleted.
 
@@ -370,19 +347,11 @@ DEF_uint32(max_log_file_num, 8, "#0 max number of log files");
 
 ### max_log_buffer_size
 
-```cpp
-DEF_uint32(max_log_buffer_size, 32 << 20, "#0 max size of log buffer, default: 32MB");
-```
-
 - Specify the maximum size of the log cache. The default is 32M. If this value is exceeded, about half of the logs will be lost.
 
 
 
 ### log_flush_ms
-
-```cpp
-DEF_uint32(log_flush_ms, 128, "#0 flush the log buffer every n ms");
-```
 
 - The time interval for the background thread to flush the log cache to the file, in milliseconds.
 
@@ -390,31 +359,23 @@ DEF_uint32(log_flush_ms, 128, "#0 flush the log buffer every n ms");
 
 ### log_daily
 
-````cpp
-DEF_bool(log_daily, false, ">>#0 if true, enable daily log rotation");
-````
-
 - Generate log files by day, the default is false.
 
 
 
 ### cout
 
-```cpp
-DEF_bool(cout, false, "#0 also logging to terminal");
-```
-
-- Terminal log switch, the default is false. If true, logs will also be printed to the terminal.
+- Terminal log switch, the default is false. If true, logs will also be printed to the console.
 
 
 
 
 ## Log file
 
-### Log Organization
+### Log file name
 
 
-co/log will record all levels of logs in the same file. By default, the program name is used as the log file name. For example, the log file of process xx is xx.log. When the log file reaches the maximum size (FLG_max_log_file_size), co/log will rename the log file and generate a new file. The log directory may contain the following files:
+`co.log` will write all levels of logs into the same file. By default, the program name is used as the log file name. For example, the log file of process xx is xx.log. When the log file reaches the maximum size (FLG_max_log_file_size), `co.log` will rename the log file and generate a new file. The log directory may contain the following files:
 
 
 ```bash
@@ -424,29 +385,26 @@ xx_0523_16_13_12.921.log
 xx_0523_16_15_05.264.log
 ```
 
-`xx.log` is always the latest log file. When the number of files exceeds `FLG_max_log_file_num`, co/log will remove the oldest log file.
+`xx.log` is always the latest log file. When the number of files exceeds `FLG_max_log_file_num`, `co.log` will remove the oldest log file.
 
-`fatal` logs will be additionally recorded in the `xx.fatal` file, **co/log will not rename or delete the fatal log file**.
+`fatal` logs will be additionally recorded in the `xx.fatal` file, **co.log will not rename or delete the fatal log file**.
 
 
 
 ### Log format
 
 ```bash
-I0514 11:15:30.123 1045 test/xx.cc:11] hello world
-D0514 11:15:30.123 1045 test/xx.cc:12] hello world
-W0514 11:15:30.123 1045 test/xx.cc:13] hello world
-E0514 11:15:30.123 1045 test/xx.cc:14] hello world
-F0514 11:15:30.123 1045 test/xx.cc:15] hello world
+I0514 11:15:30.123 1045 xx.cc:11] hello world
+D0514 11:15:30.123 1045 xx.cc:12] hello world
+W0514 11:15:30.123 1045 xx.cc:13] hello world
+E0514 11:15:30.123 1045 xx.cc:14] hello world
+F0514 11:15:30.123 1045 xx.cc:15] hello world
+0514 11:15:30.123 1045 xx.cc:11] hello world
 ```
 
-- In the above example, each line corresponds to one log.
-- The first letter of each log is the log level, `I` means info, `D` means debug, `W` means warning, `E` means error, and `F` means fatal.
-- After the level is the time, from month to milliseconds. The year is not printed. The time of the log is not the time when it is generated, but the time when it is written to the cache, as we must ensure that the logs in the log file are strictly sorted by time.
-- After the time is the thread id, 1045 above is the thread id.
-- The thread id is followed by the file and line number of the log code.
-- After the line number is `] `, that is, a space after `]`.
-- following the `] `，is the log content by the user.
+- Level log from left to right, it is the level, time (month to millisecond), thread id, file and line number, and the log content.
+- The first letter of level log is the log level, `I` for info, `D` for debug, `W` for warning, `E` for error, `F` for fatal.
+- Topic log has no level, others are the same as level log (The last log in the above example is a topic log).
 
 
 
@@ -477,4 +435,4 @@ xmake r log -min_log_level=1    # 0-4: debug,info,warning,error,fatal
 xmake r log -perf               # performance test
 ```
 
-- Run `xmake -b log` in the co root directory to compile [test/log.cc](https://github.com/idealvin/coost/blob/master/test/log.cc), and a binary program named log or log.exe will be generated.
+- Run `xmake -b log` in the root directory of coost to compile [test/log.cc](https://github.com/idealvin/coost/blob/master/test/log.cc), and a binary program named log or log.exe will be generated.

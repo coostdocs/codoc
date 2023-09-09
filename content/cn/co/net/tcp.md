@@ -1,8 +1,7 @@
 ---
-weight: 14
+weight: 5
 title: "TCP"
 ---
-
 
 include: [co/tcp.h](https://github.com/idealvin/coost/blob/master/include/co/tcp.h).
 
@@ -33,7 +32,7 @@ Connection(Connection&& c);
 Connection::~Connection();
 ```
 
-- 析构函数，调用 close() 关闭连接。
+- 析构函数，调用 [close()](#connectionclose) 关闭连接。
 
 
 
@@ -54,7 +53,7 @@ int close(int ms = 0);
 int recv(void* buf, int n, int ms=-1);
 ```
 
-- 接收数据，与 [co::recv](../../coroutine/#corecv) 类似。
+- 接收数据，与 [co::recv](../sock/#corecv) 类似。
 - 此方法必须在协程中调用。
 - 此方法成功时返回值 >0，超时或发生错误时返回值 <0，对端关闭连接时返回 0。
 
@@ -66,7 +65,7 @@ int recv(void* buf, int n, int ms=-1);
 int recvn(void* buf, int n, int ms=-1);
 ```
 
-- 接收指定长度的数据，与 [co::recvn](../../coroutine/#corecvn) 类似。
+- 接收指定长度的数据，与 [co::recvn](../sock/#corecvn) 类似。
 - 此方法成功时返回 n，超时或发生错误时返回值 <0，对端关闭连接时返回 0。
 
 
@@ -77,7 +76,7 @@ int recvn(void* buf, int n, int ms=-1);
 int reset(int ms = 0)
 ```
 
-- 重置 TCP 连接，与 close() 不同，它不会进入 `TIME_WAIT` 状态。参数 ms > 0 时，延迟一段时间再重置连接。
+- 重置 TCP 连接，与 [close()](#connectionclose) 不同，它不会进入 `TIME_WAIT` 状态。参数 ms > 0 时，延迟一段时间再重置连接。
 - 此方法必须在 I/O 线程(一般是进行 I/O 操作的协程)中调用。
 
 
@@ -88,7 +87,7 @@ int reset(int ms = 0)
 int send(const void* buf, int n, int ms=-1);
 ```
 
-- 发送数据，与 [co::send()](../../coroutine/#cosend) 类似。
+- 发送数据，与 [co::send()](../sock/#cosend) 类似。
 - 此方法成功时返回 n，超时或发生错误时返回值 <=0。
 
 
@@ -121,9 +120,6 @@ const char* strerror() const;
 - 支持 IPv4 与 IPv6。
 - 支持 SSL (需要 openssl)。
 - 采用一个连接一个协程的模型。
-
-
-
 
 
 ### Server::Server
@@ -248,10 +244,10 @@ Client(const char* ip, int port, bool use_ssl=false);
 Client(const Client& c);
 ```
 
-- 构造函数。参数 ip 是服务器的 ip，可以是域名、IPv4 或 IPv6 地址；参数 port 是服务器端口；参数 use_ssl 表示是否启用 SSL 传输，默认为 false，不启用 SSL。
+- 构造函数。参数 ip 是服务端 ip，可以是域名、IPv4 或 IPv6 地址；参数 port 是服务端口；参数 use_ssl 表示是否启用 SSL 传输，默认为 false。
 - 第 2 个版本是拷贝构造函数，仅拷贝 ip, port, use_ssl。
 - tcp::Client 构建时，并没有建立连接。
-- 一般建议在调用 recv, send 前，判断连接是否建立，没有的话就调用 connect 方法建立连接，这种方式可以实现自动重连。
+- 一般建议在调用 recv, send 前，判断连接是否建立，没有的话就调用 [connect()](#clientconnect) 方法建立连接，这种方式可以实现自动重连。
 
 
 
@@ -261,7 +257,7 @@ Client(const Client& c);
 Client::~Client();
 ```
 
-- 析构函数，调用 disconnect() 方法关闭连接。
+- 析构函数，调用 [disconnect()](#clientdisconnect) 方法关闭连接。
 
 
 
@@ -283,7 +279,7 @@ bool connect(int ms);
 
 - 建立连接，参数 ms 是超时时间，单位为毫秒。
 - 此方法必须在协程中调用。
-- 此方法成功时返回 true，否则返回 false。失败时，用户可以调用 `strerror()` 方法查看错误信息。
+- 此方法成功时返回 true，否则返回 false。失败时，用户可以调用 [strerror()](#clientstrerror) 方法查看错误信息。
 
 
 
@@ -314,7 +310,7 @@ void disconnect();
 int recv(void* buf, int n, int ms=-1);
 ```
 
-- 接收数据，与 [co::recv()](../../coroutine/#corecv) 类似。
+- 接收数据，与 [co::recv()](../sock/#corecv) 类似。
 - 此方法必须在协程中调用。
 - 此方法成功时返回值 >0，超时或发生错误时返回值 <0，对端关闭连接时返回 0。
 
@@ -326,7 +322,7 @@ int recv(void* buf, int n, int ms=-1);
 int recvn(void* buf, int n, int ms=-1);
 ```
 
-- 接收指定长度的数据，与 [co::recvn()](../../coroutine/#corecvn) 类似。
+- 接收指定长度的数据，与 [co::recvn()](../sock/#corecvn) 类似。
 - 此方法必须在协程中调用。
 - 此方法成功时返回 n，超时或发生错误时返回值 <0，对端关闭连接时返回 0。
 
@@ -338,7 +334,7 @@ int recvn(void* buf, int n, int ms=-1);
 int send(const void* buf, int n, int ms=-1);
 ```
 
-- 发送数据，与 [co::send()](../../coroutine/#cosend) 类似。
+- 发送数据，与 [co::send()](../sock/#cosend) 类似。
 - 此方法必须在协程中调用。
 - 此方法成功时返回 n，超时或发生错误时返回值 <=0。
 
@@ -410,13 +406,13 @@ s.start("0.0.0.0", 7788, "privkey.pem", "certificate.pem");  // use ssl
 bool use_ssl = false;
 std::unique_ptr<tcp::Client> proto;
 
-co::Pool pool(
+co::pool pool(
     []() {return (void*) new tcp::Client(*proto); },
     [](void* p) {delete (tcp::Client*) p;}
 );
 
 void client_fun() {
-    co::PoolGuard<tcp::Client> c(pool);
+    co::pool_guard<tcp::Client> c(pool);
     
     if (!c->connect(3000)) {
         LOG << "connect failed: "<< c->strerror();
@@ -453,5 +449,4 @@ for (int i = 0; i <8; ++i) {
 }
 ```
 
-- 上面的例子中，我们用 co::Pool 缓存客户端连接，不同协程可以共用 co::Pool 中的连接。
-- co::PoolGuard 构建时自动从 co::Pool 中拉取一个空闲连接，析构时自动将该连接放回 co::Pool 中。
+- 上面的例子中，我们用 [co::pool](../../concurrency/coroutine/pool/) 缓存客户端连接，不同协程可以共用 pool 中的连接。

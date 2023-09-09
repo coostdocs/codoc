@@ -6,7 +6,7 @@ title: "JSON"
 include: [co/json.h](https://github.com/idealvin/coost/blob/master/include/co/json.h).
 
 
-`co/json` 是一个类似 [rapidjson](https://github.com/Tencent/rapidjson) 的 JSON 库，与 rapidjson 相比，它既有性能上的优势，同时又更简单易用。
+**co.json** 是一个类似 [rapidjson](https://github.com/Tencent/rapidjson) 的 JSON 库，与 rapidjson 相比，它既有性能上的优势，同时又更简单易用。
 
 
 ## 基本概念
@@ -16,7 +16,7 @@ include: [co/json.h](https://github.com/idealvin/coost/blob/master/include/co/js
 - 由一系列 **key/value** 键值对构成的集合，这类结构称为 **object**，对应编程语言中的 struct, map 等等。
 - 由一系列 **value** 构成的列表，这类结构称为 **array**，对应编程语言中的 vector, list 等等。
 
-上述 key 是 string，value 一般也称为 **JSON value** (co/json 中用 **Json** 类表示)，可以是 object, array, number, string, bool(false, true), null 中的任意一种。number 是整数或浮点数，大部分实现会将整数与浮点数区分开。
+上述 key 是 string，value 一般也称为 **JSON value** (co.json 中用 **Json** 类表示)，可以是 object, array, number, string, bool(false, true), null 中的任意一种。number 是整数或浮点数，大部分实现会将整数与浮点数区分开。
 
 object 由一对大括号括起来，array 由一对中括号括起来，它们看起来像下面这样：
 

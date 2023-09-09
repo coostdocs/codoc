@@ -17,7 +17,7 @@ title: "编译"
 
 ## xmake
 
-CO 推荐使用 [xmake](https://github.com/xmake-io/xmake) 作为构建工具。
+co 推荐使用 [xmake](https://github.com/xmake-io/xmake) 作为构建工具。
 
 
 
@@ -25,33 +25,11 @@ CO 推荐使用 [xmake](https://github.com/xmake-io/xmake) 作为构建工具。
 
 windows, mac 与 debian/ubuntu 可以直接去 xmake 的 [release](https://github.com/xmake-io/xmake/releases) 页面下载安装包，其他系统请参考 xmake 的 [Installation](https://xmake.io/#/guide/installation) 说明。
 
-xmake 在 linux 上默认禁止 root 用户编译，[ruki](https://github.com/waruqi) 说不安全，可以在 `~/.bashrc` 中加上下面的一行，启用 root 编译:
-
-```cpp
-export XMAKE_ROOT=y
-```
-
-
-
-### 设置 xmake github 镜像代理
-
-xmake 可能会从 github 上拉取三方库，国内 github 下载速度较慢，可以用下面的方式设置镜像代理：
-
-- 安装 xmake 2.5.4 以上版本。
-- 执行 `xmake show -l envs` 命令查找 `XMAKE_GLOBALDIR`，在该环境变量指向的目录下面创建一个 **pac.lua** 文件，在文件里加上下面的代码：
-
-```lua
-function mirror(url)
-    return url:gsub("github.com", "hub.fastgit.org")
-end
-function main() end
-```
-
 
 
 ### 快速构建
 
-在 CO 根目录执行下述命令构建：
+在 co 根目录执行下述命令构建：
 
 ```sh
 xmake -a    # 构建所有项目 (libco, gen, test, unitest)
@@ -66,7 +44,7 @@ xmake -a
 
 启用 HTTP 或 SSL 特性时，xmake 会自动从网络安装 libcurl 与 openssl，可能需要花点时间。
 
-命令行中的 `-a` 表示构建 CO 中的所有项目，如果不加 `-a`，默认只会构建 libco。另外，可以用 `-v` 或 `-vD` 让 xmake 打印更详细的编译信息：
+命令行中的 `-a` 表示构建 co 中的所有项目，如果不加 `-a`，默认只会构建 libco。另外，可以用 `-v` 或 `-vD` 让 xmake 打印更详细的编译信息：
 
 ```sh
 xmake -v -a
@@ -76,7 +54,7 @@ xmake -v -a
 
 ### 编译选项
 
-Xmake 提供了 `xmake f` 命令，用于配置编译选项。需要注意的是，**多个配置选项必须在一条 xmake f 命令中完成**，若多次执行 `xmake f` 命令，后面的会覆盖前面的配置。
+xmake 提供了 `xmake f` 命令，用于配置编译选项。需要注意的是，**多个配置选项必须在一条 xmake f 命令中完成**，若多次执行 `xmake f` 命令，后面的会覆盖前面的配置。
 
 
 #### 编译 debug 版本的 libco
@@ -94,7 +72,6 @@ xmake f -k shared
 xmake -v
 ```
 
-注意 CO 在 Windows 平台不支持动态库。
 
 
 #### 编译 32 位的 libco
@@ -118,7 +95,7 @@ xmake -v
 
 #### Windows 平台指定 vs_runtime
 
-CO 在 Windows 平台默认使用 **MT** 运行库，用户可以用下面的命令配置 vs_runtime：
+co 在 Windows 平台默认使用 **MT** 运行库，用户可以用下面的命令配置 vs_runtime：
 
 ```cpp
 xmake f --vs_runtime=MD
@@ -128,7 +105,7 @@ xmake -v
 
 #### Android 与 IOS 支持
 
-CO 在 Android 与 IOS 平台也能编译，详情见 [Github Actions](https://github.com/idealvin/coost/actions)。由于作者没有前端开发的经验，暂时未在 Android 与 IOS 上测试。
+co 在 Android 与 IOS 平台也能编译，详情见 [Github Actions](https://github.com/idealvin/coost/actions)。目前暂未在 Android 与 IOS 上测试。
 
 - android
 
@@ -161,7 +138,7 @@ xmake r unitest -json   # 执行单元测试 json
 
 ### 构建及运行 test 代码
 
-[co/test](https://github.com/idealvin/coost/tree/master/test) 是一些测试代码，在 co/test 目录或其子目录下增加 `xx.cc` 源文件，然后在 CO 根目录下执行 `xmake -b xx` 即可构建。
+[co/test](https://github.com/idealvin/coost/tree/master/test) 是一些测试代码，在 co/test 目录或其子目录下增加 `xx.cc` 源文件，然后在 co 根目录下执行 `xmake -b xx` 即可构建。
 
 ```bash
 xmake -b flag                # 编译 test/flag.cc
@@ -188,8 +165,6 @@ cp gen /usr/local/bin/
 gen hello_world.proto
 ```
 
-proto 文件格式可以参考 [hello_world.proto](https://github.com/idealvin/coost/blob/master/test/so/rpc/hello_world.proto)。
-
 
 
 ### 安装 libco
@@ -207,7 +182,7 @@ xmake i -o /usr/local         # 安装到 /usr/local 目录
 ### 从 xmake repo 安装 libco
 
 ```cpp
-xrepo install -f "openssl=true,libcurl=true" co
+xrepo install -f "openssl=true,libcurl=true" coost
 ```
 
 
@@ -251,17 +226,6 @@ make -j8
 
 ```sh
 mkdir build && cd build
-cmake .. -DBUILD_ALL=ON -DWITH_LIBCURL=ON
+cmake .. -DBUILD_ALL=ON -DWITH_LIBCURL=ON -DWITH_OPENSSL=ON
 make -j8
-```
-
-
-
-### 从 vcpkg 安装 libco
-
-```sh
-vcpkg install co:x64-windows
-
-# HTTP & SSL support
-vcpkg install co[libcurl,openssl]:x64-windows
 ```

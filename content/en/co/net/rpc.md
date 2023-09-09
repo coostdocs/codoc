@@ -1,14 +1,16 @@
 ---
-weight: 16
+weight: 7
 title: "RPC"
 ---
-
 
 include: [co/rpc.h](https://github.com/idealvin/coost/blob/master/include/co/rpc.h).
 
 
-co/rpc is a high-performance RPC framework similar to [grpc](https://github.com/grpc/grpc), it uses **JSON** as the data exchange format, which is different from binary protocols such as protobuf.
+Coost implements a coroutine-based RPC framework, which internally uses **JSON** as the data exchange format. Compared with RPC frameworks using binary protocols such as protobuf, it is more flexible and easier to use.
 
+{{< hint info >}}
+Since v3.0, the RPC framework also supports HTTP protocol, and we are able to send a RPC request with the HTTP POST method.
+{{< /hint >}}
 
 
 
@@ -27,9 +29,8 @@ class Service {
 };
 ````
 
-- This class is a pure interface, which represents a service. A RPC server may have multiple services.
-- `name()` returns the service name, like "HelloWorld".
-- `methods()` returns all the RPC methods provided by the Service class.
+- This class is a pure interface, which represents a RPC service. A RPC server may have multiple services.
+- `name()` returns the service name, `methods()` returns all the RPC methods.
 
 
 
@@ -49,11 +50,11 @@ Server();
 ### Server::add_service
 
 ```cpp
-Server& add_service(rpc::Service* s);
-Server& add_service(const std::shared_ptr<rpc::Service>& s);
+1. Server& add_service(rpc::Service* s);
+2. Server& add_service(const std::shared_ptr<rpc::Service>& s);
 ```
 
-- Add a service, the parameter s must be dynamically created with operator new.
+- Add a service, the parameter `s` in the first one must be dynamically created with `operator new`.
 - Users can call this method multiple times to add multiple services, and **different services must have different names**.
 
 
@@ -63,14 +64,14 @@ Server& add_service(const std::shared_ptr<rpc::Service>& s);
 ```cpp
 void start(
     const char* ip, int port,
-    const char* url='/',
+    const char* url="/",
     const char* key=0, const char* ca=0
 );
 ```
 
 - Start the RPC server, this method will not block the current thread.
-- The parameter ip is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
-- The parameter url is the url of the HTTP service, and must start with `/`.
+- The parameter `ip` is the server ip, which can be an IPv4 or IPv6 address, and the parameter `port` is the server port. 
+- The parameter `url` is the url of the HTTP server, and must start with `/`.
 - The parameter **key** is path of a **PEM**file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
 - Starting from v3.0, the server no longer depends on the `rpc::Server` object after startup.
 
@@ -93,36 +94,41 @@ void exit();
 
 ### Define a proto file
 
-```cpp
-// hello_world.proto
+Here is a simple proto file hello_world.proto:
 
+```cpp
 package xx
 
 service HelloWorld {
-    hello,
-    world,
+    hello
+    world
 }
 ```
 
-- The above is a simple proto file, `//` is for comments.
-- **package xx** specifies the package name. In C++, it means that the code is generated into a namespace. You can use package xx.yy.zz to generate nested namespaces.
-- **service HelloWorld** defines a service class that inherits from **rpc::Service**, and its name is `"HelloWorld"`. The service class provides two RPC methods, hello and world.
-- **A proto file can define only one service.** In the proto file, the contents after the service definition will be ignored.
+**package** defines the package name.
+- **package** defines the package name, which corresponds to **namespace** in C++.
+- **service** defines a RPC service, it has 2 methods, hello and world.
+
+- Since the RPC request and response are both JSON, there is no need to define the structure in the proto file.
+- At most one service can be defined in a proto file.
+
+{{< hint info >}}
+Coost v3.0.1 rewrote [gen](https://github.com/idealvin/coost/tree/master/gen) with flex and [byacc](https://invisible-island.net/byacc/), and we can alse define object (struct) in the proto file. For specific usage, please refer to [j2s](https://github.com/idealvin/coost/tree/master/test/j2s).
+{{< /hint >}}
 
 
 
 ### Generate code for RPC service
 
-[gen](https://github.com/idealvin/coost/tree/master/gen) is the RPC code generator provided by co, which can be used to generate code for RPC service.
+[gen](https://github.com/idealvin/coost/tree/master/gen) is the RPC code generator provided by coost, which can be used to generate code for RPC service.
 
 ```bash
 xmake -b gen             # build gen
 cp gen /usr/local/bin    # put gen in the /usr/local/bin directory
 gen hello_world.proto    # Generate code
-gen *.proto              # Batch generation
 ```
 
-The file generated for hello_world.proto is hello_world.h:
+The generated file hello_world.proto is as follow:
 
 ```cpp
 // Autogenerated.
@@ -165,8 +171,8 @@ class HelloWorld : public rpc::Service {
 } // xx
 ```
 
-- As you can see, the HelloWorld class inherits from rpc::Service, and it has already implemented name() and methods() in rpc::Service.
-- Users only need to inherit the HelloWorld class and implement the hello and world methods.
+- As you can see, the `HelloWorld` class inherits from [rpc::Service](#rpcservice), and it has already implemented `name()` and `methods()` in `rpc::Service`.
+- Users only need to inherit the `HelloWorld` class and implement the methods `hello` and `world`.
 
 
 
@@ -200,7 +206,7 @@ class HelloWorldImpl : public HelloWorld {
 } // xx
 ```
 
-- The above is just a very simple example. In actual applications, it is generally necessary to perform corresponding business processing according to the parameters in req, and then fill in res.
+- The above is just a very simple example. In actual applications, it is generally necessary to perform corresponding business processing according to the parameters in `req`, and then fill in `res`.
 
 
 
@@ -208,7 +214,7 @@ class HelloWorldImpl : public HelloWorld {
 
 ```cpp
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
 
     rpc::Server()
         .add_service(new xx::HelloWorldImpl)
@@ -220,14 +226,17 @@ int main(int argc, char** argv) {
 }
 ```
 
-- Before starting the server, we must call add_service() to add the service.
-- The `start()` method will not block the current thread, so we need to write a for loop to prevent the main function from exiting directly.
+- First call [add_service()](#serveradd_service) to add the service, then call [start()](#serverstart) to start the server.
+
+{{< hint info >}}
+The `start()` method will not block the current thread, so we need a for loop to prevent the main function from exiting.
+{{< /hint >}}
 
 
 
 ### Call RPC service with curl
 
-In v3.0, co/rpc supports HTTP protocol, so RPC service can be called with the `curl` command:
+In v3.0, the RPC framework supports HTTP protocol, so we can call the RPC service with the `curl` command:
 
 ```bash
 curl http://127.0.0.1:7788/xx --request POST --data '{"api":"ping"}'
@@ -248,13 +257,15 @@ curl http://127.0.0.1:7788/xx --request POST --data '{"api":"HelloWorld.hello"}'
 ### Client::Client
 
 ```cpp
-Client(const char* ip, int port, bool use_ssl=false);
-Client(const Client& c);
+1. Client(const char* ip, int port, bool use_ssl=false);
+2. Client(const Client& c);
 ```
 
-- Constructor. 
-- The first one, the parameter ip is the ip of the server, which can be a domain name, IPv4 or IPv6 address; the parameter port is the server port; the parameter use_ssl indicates whether to enable SSL transmission, the default is false, and SSL is disabled.
-- When rpc::Client was constructed, the connection is not established immediately.
+- 1, the parameter `ip` is ip of the server, which can be a domain name, IPv4 or IPv6 address; the parameter `port` is port of the server; the parameter `use_ssl` indicates whether to enable SSL transmission, the default is false, and SSL is disabled.
+
+{{< hint info >}}
+When rpc::Client was constructed, the connection is not established immediately.
+{{< /hint >}}
 
 
 
@@ -274,9 +285,9 @@ Client::~Client();
 void call(const Json& req, Json& res);
 ```
 
-- Perform a RPC request, it must be called in the coroutine.
+- Perform a RPC request, it must be called in coroutine.
 - The parameter `req` must contain the `"api"` field, its value is generally in the form of `"service.method"`.
-- The parameter `res` is the response result of the RPC request.
+- The parameter `res` is the response of the RPC request.
 - If the RPC request is not sent, or no response from the server is received, res will not be filled.
 - This method checks the connection status before sending the RPC request, and establishes the connection first if it is not connected.
 
@@ -305,7 +316,7 @@ void ping();
 
 ## RPC client example
 
-### Use the rpc::Client directly
+### Use rpc::Client directly
 
 ```cpp
 DEF_bool(use_ssl, false, "use ssl if true");
@@ -315,10 +326,10 @@ void client_fun() {
     rpc::Client c("127.0.0.1", 7788, FLG_use_ssl);
 
     for (int i = 0; i < FLG_n; ++i) {
-        Json req = {
+        co::Json req = {
             {"api", "HelloWorld.hello"}
         };
-        Json res;
+        co::Json res;
         c.call(req, res);
         co::sleep(1000);
     }
@@ -333,20 +344,20 @@ go(client_fun);
 
 
 
-### Use connection pool co::Pool
+### Use connection pool
 
-When a client needs to establish a large number of connections, `co::Pool` can be used to manage these connections.
+When a client needs to establish a large number of connections, [co::pool](../../concurrency/coroutine/pool/) can be used to manage these connections.
 
 ```cpp
 std::unique_ptr<rpc::Client> proto;
 
-co::Pool pool(
+co::pool pool(
     []() { return (void*) new rpc::Client(*proto); },
     [](void* p) { delete (rpc::Client*) p; }
 );
 
 void client_fun() {
-    co::PoolGuard<rpc::Client> c(pool);
+    co::pool_guard<rpc::Client> c(pool);
 
     while (true) {
         c->ping();
@@ -362,16 +373,15 @@ for (int i = 0; i < 8; ++i) {
 ```
 
 
-- In the above example, co::Pool is used to store the clients, and multiple coroutines can share these clients.
-- co::PoolGuard automatically pops an idle client from co::Pool when it is created, and automatically puts the client back into co::Pool when it is destructed.
-- The ccb of co::Pool uses copy construction to copy a client from proto.
+- In the above example, co::pool is used to store the clients, and multiple coroutines can share these clients.
+- The ccb of co::pool uses copy construction to copy a client from `proto`.
 
 
 
 
 ## Config items
 
-co/rpc uses [co/flag](../../flag/) to define config items. The flags defined in co/rpc are listed below.
+Coost uses [co.flag](../../flag/) to define config items for RPC.
 
 
 ### rpc_conn_idle_sec

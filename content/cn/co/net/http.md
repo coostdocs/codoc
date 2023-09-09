@@ -1,8 +1,7 @@
 ---
-weight: 15
+weight: 6
 title: "HTTP"
 ---
-
 
 include: [co/http.h](https://github.com/idealvin/coost/blob/master/include/co/http.h).
 
@@ -114,7 +113,7 @@ void head(const char* url);
 ```
 
 - HTTP **HEAD** 请求，必须在协程中调用。
-- 参数 url 必须是 `'/'` 开头的字符串。
+- 参数 url 必须是 `/` 开头的字符串。
 
 
 
@@ -127,7 +126,6 @@ const fastring& header() const;
 
 - 第 1 个版本获取当前 HTTP 响应中 header 的值，header 不存在时，返回一个空字符串。
 - 第 2 个版本获取当前 HTTP 响应的整个 header 部分(包括起始行)。
-
 
 - 示例
 
@@ -147,7 +145,6 @@ void perform();
 
 - 执行 HTTP 请求，get, post 等方法实际上都是基于此方法实现。
 - 用户一般不需要调用此方法，只有当 http::Client 提供的 get, post 等方法满足不了需要时，才考虑用此方法自定义 HTTP 请求。
-
 
 - 示例
 
@@ -194,7 +191,7 @@ void put(const char* url, const char* path);
 void remove_header(const char* key);
 ```
 
-- 删除之前添加的 HTTP header。调用 add_header() 方法添加的头部会存在于后续所有 HTTP 请求中，如果用户不想在后续请求中带上某些 header，可以用此方法显示删除。
+- 删除之前添加的 HTTP header。调用 [add_header()](#clientadd_header) 方法添加的头部会存在于后续所有 HTTP 请求中，如果用户不想在后续请求中带上某些 header，可以用此方法显示删除。
 
 
 
@@ -216,7 +213,7 @@ int response_code() const;
 
 - 获取当前 HTTP 请求的响应码。
 - 正常情况下返回值是 100 到 511 之间的值。
-- 若 HTTP 请求没有发送出去，或者没有收到服务端的响应，此方法返回 0，用户可以用 strerror() 方法获取错误信息。
+- 若 HTTP 请求没有发送出去，或者没有收到服务端的响应，此方法返回 0，用户可以用 [strerror()](#clientstrerror) 方法获取错误信息。
 
 
 
@@ -254,7 +251,7 @@ void f() {
     LOG << "body size: " << c.body().size();
     LOG << c.header();
 
-    c.get("/idealvin/co");
+    c.get("/idealvin/coost");
     LOG << "body size: " << c.body().size();
     LOG << "Content-Length: " << c.header("Content-Length");
     LOG << c.header();
@@ -270,7 +267,7 @@ go(f);
 
 ## http::Req
 
-`http::Req` 类是对 HTTP 请求的封装，用于实现 http::Server。
+`http::Req` 类是对 HTTP 请求的封装，用于实现 [http::Server](#httpserver)。
 
 
 ### Req::Req
@@ -360,7 +357,7 @@ Version version() const;
 
 ## http::Res
 
-`http::Res` 类是对 HTTP 响应的封装，用于实现 http::Server。
+`http::Res` 类是对 HTTP 响应的封装，用于实现 [http::Server](#httpserver)。
 
 
 
@@ -490,19 +487,10 @@ http::Server().on_req(cb).start(
 );
 ```
 
-`co/test` 提供了一个简单的 [demo](https://github.com/idealvin/coost/blob/master/test/so/http_serv.cc)，用户可以按下述方式编译运行:
-
-```bash
-xmake -b http_serv
-xmake r http_serv
-```
-
-启动 http server 后，可以在浏览器的地址栏中输入 `127.0.0.1/hello` 看结果。
 
 
 
-
-## 静态 web server (so::easy)
+## 静态 web server
 
 ```cpp
 void easy(const char* root_dir=".", const char* ip="0.0.0.0", int port=80);
@@ -524,7 +512,7 @@ void easy(const char* root_dir, const char* ip, int port, const char* key, const
 DEF_string(d, ".", "root dir"); // root dir of web server
 
 int main(int argc, char** argv) {
-    flag::init(argc, argv);
+    flag::parse(argc, argv);
     so::easy(FLG_d.c_str()); // mum never have to worry again
     return 0;
 }
@@ -535,7 +523,7 @@ int main(int argc, char** argv) {
 
 ## 配置项
 
-co/http 使用 [co/flag](../../flag/) 定义配置项，下面列出的是 co/http 内部定义的 flag。
+coost 使用 [co.flag](../../flag/) 定义了 HTTP 相关的配置项。
 
 
 ### http_conn_timeout

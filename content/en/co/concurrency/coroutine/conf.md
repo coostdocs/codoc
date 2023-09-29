@@ -6,7 +6,7 @@ title: "Config"
 
 ## Config
 
-Coost uses `co.flag` to define config items for the coroutine module. Please refer to [co.flag documents](../../flag/) for detailed usage.
+Coost uses `co.flag` to define config items for the coroutine module. Please refer to [co.flag documents](../../../flag/) for detailed usage.
 
 
 

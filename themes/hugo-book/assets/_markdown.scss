@@ -80,7 +80,7 @@
 
   code {
     padding: 0 $padding-4;
-    background: var(--gray-200);
+    background: var(--code-background);
     font-size: 0.875em;
   }
 
@@ -92,7 +92,7 @@
 
     code {
       padding: 0;
-      background-color: var(--gray-100);
+      background-color: var(--code-background);
     }
   }
 
@@ -126,7 +126,7 @@
     }
 
     tr:nth-child(2n) {
-      background: var(--gray-100);
+      background: var(--code-background);
     }
   }
 

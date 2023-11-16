@@ -1,6 +1,6 @@
 html {
   font-size: $font-size-base;
-  scroll-behavior: smooth;
+  //scroll-behavior: smooth;
   touch-action: manipulation;
 }
 
@@ -108,7 +108,7 @@ ul.pagination {
     width: $menu-width;
     padding: $padding-16 * 2;
     //background: var(--body-background);
-    background-color: #fafafa;
+    background: var(--aside-background);
 
     @include fixed;
   }
@@ -254,7 +254,7 @@ body[dir="rtl"] .book-menu {
   .book-toc-content {
     width: $toc-width;
     padding: $padding-16 * 2 $padding-16;
-    background-color: #fafafa;
+    background: var(--aside-background);
 
     @include fixed;
   }

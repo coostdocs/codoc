@@ -74,17 +74,36 @@ bool mkdir(const std::string& path, bool p=false);
 
 
 
+### fs::mv
+
+```cpp
+bool mv(const char* from, const char* to);
+bool mv(const fastring& from, const fastring& to);
+bool mv(const std::string& from, const std::string& to);
+```
+
+- v3.0.2 新增，移动或重命名文件、目录，行为与 linux 系统中 `mv` 命令类似。
+- `to` 存在且为目录时，将 `from` 移动到目录 `to` 下面。
+- 若目标与 `from` 类型相同(都是目录或文件)，且目标不是非空目录，则目标会被覆盖掉。
+
+```cpp
+// 假设目录 d 已存在
+fs::mv("xx.txt", "xx.log");  // xx.txt -> xx.log
+fs::mv("xx.txt", "d");       // xx.txt -> d/xx.txt
+```
+
+
+
 ### fs::remove
 
 ```cpp
-bool remove(const char* path, bool rf=false);
-bool remove(const fastring& path, bool rf=false);
-bool remove(const std::string& path, bool rf=false);
+bool remove(const char* path, bool r=false);
+bool remove(const fastring& path, bool r=false);
+bool remove(const std::string& path, bool r=false);
 ```
 
 - 删除文件或目录，参数 path 是路径。
-- path 是目录时，参数 rf 表示是否强制删除，默认为 false，仅删除空目录。若 rf 为 true，则相当于 `rm -rf`，非空目录也会被删除。
-- path 是文件时，参数 rf 会被忽略。
+- 参数 r 默认为 false，仅删除文件或空目录；r 为 true 时，相当于 `rm -r`，可删除非空目录。
 
 
 
@@ -96,9 +115,7 @@ bool rename(const fastring& from, const fastring& to);
 bool rename(const std::string& from, const std::string& to);
 ```
 
-- 重命名文件或目录，参数 from 是原路径，参数 to 是新路径。
-- 参数 to 是目录时，windows 要求 to 和 from 在同一个盘符(drive) 下面。
-- 详情可以参考 [win32/MoveFile](https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefilea), [linux/rename](https://www.man7.org/linux/man-pages/man2/rename.2.html)。
+- v3.0.2 中标记为 deprecated，可以使用 [fs::mv](#fsmv) 取代之。
 
 
 
@@ -129,7 +146,7 @@ fs::mkdir("a/b", true);     // mkdir -p a/b
 
 fs::remove("x/x.txt");      // rm x/x.txt
 fs::remove("a/b");          // rmdir a/b
-fs::remove("a/b", true);    // rm -rf a/b     
+fs::remove("a/b", true);    // rm -r a/b     
 
 fs::rename("a/b", "a/c");   // mv a/b a/c
 fs::symlink("/usr", "x");   // ln -s /usr x

@@ -74,17 +74,36 @@ bool mkdir(const std::string& path, bool p=false);
 
 
 
+### fs::mv
+
+```cpp
+bool mv(const char* from, const char* to);
+bool mv(const fastring& from, const fastring& to);
+bool mv(const std::string& from, const std::string& to);
+```
+
+- Added in v3.0.2, move or rename a file or directory, the behavior is similar to the `mv` command in Linux.
+- When `to` exists and is a directory, `from` will be moved into directory `to`.
+- If the target is of the same type as `from` (both are directories or files), and the target is not a non-empty directory, the target will be overwritten.
+
+```cpp
+// Assume directory d already exists
+fs::mv("xx.txt", "xx.log"); // xx.txt -> xx.log
+fs::mv("xx.txt", "d");      // xx.txt -> d/xx.txt
+```
+
+
+
 ### fs::remove
 
 ```cpp
-bool remove(const char* path, bool rf=false);
-bool remove(const fastring& path, bool rf=false);
-bool remove(const std::string& path, bool rf=false);
+bool remove(const char* path, bool r=false);
+bool remove(const fastring& path, bool r=false);
+bool remove(const std::string& path, bool r=false);
 ```
 
 - Delete a file or directory.
-- When `path` is a directory, the parameter `rf` indicates whether to force deletion, the default is false, and only delete empty directory. If `rf` is true, it is equivalent to `rm -rf`, non-empty directory will also be deleted.
-- When `path` is a file, the parameter `rf` will be ignored.
+- The parameter `r` is false by default, which only deletes file or empty directory; when `r` is true, it is equivalent to `rm -r`, which can delete non-empty directory.
 
 
 
@@ -96,9 +115,7 @@ bool rename(const fastring& from, const fastring& to);
 bool rename(const std::string& from, const std::string& to);
 ```
 
-- Rename the file or directory, the parameter `from` is the original path, and the parameter `to` is the new path.
-- When `to` is a directory, windows requires `to` and `from` to be under the same drive.
-- For details, please refer to [win32/MoveFile](https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-movefilea), [linux/rename](https://www.man7.org/linux/man-pages/man2/rename.2.html).
+- Deprecated in v3.0.2. Use [fs::mv](#fsmv) instead.
 
 
 

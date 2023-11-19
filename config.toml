@@ -18,6 +18,7 @@ enableGitInfo = true
 [markup]
 [markup.highlight]
   style = "github"
+  noClasses=false
   #lineNos = true
   
 [markup.goldmark.renderer]

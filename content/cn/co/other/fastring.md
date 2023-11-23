@@ -20,9 +20,8 @@ include: [co/fastring.h](https://github.com/idealvin/coost/blob/master/include/c
 4.  fastring(const char* s);
 5.  fastring(const std::string& s);
 6.  fastring(size_t n, char c);
-7.  fastring(char c, size_t n);
-8.  fastring(const fastring& s);
-9.  fastring(fastring&& s) noexcept;
+7.  fastring(const fastring& s);
+8.  fastring(fastring&& s) noexcept;
 ```
 
 - 1, 默认构造函数，创建一个空的 fastring 对象，不会分配任何内存。
@@ -30,10 +29,13 @@ include: [co/fastring.h](https://github.com/idealvin/coost/blob/master/include/c
 - 3, 用给定的字节序列创建 fastring 对象，参数 n 是序列长度。
 - 4, 用 C 风格的字符串创建 fastring 对象，s 必须是 '\0' 结尾的字符串。
 - 5, 用 std::string 创建一个 fastring 对象。
-- 6-7, 将 fastring 对象初始化为 n 个字符 c 构成的字符串。
-- 8, 拷贝构造函数，内部会进行内存拷贝。
-- 9, 移动构造函数，不会进行内存拷贝。
+- 6, 将 fastring 对象初始化为 n 个字符 c 构成的字符串。
+- 7, 拷贝构造函数，内部会进行内存拷贝。
+- 8, 移动构造函数，不会进行内存拷贝。
 
+{{< hint warning >}}
+v3.0.2 中移除了 `fastring(char c, size_t n);`。
+{{< /hint >}}
 
 - 示例
 
@@ -43,7 +45,6 @@ fastring s(32);            // 空字符串，预分配内存(容量为32)
 fastring s("hello");       // 初始化 s 为 "hello"
 fastring s("hello", 3);    // 初始化 s 为 "hel"
 fastring s(88, 'x');       // 初始化 s 为 88 个 'x'
-fastring s('x', 88);       // 初始化 s 为 88 个 'x'
 fastring t(s);             // 拷贝构造
 fastring x(std::move(s));  // 移动构造，s 自身变成空字符串
 ```
@@ -84,10 +85,13 @@ t = std::move(s);      // t -> "x", s -> ""
 ```cpp
 1. fastring& assign(const void* s, size_t n);
 2. template<typename S> fastring& assign(S&& s);
+3. fastring& assign(size_t n, char c);
 ```
 
 - 对 fastring 进行赋值，v3.0.1 新增。
-- 1 中 n 是字节序列的长度，2 与 [operator=](#operator) 等价。
+- 1, 用字节序列赋值，n 是字节序列 s 的长度，s 可以是 fastring 自身的一部分。
+- 2, 与 [operator=](#operator) 等价。
+- 3, v3.0.2 新增，将 fastring 赋值为 n 个字符 c。
 
 
 
@@ -178,14 +182,18 @@ size_t capacity() const noexcept;
 const char* c_str() const;
 ```
 
-- 此方法获取等效的 C 字符串。
-- 此方法在 fastring 末尾加上一个 '\0'，它不会改变 fastring 的 size 及内容，但有可能导致内部重新分配内存。
+- 此方法获取等效的 C 风格字符串 (`\0`结尾)。
+
+{{< hint warning >}}
+通过 `c_str()` 访问的字符数组是只读的，不可进行写操作。
+{{< /hint >}}
 
 
 
 ### data
 
 ```cpp
+char* data() noexcept;
 const char* data() const noexcept;
 ```
 
@@ -263,11 +271,12 @@ void reset();
 ### resize
 
 ```cpp
-void resize(size_t n);
+1. void resize(size_t n);
+2. void resize(size_t n, char c);
 ```
 
 - 此方法将 fastring 的 size 设置为 n。
-- 当 n 大于原来的 size 时，此操作将 size 扩大到 n，但不会用 '\0' 填充扩展的部分。
+- 当 n 大于原来的 size 时，此操作将 size 扩大到 n。**1 中扩展的部分，内容是未定义的；2 中会用字符 `c` 填充扩展的部分。**
 
 - 示例
 
@@ -276,6 +285,10 @@ fastring s("hello");
 s.resize(3);    // s -> "hel"
 s.resize(6);
 char c = s[5];  // c 是不确定的随机值
+
+s.resize(3);
+s.resize(6, 0);
+c = s[5];       // c 是 '\0'
 ```
 
 
@@ -327,16 +340,19 @@ s.swap(x);  // s -> "world", x -> "hello"
 3. fastring& append(const fastring& s);
 4. fastring& append(const std::string& s);
 5. fastring& append(size_t n, char c);
-6. fastring& append(char c, size_t n);
-7. fastring& append(char c);
+6. fastring& append(char c);
 ```
 
 - 1, 追加指定长度的字节序列，n 为序列长度。
 - 2, 追加 '\0' 结尾的字符串，s 可以是执行 append 操作的 fastring 的一部分。
 - 3, 追加 fastring 对象，s 可以是执行 append 操作的 fastring 对象本身。
 - 4, 追加 std::string 对象。
-- 5-6, 追加 n 个字符 c。
-- 7, 追加单个字符 c。
+- 5, 追加 n 个字符 c。
+- 6, 追加单个字符 c。
+
+{{< hint warning >}}
+v3.0.2 移除了 `fastring& append(char c, size_t n);`。
+{{< /hint >}}
 
 - 示例
 
@@ -344,7 +360,6 @@ s.swap(x);  // s -> "world", x -> "hello"
 fastring s;
 s.append('c');                 // s -> "c"
 s.append(2, 'c');              // s -> "ccc"
-s.append('c', 2);              // s -> "ccccc"
 s.clear();
 s.append('c').append(2, 'x');  // s -> "cxx"
 s.append(s.c_str() + 1);       // s -> "cxxxx"
@@ -362,7 +377,7 @@ fastring& append_nomchk(const char* s)
 - 与 [append()](#append) 类似，但不会检查 s 是否与内部内存重叠。
 
 {{< hint warning >}}
-若 s 与 fastring 内部内存可能重叠，则不能使用此方法。
+若 s 可能与 fastring 内部内存重叠，则不可使用此方法。
 {{< /hint >}}
 
 

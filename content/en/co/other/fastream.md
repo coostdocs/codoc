@@ -142,14 +142,17 @@ size_t capacity() const noexcept;
 const char* c_str() const;
 ```
 
-- This method gets the equivalent C string.
-- This method adds a '\0' to the end of fastream, it will not change the size and content of fastream, but may cause internal reallocation of memory.
+- This method gets the equivalent C-style string (null terminated).
 
+{{< hint warning >}}
+Writing to the character array accessed through `c_str()` is undefined behavior.
+{{< /hint >}}
 
 
 ### data
 
 ```cpp
+char* data() noexcept;
 const char* data() const noexcept;
 ```
 
@@ -246,23 +249,26 @@ void reset();
 ### resize
 
 ```cpp
-void resize(size_t n);
+1. void resize(size_t n);
+2. void resize(size_t n, char c);
 ```
 
 - This method sets the size of fastream to `n`.
 
-{{< hint warning >}}
-When `n` is greater than the original size, it will expand size to `n`, but will not fill the expanded part with zeroes.
-{{< /hint >}}
+- When `n` is greater than the original size, it will expand size to `n`. **In the 1st version, the content of the extended part is undefined. The 2nd version will fill the extended part with character `c`.**
 
 - Example
 
 ```cpp
 fastream s;
 s.append("hello");
-s.resize(3);   // s -> "hel"
+s.resize(3);    // s -> "hel"
 s.resize(6);
-char c = s[5]; // c is an uncertain random value
+char c = s[5];  // c is an uncertain random value
+
+s.resize(3);
+s.resize(6, 0);
+c = s[5];       // c is '\0'
 ```
 
 
@@ -298,23 +304,26 @@ s.swap(x); // s: cap -> 64, x: cap -> 32
 5.  fastream& append(const fastream& s);
 
 6.  fastream& append(size_t n, char c);
-7.  fastream& append(char c, size_t n);
+7.  fastream& append(char c);
+8.  fastream& append(signed char v)
+9. fastream& append(unsigned char c);
 
-8.  fastream& append(char c);
-9.  fastream& append(signed char v)
-10. fastream& append(unsigned char c);
-
-11. fastream& append(uint16 v);
-12. fastream& append(uint32 v);
-13. fastream& append(uint64 v);
+10. fastream& append(uint16 v);
+11. fastream& append(uint32 v);
+12. fastream& append(uint64 v);
 ```
 
 - 1, appends a byte sequence of length `n`.
 - 2-4, append string `s`.
 - 5, appends a fastream, `s` can be the fastream itself that performs the append operation.
-- 6-7, append n characters `c`.
-- 8-10, append a single character `c`.
-- 11-13, equivalent to `append(&v, sizeof(v))`.
+- 6, append n characters `c`.
+- 7-9, append a single character `c`.
+- 10-12, equivalent to `append(&v, sizeof(v))`.
+
+{{< hint warning >}}
+Since v3.0.1, it is ok that the parameter `s` in 1 and 2 overlaps with the internal memory of `fastream`.  
+v3.0.2 removed `fastream& append(char c, size_t n);`.
+{{< /hint >}}
 
 - Example
 
@@ -328,7 +337,6 @@ s.append(s);         // append itself, s -> "xxxx"
 s.append(buf, 8);    // Append 8 bytes
 s.append('c');       // Append a single character
 s.append(100,'c');   // Append 100'c'
-s.append('c', 100);  // append 100'c'
 
 s.append(&i, 4);     // Append 4 bytes
 s.append(i);         // Append 4 bytes, same as above

@@ -218,11 +218,11 @@ DEF_string(s, "", "xx");
 
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
-    COUT << "x: " << FLG_x;
-    COUT << "y: " << FLG_y;
-    COUT << "debug: " << FLG_debug;
-    COUT << "u: " << FLG_u;
-    COUT << FLG_s << "|" << FLG_s.size();
+    co::print("x: ", FLG_x);
+    co::print("y: ", FLG_y);
+    co::print("debug: ", FLG_debug);
+    co::print("u: ", FLG_u);
+    co::print(FLG_s, '|', FLG_s.size());
     return 0;
 }
 ```

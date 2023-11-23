@@ -228,11 +228,11 @@ DEF_string(s, "", "xx");
 
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
-    COUT << "x: " << FLG_x;
-    COUT << "y: " << FLG_y;
-    COUT << "debug: " << FLG_debug;
-    COUT << "u: " << FLG_u;
-    COUT << FLG_s << "|" << FLG_s.size();
+    co::print("x: ", FLG_x);
+    co::print("y: ", FLG_y);
+    co::print("debug: ", FLG_debug);
+    co::print("u: ", FLG_u);
+    co::print(FLG_s, '|', FLG_s.size());
     return 0;
 }
 ```
@@ -284,26 +284,6 @@ CHECK(p != NULL) << "malloc failed..";
 CHECK_NE(p, NULL) << "malloc failed..";
 ```
 
-log is very fast, the following are some test results:
-
-| platform | glog | co/log | speedup |
-| ------ | ------ | ------ | ------ |
-| win2012 HHD | 1.6MB/s | 180MB/s | 112.5 |
-| win10 SSD | 3.7MB/s | 560MB/s | 151.3 |
-| mac SSD | 17MB/s | 450MB/s | 26.4 |
-| linux SSD | 54MB/s | 1023MB/s | 18.9 |
-
-The above is the write speed of co/log and glog (single thread, 1 million logs). It can be seen that co/log is nearly two orders of magnitude faster than glog.
-
-| threads | linux co/log | linux spdlog | win co/log | win spdlog | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| 1 | 0.087235 | 2.076172 | 0.117704 | 0.461156 | 23.8/3.9 |
-| 2 | 0.183160 | 3.729386 | 0.158122 | 0.511769 | 20.3/3.2 |
-| 4 | 0.206712 | 4.764238 | 0.316607 | 0.743227 | 23.0/2.3 |
-| 8 | 0.302088 | 3.963644 | 0.406025 | 1.417387 | 13.1/3.5 |
-
-The above is the time of [printing 1 million logs with 1, 2, 4, and 8 threads](https://github.com/idealvin/coost/tree/benchmark), in seconds. Speedup is the performance improvement of co/log compared to spdlog on linux and windows platforms.
-
 
 
 ### unitest
@@ -336,7 +316,7 @@ The above is a simple example. The `DEF_test` macro defines a test unit, which i
 
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
-    unitest::run_all_tests();
+    unitest::run_tests();
     return 0;
 }
 ```
@@ -344,7 +324,7 @@ int main(int argc, char** argv) {
 The directory [unitest](https://github.com/idealvin/coost/tree/master/unitest) contains the unit test code in coost. Users can run unitest with the following commands:
 
 ```sh
-xmake r unitest -a   # Run all test cases
+xmake r unitest      # Run all test cases
 xmake r unitest -os  # Run test cases in the os unit
 ```
 

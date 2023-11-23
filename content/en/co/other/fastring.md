@@ -20,9 +20,8 @@ include: [co/fastring.h](https://github.com/idealvin/coost/blob/master/include/c
 4.  fastring(const char* s);
 5.  fastring(const std::string& s);
 6.  fastring(size_t n, char c);
-7.  fastring(char c, size_t n);
-8.  fastring(const fastring& s);
-9.  fastring(fastring&& s) noexcept;
+7.  fastring(const fastring& s);
+8.  fastring(fastring&& s) noexcept;
 ```
 
 - 1, the default constructor, which creates an empty fastring without allocating any memory.
@@ -30,10 +29,13 @@ include: [co/fastring.h](https://github.com/idealvin/coost/blob/master/include/c
 - 3, creates a fastring from the given byte sequence, and the parameter `n` is the sequence length.
 - 4, creates a fastring from a null-terminated string.
 - 5, creates a fastring from `std::string`.
-- 6-7, initialize fastring to a string of `n` characters `c`.
-- 8, the copy constructor, which will copy the internal memory.
-- 9, the move constructor, which does not copy the memory.
+- 6, initialize fastring to a string of `n` characters `c`.
+- 7, the copy constructor, which will copy the internal memory.
+- 8, the move constructor, which does not copy the memory.
 
+{{< hint warning >}}
+coost v3.0.2 removed `fastring(char c, size_t n);`.
+{{< /hint >}}
 
 - Example
 
@@ -43,7 +45,6 @@ fastring s(32);           // empty string, pre-allocated memory (capacity is 32)
 fastring s("hello");      // initialize s to "hello"
 fastring s("hello", 3);   // initialize s to "hel"
 fastring s(88,'x');       // initialize s to 88 'x'
-fastring s('x', 88);      // initialize s to 88 'x'
 fastring t(s);            // copy construction
 fastring x(std::move(s)); // Move construction, s itself becomes empty
 ```
@@ -84,10 +85,13 @@ t = std::move(s);      // t -> "x", s -> ""
 ```cpp
 1. fastring& assign(const void* s, size_t n);
 2. template<typename S> fastring& assign(S&& s);
+3. fastring& assign(size_t n, char c);
 ```
 
 - Assign value to fastring, added in v3.0.1.
-- In the first one, `n` is the length of `s`. The second is equivalent to [operator=](#operator).
+- 1, `n` is the length of `s`, `s` can be part of the fastring itself.
+- 2, equivalent to [operator=](#operator).
+- 3, added in v3.0.2, assign `n` characters `c` to fastring.
 
 
 
@@ -178,14 +182,18 @@ size_t capacity() const noexcept;
 const char* c_str() const;
 ```
 
-- This method gets the equivalent C string.
-- This method adds a '\0' to the end of fastring, it will not change the size and content of fastring, but it may cause internal reallocation of memory.
+- This method gets the equivalent C-style string (null terminated).
+
+{{< hint warning >}}
+Writing to the character array accessed through `c_str()` is undefined behavior.
+{{< /hint >}}
 
 
 
 ### data
 
 ```cpp
+char* data() noexcept;
 const char* data() const noexcept;
 ```
 
@@ -264,14 +272,13 @@ void reset();
 ### resize
 
 ```cpp
-void resize(size_t n);
+1. void resize(size_t n);
+2. void resize(size_t n, char c);
 ```
 
-- This method sets the size of fastring to `n`.
+- This method sets the size of fastream to `n`.
 
-{{< hint warning >}}
-When `n` is greater than the original size, it will expand size to `n`, but **will not fill the expanded part with zeroes**.
-{{< /hint >}}
+- When `n` is greater than the original size, it will expand size to `n`. **In the 1st version, the content of the extended part is undefined. The 2nd version will fill the extended part with character `c`.**
 
 - Example
 
@@ -280,6 +287,10 @@ fastring s("hello");
 s.resize(3);   // s -> "hel"
 s.resize(6);
 char c = s[5]; // c is an uncertain random value
+
+s.resize(3);
+s.resize(6, 0);
+c = s[5];       // c is '\0'
 ```
 
 
@@ -330,29 +341,30 @@ s.swap(x); // s -> "world", x -> "hello"
 3. fastring& append(const fastring& s);
 4. fastring& append(const std::string& s);
 5. fastring& append(size_t n, char c);
-6. fastring& append(char c, size_t n);
-7. fastring& append(char c);
+6. fastring& append(char c);
 ```
 
 - 1, appends a byte sequence of length `n`.
 - 2, appends a null-terminated string, and `s` can be part of fastring that performs the append operation.
 - 3, appends a fastring, and s can be the fastring itself that performs the append operation.
 - 4, appends `std::string`.
-- 5-6, appends `n` characters `c`.
-- 7, appends a single character c.
+- 5, appends `n` characters `c`.
+- 6, appends a single character c.
 
+{{< hint warning >}}
+v3.0.2 removed `fastring& append(char c, size_t n);`.
+{{< /hint >}}
 
 - Example
 
 ```cpp
 fastring s;
-s.append('c');               // s -> "c"
-s.append(2,'c');             // s -> "ccc"
-s.append('c', 2);            // s -> "ccccc"
+s.append('c');                // s -> "c"
+s.append(2, 'c');             // s -> "ccc"
 s.clear();
-s.append('c').append(2,'x'); // s -> "cxx"
-s.append(s.c_str() + 1);     // s -> "cxxxx"
-s.append(s.data(), 3);       // s -> "cxxxxcxx"
+s.append('c').append(2, 'x'); // s -> "cxx"
+s.append(s.c_str() + 1);      // s -> "cxxxx"
+s.append(s.data(), 3);        // s -> "cxxxxcxx"
 ```
 
 

@@ -57,7 +57,7 @@ void* zalloc(size_t size);
 
 
 
-### ------------
+### ———————————
 ### co::make
 
 ```cpp
@@ -123,7 +123,7 @@ fastring& s = *co::make_static<fastring>(32, 'x');
 
 
 
-### ------------
+### ———————————
 ### co::shared
 
 ```cpp

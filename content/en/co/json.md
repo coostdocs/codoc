@@ -30,9 +30,47 @@ By definition, object and array can be nested, which can represent complex data 
 
 
 
-## Json
+## global
 
-### Json::Json
+### json::array
+
+```cpp
+Json array();
+```
+
+- This function is in namespace json, it returns an empty array.
+
+
+
+### json::object
+
+```cpp
+Json object();
+```
+
+- This function is in namespace json, it returns an empty object.
+
+
+
+### json::parse
+
+```cpp
+Json parse(const char* s, size_t n);
+Json parse(const char* s);
+Json parse(const fastring& s);
+Json parse(const std::string& s);
+```
+
+- Parse Json from a JSON string.
+- This function is not a method in the Json class, but a function defined in `namespace json`.
+- This function returns a Json object, when the parsing failed, it returns null.
+
+
+
+
+## co::Json
+
+### constructor
 
 ```cpp
  1. Json() noexcept;
@@ -69,52 +107,32 @@ By definition, object and array can be nested, which can represent complex data 
 - Example
 
 ```cpp
-Json a;          // null
-Json b(nullptr); // null
-Json c = false;  // bool
-Json d = 3.14;   // double
-Json e = 23;     // integer
-Json f = "xx";   // string
+co::Json a;          // null
+co::Json b(nullptr); // null
+co::Json c = false;  // bool
+co::Json d = 3.14;   // double
+co::Json e = 23;     // integer
+co::Json f = "xx";   // string
 
-Json g = {1, 2, 3};  // g -> [1, 2, 3]
-Json h = {"a", "b"}; // h -> ["a", "b"]
+co::Json g = {1, 2, 3};  // g -> [1, 2, 3]
+co::Json h = {"a", "b"}; // h -> ["a", "b"]
 
-Json i = {           // i -> { "a": "b" }
+co::Json i = {           // i -> { "a": "b" }
     {"a", "b"}
 };
 
-Json j = {           // j -> {"a": 1, "b": [1,2,3]}
+co::Json j = {           // j -> {"a": 1, "b": [1,2,3]}
     {"a", 1},
     {"b", {1, 2, 3}},
 };
 
-Json x(i);            // i -> null
-Json y(std::move(j)); // j -> null
+co::Json x(i);            // i -> null
+co::Json y(std::move(j)); // j -> null
 ```
 
 
 
-### json::array
-
-```cpp
-Json array();
-```
-
-- This function is in namespace json, it returns an empty array.
-
-
-
-### json::object
-
-```cpp
-Json object();
-```
-
-- This function is in namespace json, it returns an empty object.
-
-
-
-### Json::operator=
+### operator=
 
 ```cpp
 Json& operator=(Json&& v);
@@ -126,7 +144,7 @@ void operator=(const Json&) = delete;
 
 
 
-### Json::dup
+### dup
 
 ```cpp
 Json dup() const;
@@ -138,8 +156,8 @@ Json dup() const;
 - 示例
 
 ```cpp
-Json x = {1, 2, 3}; // x -> [1,2,3]
-Json y, z;
+co::Json x = {1, 2, 3}; // x -> [1,2,3]
+co::Json y, z;
 y = x;       // x -> null, y -> [1,2,3]
 z = y.dup(); // y:[1,2,3], z -> [1,2,3]
 ```
@@ -148,7 +166,7 @@ z = y.dup(); // y:[1,2,3], z -> [1,2,3]
 
 
 ### ———————————
-### Json::is_null
+### is_null
 
 ```cpp
 bool is_null() const;
@@ -158,7 +176,7 @@ bool is_null() const;
 
 
 
-### Json::is_bool
+### is_bool
 
 ```cpp
 bool is_bool() const;
@@ -168,7 +186,7 @@ bool is_bool() const;
 
 
 
-### Json::is_int
+### is_int
 
 ```cpp
 bool is_int() const;
@@ -178,7 +196,7 @@ bool is_int() const;
 
 
 
-### Json::is_double
+### is_double
 
 ```cpp
 bool is_double() const;
@@ -188,7 +206,7 @@ bool is_double() const;
 
 
 
-### Json::is_string
+### is_string
 
 ```cpp
 bool is_string() const;
@@ -198,7 +216,7 @@ bool is_string() const;
 
 
 
-### Json::is_array
+### is_array
 
 ```cpp
 bool is_array() const;
@@ -208,7 +226,7 @@ bool is_array() const;
 
 
 
-### Json::is_object
+### is_object
 
 ```cpp
 bool is_object() const;
@@ -220,7 +238,7 @@ bool is_object() const;
 
 
 ### ———————————
-### Json::as_bool
+### as_bool
 
 ```cpp
 bool as_bool() const;
@@ -233,7 +251,7 @@ bool as_bool() const;
 
 
 
-### Json::as_int
+### as_int
 
 ```cpp
 int as_int() const;
@@ -247,7 +265,7 @@ int64 as_int64() const;
 
 
 
-### Json::as_double
+### as_double
 
 ```cpp
 double as_double() const;
@@ -260,30 +278,29 @@ double as_double() const;
 
 
 
-### Json::as_string
+### as_string
 
 ```cpp
-const char* as_string() const;
+fastring as_string() const;
 ```
 
-- This method returns a C-style string ending with `'\0'`, and the user can also call the `string_size()` method to get the length of the string.
 - Get value of string type, return fastring.
-- For non-string types, this method is equal to [Json::str()](#jsonstr), and the result will be automatically converted to string type.
+- For non-string types, this method is equal to [str()](#str), and the result will be automatically converted to string type.
 
 
 
-### Json::as_c_str
+### as_c_str
 
 ```cpp
 const char* as_c_str() const;
 ```
 
-- Returns a null-terminated C-style string, [string_size()](#jsonstring_size) can be called to get its length.
+- Returns a null-terminated C-style string, [string_size()](#string_size) can be called to get its length.
 - For non-string types, return an empty string.
 
 
 
-### Json::get
+### get
 
 ```cpp
 1. Json& get(uint32 i) const;
@@ -301,7 +318,7 @@ const char* as_c_str() const;
 
 
 
-### Json::set
+### set
 
 ```cpp
 template <class T>
@@ -321,7 +338,7 @@ inline Json& set(A&& a, B&& b, X&& ... x);
 ### Example
 
 ```cpp
-Json r = {
+co::Json r = {
     { "a", 7 },
     { "b", false },
     { "c", { 1, 2, 3 } },
@@ -336,9 +353,9 @@ r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
 
 // x -> {"a":1,"b":[0,1,2],"c":{"d":["oo"]}}
-Json x;
+co::Json x;
 x.set("a", 1);
-x.set("b", Json({0,1,2}));
+x.set("b", co::Json({0,1,2}));
 x.set("c", "d", 0, "oo");
 ```
 
@@ -346,7 +363,7 @@ x.set("c", "d", 0, "oo");
 
 
 ### ———————————
-### Json::operator==
+### operator==
 
 ```cpp
 bool operator==(bool v) const;
@@ -365,7 +382,7 @@ bool operator==(const std::string& v) const;
 
 
 
-### Json::operator!=
+### operator!=
 
 ```cpp
 bool operator!=(bool v) const;
@@ -387,7 +404,7 @@ bool operator!=(const std::string& v) const;
 ### Example
 
 ```cpp
-Json x = {
+co::Json x = {
     {"a", 3},
     {"b", false},
     {"s", "xx"},
@@ -403,7 +420,7 @@ x["s"] == "xx";  // true
 
 
 ### ———————————
-### Json::add_member
+### add_member
 
 ```cpp
 Json& add_member(const char* key, Json&& v);
@@ -420,20 +437,20 @@ Json& add_member(const char* key, Json& v);
 - Example
 
 ```cpp
-Json r;
+co::Json r;
 r.add_member("a", 1);    // r -> {"a":1}
 r.add_member("d", 3.3);  // r -> {"a":1, "d":3.3}
 r.add_member("s", "xx"); // r -> {"a":1, "d":3.3, "s":"xx"}
 
-Json x;
-x.add_member("xx", r);                        // r -> null
-r.add_member("o", Json().add_member("x", 3)); // r -> {"o":{"x":3}}
-Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
+co::Json x;
+x.add_member("xx", r);                            // r -> null
+r.add_member("o", co::Json().add_member("x", 3)); // r -> {"o":{"x":3}}
+co::Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
 ```
 
 
 
-### Json::erase
+### erase
 
 ```cpp
 void erase(uint32 i);
@@ -446,7 +463,7 @@ void erase(const char* key);
 
 
 
-### Json::push_back
+### push_back
 
 ```cpp
 Json& push_back(Json&& v);
@@ -460,19 +477,19 @@ Json& push_back(Json& v);
 - Example
 
 ```cpp
-Json r;
+co::Json r;
 r.push_back(1);    // r -> [1]
 r.push_back(3.3);  // r -> [1, 3.3]
 r.push_back("xx"); // r -> [1, 3.3, "xx"]
 
-Json x;
+co::Json x;
 x.push_back(r);  // r -> null, x -> [[1, 3.3, "xx"]]
-r.push_back(Json().push_back(1).push_back(2)); // r -> [[1,2]]
+r.push_back(co::Json().push_back(1).push_back(2)); // r -> [[1,2]]
 ```
 
 
 
-### Json::remove
+### remove
 
 ```cpp
 void remove(uint32 i);
@@ -487,7 +504,7 @@ void remove(const char* key);
 
 
 
-### Json::reset
+### reset
 
 ````cpp
 void reset();
@@ -497,7 +514,7 @@ void reset();
 
 
 
-### Json::swap
+### swap
 
 ````cpp
 void swap(Json& v) noexcept;
@@ -510,7 +527,7 @@ void swap(Json&& v) noexcept;
 
 
 ### ———————————
-### Json::operator[]
+### operator[]
 
 ```cpp
 Json& operator[](uint32 i) const;
@@ -527,7 +544,7 @@ Json& operator[](const char* key) const;
 - Example
 
 ```cpp
-Json r = {
+co::Json r = {
     { "a", 7 },
     { "x", { 1, 2, 3 } },
 };
@@ -538,7 +555,7 @@ r["x"][0].as_int(); // 1
 
 
 
-### Json::has_member
+### has_member
 
 ```cpp
 bool has_member(const char* key) const;
@@ -551,14 +568,14 @@ bool has_member(const char* key) const;
 - Example
 
 ```cpp
-Json r = {{"a", 1}};
+co::Json r = {{"a", 1}};
 r.has_member("a"); // true
 r.has_member("x"); // false
 ```
 
 
 
-### Json::size
+### size
 
 ```cpp
 uint32 size() const;
@@ -572,7 +589,7 @@ uint32 size() const;
 - Example
 
 ```cpp
-Json r = {
+co::Json r = {
     {"x", 1},
     {"s", "hello"},
     {"a", {1, 2, 3}},
@@ -586,7 +603,7 @@ r["a"].size(); // 3
 
 
 
-### Json::empty
+### empty
 
 ```cpp
 bool empty() const;
@@ -596,7 +613,7 @@ bool empty() const;
 
 
 
-### Json::string_size
+### string_size
 
 ```cpp
 uint32 string_size() const;
@@ -606,7 +623,7 @@ uint32 string_size() const;
 
 
 
-### Json::array_size
+### array_size
 
 ```cpp
 uint32 array_size() const;
@@ -616,7 +633,7 @@ uint32 array_size() const;
 
 
 
-### Json::object_size
+### object_size
 
 ```cpp
 uint32 object_size() const;
@@ -628,7 +645,7 @@ uint32 object_size() const;
 
 
 ### ———————————
-### Json::str
+### str
 
 ```cpp
 fastream& str(fastream& s, int mdp=16) const;
@@ -644,7 +661,7 @@ fastring str(int mdp=16) const;
 
 
 
-### Json::pretty
+### pretty
 
 ```cpp
 fastream& pretty(fastream& s, int mdp=16) const;
@@ -656,7 +673,7 @@ fastring pretty(int mdp=16) const;
 
 
 
-### Json::dbg
+### dbg
 
 ```cpp
 fastream& dbg(fastream& s, int mdp=16) const;
@@ -664,12 +681,12 @@ fastring& dbg(fastring& s, int mdp=16) const;
 fastring dbg(int mdp=16) const;
 ```
 
-- Convert Json to a debug string, like `Json::str()`, but will truncate string type to the first 32 bytes if its length exceeds 512 bytes.
-- This method is generally used to print logs. In some cases, the Json object may contain a long string, such as the base64 encoding of a picture. At such cases, use `Json::dbg()` instead of `Json::str()` to avoid printing too many significant logs.
+- Convert Json to a debug string, like `str()`, but will truncate string type to the first 32 bytes if its length exceeds 512 bytes.
+- This method is generally used to print logs. In some cases, the Json object may contain a long string, such as the base64 encoding of a picture. At such cases, use `dbg()` instead of `str()` to avoid printing too many significant logs.
 
 
 
-### Json::parse_from
+### parse_from
 
 ```cpp
 bool parse_from(const char* s, size_t n);
@@ -685,25 +702,10 @@ bool parse_from(const std::string& s);
 
 
 
-### json::parse
-
-```cpp
-Json parse(const char* s, size_t n);
-Json parse(const char* s);
-Json parse(const fastring& s);
-Json parse(const std::string& s);
-```
-
-- Parse Json from a JSON string.
-- This function is not a method in the Json class, but a function defined in `namespace json`.
-- This function returns a Json object, when the parsing failed, it returns null.
-
-
-
 ### Example
 
 ```cpp
-Json r = {
+co::Json r = {
     { "a", {1,2,3} }
 };
 
@@ -712,18 +714,18 @@ fastring p = r.pretty();
 LOG << r.dbg();          // print json debug string
 LOG << r;                // the same as above, but is  more efficient
 
-Json x;
+co::Json x;
 x.parse_from(s);
 x.parse_from(p);
 
-Json v = json::parse(s);
+co::Json v = json::parse(s);
 ```
 
 
 
 
 ### ———————————
-### Json::begin
+### begin
 
 ```cpp
 iterator begin() const;
@@ -731,25 +733,25 @@ iterator begin() const;
 
 - Returns the beginning iterator.
 - The Json calling this method must be array, object or null.
-- When the Json is empty, the return value is equal to `Json::end()`.
-- If the Json calling this method is not array or object type, the return value is equal to [Json::end()](#jsonend).
+- When the Json is empty, the return value is equal to `end()`.
+- If the Json calling this method is not array or object type, the return value is equal to [end()](#end).
 
 
 
-### Json::end
+### end
 
 ```cpp
 const iterator::End& end() const;
 ```
 
 - Returns a fake end iterator.
-- The return value is actually not an iterator object, but a iterator can be compared with it. If an iterator is equal to `Json::end()`, it means that there is no more element.
+- The return value is actually not an iterator object, but a iterator can be compared with it. If an iterator is equal to `end()`, it means that there is no more element.
 
 
 
-### Json::iterator
+### iterator
 
-#### iterator::operator==
+#### operator==
 
 ```cpp
 bool operator==(const End&) const;
@@ -758,7 +760,7 @@ bool operator==(const End&) const;
 - Determine whether a iterator is equal to `End`, End is the fake end iterator.
 
 
-#### iterator::operator!=
+#### operator!=
 
 ```cpp
 bool operator!=(const End&) const;
@@ -767,7 +769,7 @@ bool operator!=(const End&) const;
 - Determine if a iterator is not equal to `End`, End is the fake end iterator.
 
 
-#### iterator::operator++
+#### operator++
 
 ```cpp
 iterator& operator++();
@@ -776,7 +778,7 @@ iterator& operator++();
 - The prefix operator++.
 
 
-#### iterator::operator*
+#### operator*
 
 ```cpp
 Json& operator*() const;
@@ -786,7 +788,7 @@ Json& operator*() const;
 - When Json is an array, the iterator points to the elements in the array.
 
 
-#### iterator::key
+#### key
 
 ```cpp
 const char* key() const;
@@ -796,7 +798,7 @@ const char* key() const;
 - When Json is an object, the iterator points to the key-value pair in the object, and this method returns the key.
 
 
-#### iterator::value
+#### value
 
 ```cpp
 Json& value() const;
@@ -809,11 +811,11 @@ Json& value() const;
 
 ### Traversing the Json
 
-co/json supports traversing a Json of type array or object by iterator:
+co.json supports traversing a Json of type array or object by iterator:
 
 ```cpp
 // {"i":7, "s":"xx", "a":[123, true, "nice"]}
-Json r = {
+co::Json r = {
     {"i", 7},
     {"s", "xx"},
     {"a", {1, 2, 3}},
@@ -825,7 +827,7 @@ for (auto it = r.begin(); it != r.end(); ++it) {
 }
 
 // array
-Json& a = r["a"];
+co::Json& a = r["a"];
 for (auto it = a.begin(); it != a.end(); ++it) {
     LOG << (*it);
 }
@@ -839,7 +841,7 @@ for (auto it = a.begin(); it != a.end(); ++it) {
 Some users may add members in the following way:
 
 ```cpp
-Json r;
+co::Json r;
 r["a"] = 1;
 r["s"] = "hello world";
 ```
@@ -847,7 +849,7 @@ r["s"] = "hello world";
 Although the above code works, the efficiency may be not so good. The `operator[]` will first look up the key, which may be slow. It is generally recommended to use **add_member()** instead:
 
 ```cpp
-Json r;
+co::Json r;
 r.add_member("a", 1);
 r.add_member("s", "hello world");
 ```
@@ -855,15 +857,15 @@ r.add_member("s", "hello world");
 Or construct a Json like this:
 
 ```cpp
-Json r = {
+co::Json r = {
     {"a", 1},
     {"s", "hello world"},
 };
 ```
 
-For read-only operations, it is recommended to replace `operator[]` with [get()](#jsonget), which has no side effects.
+For read-only operations, it is recommended to replace `operator[]` with [get()](#get), which has no side effects.
 
 ```cpp
-Json r = {{"a", 1}};
+co::Json r = {{"a", 1}};
 r.get("a").as_int(); // 1
 ```

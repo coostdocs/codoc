@@ -17,7 +17,7 @@ TLOG("topic") << "hello" << 23; // topic log
 
 
 
-###  Level Log 
+### Level Log 
 
 Level log 分为 debug, info, warning, error, fatal 5 个级别，并提供一系列的宏，用于打印不同级别的日志。
 

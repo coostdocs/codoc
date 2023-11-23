@@ -30,9 +30,47 @@ object 由一对大括号括起来，array 由一对中括号括起来，它们�
 
 
 
-## Json
+## global
 
-### Json::Json
+### json::array
+
+```cpp
+Json array();
+```
+
+- 此函数在 namespace json 下，它返回一个空的 array 对象。
+
+
+
+### json::object
+
+```cpp
+Json object();
+```
+
+- 此函数在 namespace json 下，它返回一个空的 object 对象。
+
+
+
+### json::parse
+
+```cpp
+Json parse(const char* s, size_t n);
+Json parse(const char* s);
+Json parse(const fastring& s);
+Json parse(const std::string& s);
+```
+
+- 从 JSON 字符串解析 Json 对象。
+- 此函数不是 Json 类中的方法，而是定义于 `namespace json` 下的函数。
+- 此函数返回一个 Json 对象，解析失败时，返回 null 对象。
+
+
+
+
+## co::Json
+
+### constructor
 
 ```cpp
  1. Json() noexcept;
@@ -58,7 +96,7 @@ object 由一对大括号括起来，array 由一对中括号括起来，它们�
 ```
 
 - 1-2, 构建一个 null 对象。
-- 3-4, move 构造与拷贝构造函数，**二者均执行 move 语义**，构造函数执行后，参数 `v` 将变为一个 null 对象。
+- 3-4, move 构造与拷贝构造函数，**二者均执行 move 语义**，构造函数执行后，`v` 将变为一个 null 对象。
 - 5, 构造 bool 类型的 JSON 对象。
 - 6, 构造 double 类型的 JSON 对象。
 - 7-10, 构造整数类型的 JSON 对象。
@@ -69,52 +107,32 @@ object 由一对大括号括起来，array 由一对中括号括起来，它们�
 - 示例
 
 ```cpp
-Json a;          // null
-Json b(nullptr); // null
-Json c = false;  // bool
-Json d = 3.14;   // double
-Json e = 23;     // integer
-Json f = "xx";   // string
+co::Json a;          // null
+co::Json b(nullptr); // null
+co::Json c = false;  // bool
+co::Json d = 3.14;   // double
+co::Json e = 23;     // integer
+co::Json f = "xx";   // string
 
-Json g = {1, 2, 3};  // g -> [1, 2, 3]
-Json h = {"a", "b"}; // h -> ["a", "b"]
+co::Json g = {1, 2, 3};  // g -> [1, 2, 3]
+co::Json h = {"a", "b"}; // h -> ["a", "b"]
 
-Json i = {           // i -> { "a": "b" }
+co::Json i = {           // i -> { "a": "b" }
     {"a", "b"}
 };
 
-Json j = {           // j -> {"a": 1, "b": [1,2,3]}
+co::Json j = {           // j -> {"a": 1, "b": [1,2,3]}
     {"a", 1},
     {"b", {1, 2, 3}},
 };
 
-Json x(i);            // i -> null
-Json y(std::move(j)); // j -> null
+co::Json x(i);            // i -> null
+co::Json y(std::move(j)); // j -> null
 ```
 
 
 
-### json::array
-
-```cpp
-Json array();
-```
-
-- 此函数在 namespace json 下，它返回一个空的 array 对象。
-
-
-
-### json::object
-
-```cpp
-Json object();
-```
-
-- 此函数在 namespace json 下，它返回一个空的 object 对象。
-
-
-
-### Json::operator=
+### operator=
 
 ```cpp
 Json& operator=(Json&& v);
@@ -126,7 +144,7 @@ void operator=(const Json&) = delete;
 
 
 
-### Json::dup
+### dup
 
 ```cpp
 Json dup() const;
@@ -138,8 +156,8 @@ Json dup() const;
 - 示例
 
 ```cpp
-Json x = {1, 2, 3}; // x -> [1,2,3]
-Json y, z;
+co::Json x = {1, 2, 3}; // x -> [1,2,3]
+co::Json y, z;
 y = x;       // x -> null, y -> [1,2,3]
 z = y.dup(); // y:[1,2,3], z -> [1,2,3]
 ```
@@ -148,7 +166,7 @@ z = y.dup(); // y:[1,2,3], z -> [1,2,3]
 
 
 ### ———————————
-### Json::is_null
+### is_null
 
 ```cpp
 bool is_null() const;
@@ -158,7 +176,7 @@ bool is_null() const;
 
 
 
-### Json::is_bool
+### is_bool
 
 ```cpp
 bool is_bool() const;
@@ -168,7 +186,7 @@ bool is_bool() const;
 
 
 
-### Json::is_int
+### is_int
 
 ```cpp
 bool is_int() const;
@@ -178,7 +196,7 @@ bool is_int() const;
 
 
 
-### Json::is_double
+### is_double
 
 ```cpp
 bool is_double() const;
@@ -188,7 +206,7 @@ bool is_double() const;
 
 
 
-### Json::is_string
+### is_string
 
 ```cpp
 bool is_string() const;
@@ -198,7 +216,7 @@ bool is_string() const;
 
 
 
-### Json::is_array
+### is_array
 
 ```cpp
 bool is_array() const;
@@ -208,7 +226,7 @@ bool is_array() const;
 
 
 
-### Json::is_object
+### is_object
 
 ```cpp
 bool is_object() const;
@@ -220,7 +238,7 @@ bool is_object() const;
 
 
 ### ———————————
-### Json::as_bool
+### as_bool
 
 ```cpp
 bool as_bool() const;
@@ -233,7 +251,7 @@ bool as_bool() const;
 
 
 
-### Json::as_int
+### as_int
 
 ```cpp
 int as_int() const;
@@ -247,7 +265,7 @@ int64 as_int64() const;
 
 
 
-### Json::as_double
+### as_double
 
 ```cpp
 double as_double() const;
@@ -259,29 +277,29 @@ double as_double() const;
 
 
 
-### Json::as_string
+### as_string
 
 ```cpp
 fastring as_string() const;
 ```
 
 - 获取字符串类型的值，返回 fastring。
-- 对于非 string 类型，此方法等价于 [Json::str()](#jsonstr)，结果将自动转换为 string 类型。
+- 对于非 string 类型，此方法等价于 [str()](#str)，结果将自动转换为 string 类型。
 
 
 
-### Json::as_c_str
+### as_c_str
 
 ```cpp
 const char* as_c_str() const;
 ```
 
-- 返回 `\0` 结尾的 C 风格字符串，可以用 [string_size()](#jsonstring_size) 获取其长度，一般用于对性能要求较高的地方。
+- 返回 `\0` 结尾的 C 风格字符串，可以用 [string_size()](#string_size) 获取其长度，一般用于对性能要求较高的地方。
 - 对于非 string 类型，返回空字符串。
 
 
 
-### Json::get
+### get
 
 ```cpp
 1. Json& get(uint32 i) const;
@@ -299,7 +317,7 @@ const char* as_c_str() const;
 
 
 
-### Json::set
+### set
 
 ```cpp
 template <class T>
@@ -319,7 +337,7 @@ inline Json& set(A&& a, B&& b, X&& ... x);
 ### 代码示例
 
 ```cpp
-Json r = {
+co::Json r = {
     { "a", 7 },
     { "b", false },
     { "c", { 1, 2, 3 } },
@@ -334,9 +352,9 @@ r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
 
 // x -> {"a":1,"b":[0,1,2],"c":{"d":["oo"]}}
-Json x;
+co::Json x;
 x.set("a", 1);
-x.set("b", Json({0,1,2}));
+x.set("b", co::Json({0,1,2}));
 x.set("c", "d", 0, "oo");
 ```
 
@@ -344,7 +362,7 @@ x.set("c", "d", 0, "oo");
 
 
 ### ———————————
-### Json::operator==
+### operator==
 
 ```cpp
 bool operator==(bool v) const;
@@ -363,7 +381,7 @@ bool operator==(const std::string& v) const;
 
 
 
-### Json::operator!=
+### operator!=
 
 ```cpp
 bool operator!=(bool v) const;
@@ -385,7 +403,7 @@ bool operator!=(const std::string& v) const;
 ### 代码示例
 
 ```cpp
-Json x = {
+co::Json x = {
     {"a", 3},
     {"b", false},
     {"s", "xx"},
@@ -399,9 +417,8 @@ x["s"] == "xx";  // true
 
 
 
-
 ### ———————————
-### Json::add_member
+### add_member
 
 ```cpp
 Json& add_member(const char* key, Json&& v);
@@ -418,20 +435,20 @@ Json& add_member(const char* key, Json& v);
 - 示例
 
 ```cpp
-Json r;
+co::Json r;
 r.add_member("a", 1);    // r -> {"a":1}
 r.add_member("d", 3.3);  // r -> {"a":1, "d":3.3}
 r.add_member("s", "xx"); // r -> {"a":1, "d":3.3, "s":"xx"}
 
-Json x;
-x.add_member("xx", r);                        // r -> null
-r.add_member("o", Json().add_member("x", 3)); // r -> {"o":{"x":3}}
-Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
+co::Json x;
+x.add_member("xx", r);                            // r -> null
+r.add_member("o", co::Json().add_member("x", 3)); // r -> {"o":{"x":3}}
+co::Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
 ```
 
 
 
-### Json::erase
+### erase
 
 ```cpp
 void erase(uint32 i);
@@ -444,7 +461,7 @@ void erase(const char* key);
 
 
 
-### Json::push_back
+### push_back
 
 ```cpp
 Json& push_back(Json&& v);
@@ -458,19 +475,19 @@ Json& push_back(Json& v);
 - 示例
 
 ```cpp
-Json r;
+co::Json r;
 r.push_back(1);    // r -> [1]
 r.push_back(3.3);  // r -> [1, 3.3]
 r.push_back("xx"); // r -> [1, 3.3, "xx"]
 
-Json x;
+co::Json x;
 x.push_back(r);  // r -> null, x -> [[1, 3.3, "xx"]]
-r.push_back(Json().push_back(1).push_back(2)); // r -> [[1,2]]
+r.push_back(co::Json().push_back(1).push_back(2)); // r -> [[1,2]]
 ```
 
 
 
-### Json::remove
+### remove
 
 ```cpp
 void remove(uint32 i);
@@ -484,7 +501,7 @@ void remove(const char* key);
 
 
 
-### Json::reset
+### reset
 
 ```cpp
 void reset();
@@ -494,7 +511,7 @@ void reset();
 
 
 
-### Json::swap
+### swap
 
 ```cpp
 void swap(Json& v) noexcept;
@@ -507,7 +524,7 @@ void swap(Json&& v) noexcept;
 
 
 ### ———————————
-### Json::operator[]
+### operator[]
 
 ```cpp
 Json& operator[](uint32 i) const;
@@ -524,7 +541,7 @@ Json& operator[](const char* key) const;
 - 示例
 
 ```cpp
-Json r = {
+co::Json r = {
     { "a", 7 },
     { "x", { 1, 2, 3 } },
 };
@@ -535,7 +552,7 @@ r["x"][0].as_int(); // 1
 
 
 
-### Json::has_member
+### has_member
 
 ```cpp
 bool has_member(const char* key) const;
@@ -548,14 +565,14 @@ bool has_member(const char* key) const;
 - 示例
 
 ```cpp
-Json r = {{"a", 1}};
+co::Json r = {{"a", 1}};
 r.has_member("a"); // true
 r.has_member("x"); // false
 ```
 
 
 
-### Json::size
+### size
 
 ```cpp
 uint32 size() const;
@@ -569,7 +586,7 @@ uint32 size() const;
 - 示例
 
 ```cpp
-Json r = {
+co::Json r = {
     {"x", 1},
     {"s", "hello"},
     {"a", {1, 2, 3}},
@@ -583,7 +600,7 @@ r["a"].size(); // 3
 
 
 
-### Json::empty
+### empty
 
 ```cpp
 bool empty() const;
@@ -593,7 +610,7 @@ bool empty() const;
 
 
 
-### Json::string_size
+### string_size
 
 ```cpp
 uint32 string_size() const;
@@ -603,7 +620,7 @@ uint32 string_size() const;
 
 
 
-### Json::array_size
+### array_size
 
 ```cpp
 uint32 array_size() const;
@@ -613,7 +630,7 @@ uint32 array_size() const;
 
 
 
-### Json::object_size
+### object_size
 
 ```cpp
 uint32 object_size() const;
@@ -625,7 +642,7 @@ uint32 object_size() const;
 
 
 ### ———————————
-### Json::str
+### str
 
 ```cpp
 fastream& str(fastream& s, int mdp=16) const;
@@ -641,7 +658,7 @@ fastring str(int mdp=16) const;
 
 
 
-### Json::pretty
+### pretty
 
 ```cpp
 fastream& pretty(fastream& s, int mdp=16) const;
@@ -649,11 +666,11 @@ fastring& pretty(fastring& s, int mdp=16) const;
 fastring pretty(int mdp=16) const;
 ```
 
-- 将 Json 对象转换成更漂亮的 JSON 字符串，除了结果好看点，其他与 `Json::str()` 一样。
+- 将 Json 对象转换成更漂亮的 JSON 字符串，除了结果好看点，其他与 `str()` 一样。
 
 
 
-### Json::dbg
+### dbg
 
 ```cpp
 fastream& dbg(fastream& s, int mdp=16) const;
@@ -661,12 +678,12 @@ fastring& dbg(fastring& s, int mdp=16) const;
 fastring dbg(int mdp=16) const;
 ```
 
-- 将 Json 对象转换成 debug 字符串，当 string 类型的值长度超过 512 字节时，截断取前 32 字节，其他与 `Json::str()` 一样。
-- 此方法一般用于打印日志。有些应用场景中，Json 对象可能包含较长的 string，如一个图片文件的 base64 编码，这个时候用 `Json::dbg()` 取代 `Json::str()` 方法，可以避免打印过多无意义的日志。
+- 将 Json 对象转换成 debug 字符串，当 string 类型的值长度超过 512 字节时，截断取前 32 字节，其他与 `str()` 一样。
+- 此方法一般用于打印日志。有些应用场景中，Json 对象可能包含较长的 string，如一个图片文件的 base64 编码，这个时候用 `dbg()` 取代 `str()` 方法，可以避免打印过多无意义的日志。
 
 
 
-### Json::parse_from
+### parse_from
 
 ```cpp
 bool parse_from(const char* s, size_t n);
@@ -682,25 +699,10 @@ bool parse_from(const std::string& s);
 
 
 
-### json::parse
-
-```cpp
-Json parse(const char* s, size_t n);
-Json parse(const char* s);
-Json parse(const fastring& s);
-Json parse(const std::string& s);
-```
-
-- 从 JSON 字符串解析 Json 对象。
-- 此函数不是 Json 类中的方法，而是定义于 `namespace json` 下的函数。
-- 此函数返回一个 Json 对象，解析失败时，返回 null 对象。
-
-
-
 ### 代码示例
 
 ```cpp
-Json r = {
+co::Json r = {
     { "a", {1,2,3} }
 };
 
@@ -709,42 +711,42 @@ fastring p = r.pretty();
 LOG << r.dbg();          // print json debug string
 LOG << r;                // the same as above, but is  more efficient
 
-Json x;
+co::Json x;
 x.parse_from(s);
 x.parse_from(p);
 
-Json v = json::parse(s);
+co::Json v = json::parse(s);
 ```
 
 
 
 
 ### ———————————
-### Json::begin
+### begin
 
 ```cpp
 iterator begin() const;
 ```
 
 - 返回指向 Json 对象的 beginning iterator。
-- 若调用此方法的 Json 对象不是 array 或 object 类型，返回值等于 [Json::end()](#jsonend)。
+- 若调用此方法的 Json 对象不是 array 或 object 类型，返回值等于 [end()](#end)。
 
 
 
-### Json::end
+### end
 
 ```cpp
 const iterator::End& end() const;
 ```
 
 - 返回一个假的 end iterator。
-- 返回值实际上并不是一个 iterator 对象，但 iterator 可以与它比较，若 iterator 与 `Json::end()` 相等，表示没有更多的元素了。
+- 返回值实际上并不是一个 iterator 对象，但 iterator 可以与它比较，若 iterator 与 `end()` 相等，表示没有更多的元素了。
 
 
 
-### Json::iterator
+### iterator
 
-#### iterator::operator==
+#### operator==
 
 ```cpp
 bool operator==(const End&) const;
@@ -753,7 +755,7 @@ bool operator==(const End&) const;
 - 判断 iterator 是否等于 `End`，End 是一个假的 end iterator。
 
 
-#### iterator::operator!=
+#### operator!=
 
 ```cpp
 bool operator!=(const End&) const;
@@ -762,7 +764,7 @@ bool operator!=(const End&) const;
 - 判断 iterator 是否不等于 `End`，End 是一个假的 end iterator。
 
 
-#### iterator::operator++
+#### operator++
 
 ```cpp
 iterator& operator++();
@@ -771,7 +773,7 @@ iterator& operator++();
 - 重载前缀 `++` 操作，不支持后缀 `++` 操作。
 
 
-#### iterator::operator*
+#### operator*
 
 ```cpp
 Json& operator*() const;
@@ -781,7 +783,7 @@ Json& operator*() const;
 - Json 为 array 时，iterator 指向 array 中的元素。
 
 
-#### iterator::key
+#### key
 
 ```cpp
 const char* key() const;
@@ -791,7 +793,7 @@ const char* key() const;
 - Json 为 object 时，iterator 指向 object 中的 key-value 键值对，此方法返回该键值对中的 key。
 
 
-#### iterator::value
+#### value
 
 ```cpp
 Json& value() const;
@@ -804,11 +806,11 @@ Json& value() const;
 
 ### 遍历 array 或 object
 
-co/json 支持用 iterator 遍历 array 或 object 类型的 Json 对象。
+co.json 支持用 iterator 遍历 array 或 object 类型的 Json 对象。
 
 ```cpp
 // {"i":7, "s":"xx", "a":[123, true, "nice"]}
-Json r = {
+co::Json r = {
     {"i", 7},
     {"s", "xx"},
     {"a", {1, 2, 3}},
@@ -820,7 +822,7 @@ for (auto it = r.begin(); it != r.end(); ++it) {
 }
 
 // array
-Json& a = r["a"];
+co::Json& a = r["a"];
 for (auto it = a.begin(); it != a.end(); ++it) {
     LOG << (*it);
 }
@@ -834,7 +836,7 @@ for (auto it = a.begin(); it != a.end(); ++it) {
 有些用户喜欢用下面的方式添加元素：
 
 ```cpp
-Json r;
+co::Json r;
 r["a"] = 1;
 r["s"] = "hello world";
 ```
@@ -842,7 +844,7 @@ r["s"] = "hello world";
 上面的操作虽然可行，但是**效率并不高**。`operator[]` 操作会先查找 key，找到了就更新值，没找到就插入新的元素。一般建议用 **add_member()** 方法取而代之：
 
 ```cpp
-Json r;
+co::Json r;
 r.add_member("a", 1);
 r.add_member("s", "hello world");
 ```
@@ -850,13 +852,13 @@ r.add_member("s", "hello world");
 或者像下面这样构造 Json 对象：
 
 ```cpp
-Json r = {
+co::Json r = {
     {"a", 1},
     {"s", "hello world"},
 };
 ```
 
-对于只读操作，建议用 [get()](#jsonget) 取代 `operator[]`，前者无副作用。
+对于只读操作，建议用 [get()](#get) 取代 `operator[]`，前者无副作用。
 
 ```cpp
 Json r = {{"a", 1}};

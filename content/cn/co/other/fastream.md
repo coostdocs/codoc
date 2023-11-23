@@ -142,14 +142,19 @@ size_t capacity() const noexcept;
 const char* c_str() const;
 ```
 
-- 此方法获取等效的 C 字符串。
-- 此方法在 fastream 末尾加上一个 '\0'，它不会改变 fastream 的 size 及内容，但有可能导致内部重新分配内存。
+- 此方法获取等效的 C 风格字符串 (`\0`结尾)。
+
+{{< hint warning >}}
+通过 `c_str()` 访问的字符数组是只读的，不可进行写操作。
+{{< /hint >}}
+
 
 
 
 ### data
 
 ```cpp
+char* data() noexcept;
 const char* data() const noexcept;
 ```
 
@@ -219,7 +224,7 @@ fastring x = s.str();  // x = "hello"
 void ensure(size_t n);
 ```
 
-- 此方法确保 fastream 剩余的内存容量能容纳至少 n 个字符。
+- 此方法确保 fastream 剩余的内存能容纳至少 n 个字符。
 
 
 
@@ -247,11 +252,12 @@ void reset();
 ### resize
 
 ```cpp
-void resize(size_t n);
+1. void resize(size_t n);
+2. void resize(size_t n, char c);
 ```
 
 - 此方法将 fastream 的 size 设置为 n。
-- 当 n 大于原来的 size 时，此操作将 size 扩大到 n，但不会用 '\0' 填充扩展的部分。
+- 当 n 大于原来的 size 时，此操作将 size 扩大到 n。**1 中扩展的部分，内容是未定义的；2 中会用字符 `c` 填充扩展的部分。**
 
 - 示例
 
@@ -261,6 +267,10 @@ s.append("hello");
 s.resize(3);    // s -> "hel"
 s.resize(6);
 char c = s[5];  // c 是不确定的随机值
+
+s.resize(3);
+s.resize(6, 0);
+c = s[5];       // c 是 '\0'
 ```
 
 
@@ -295,26 +305,25 @@ s.swap(x);  // s: cap -> 64,  x: cap -> 32
 5.  fastream& append(const fastream& s);
 
 6.  fastream& append(size_t n, char c);
-7.  fastream& append(char c, size_t n);
+7.  fastream& append(char c);
+8.  fastream& append(signed char v)
+9. fastream& append(unsigned char c);
 
-8.  fastream& append(char c);
-9.  fastream& append(signed char v)
-10. fastream& append(unsigned char c);
-
-11. fastream& append(uint16 v);
-12. fastream& append(uint32 v);
-13. fastream& append(uint64 v);
+10. fastream& append(uint16 v);
+11. fastream& append(uint32 v);
+12. fastream& append(uint64 v);
 ```
 
 - 1, 追加长度为 n 的字节序列。
 - 2-4, 追加字符串 s。
 - 5, 追加 fastream，s 可以是进行 append 操作的 fastream 对象本身。
-- 6-7, 追加 n 个字符 c。
-- 8-10, 追加单个字符 c。
-- 11-13, 等价于 `append(&v, sizeof(v))`。
+- 6, 追加 n 个字符 c。
+- 7-9, 追加单个字符 c。
+- 10-12, 等价于 `append(&v, sizeof(v))`。
 
-{{< hint info >}}
-从 v3.0.1 开始，1-2 参数 s 可以与 fastream 内部内存重叠。
+{{< hint warn >}}
+从 v3.0.1 开始，1-2 参数 s 可以与 fastream 内部内存重叠。  
+v3.0.2 移除了 `fastream& append(char c, size_t n);`。
 {{< /hint >}}
 
 - 示例
@@ -329,7 +338,6 @@ s.append(s);         // 追加自身, s -> "xxxx"
 s.append(buf, 8);    // 追加 8 字节
 s.append('c');       // 追加单个字符
 s.append(100, 'c');  // 追加 100 个 'c'
-s.append('c', 100);  // 追加 100 个 'c'
 
 s.append(&i, 4);     // 追加 4 字节
 s.append(i);         // 追加 4 字节, 与上同

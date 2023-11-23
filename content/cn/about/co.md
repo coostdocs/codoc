@@ -3,6 +3,17 @@ weight: 2
 title: "简介"
 ---
 
+## 文档付费声明
+
+{{< hint warning >}}
+本文档采取付费阅读模式，每个用户可支付 59￥，获得本文档永久阅读权。感谢您的支持。
+
+**[支付页面](../sponsor/)**
+{{< /hint >}}
+
+
+
+
 ## coost 简介
 
 [![stars](https://img.shields.io/github/stars/idealvin/coost?style=social)](https://github.com/idealvin/coost)
@@ -47,15 +58,6 @@ coost 简称为 co，曾被称为小型 [boost](https://www.boost.org/) 库，�
 
 {{< /columns >}}
 
-
-{{< hint warning >}}
-**文档付费声明**  
-本文档采取付费阅读模式，用户可选择如下付费方案之一：
-- 每个用户一次性支付 59￥，获得本文档永久阅读权。
-- 每个用户支付 23￥/年，持续 3 年，之后获得本文档永久阅读权。  
-
-**[支付页面](../sponsor/)**
-{{< /hint >}}
 
 
 

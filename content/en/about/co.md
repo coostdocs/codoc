@@ -3,6 +3,17 @@ weight: 1
 title: "Introduction"
 ---
 
+## Payment statement
+
+{{< hint warning >}}
+This document requires a payment. You may pay 10$ to obtain permanent reading rights to this document. Thanks for your support.
+
+**[Payment page](../sponsor/)**
+{{< /hint >}}
+
+
+
+
 ## What is coost
 
 [![stars](https://img.shields.io/github/stars/idealvin/coost?style=social)](https://github.com/idealvin/coost)

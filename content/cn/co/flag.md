@@ -14,7 +14,7 @@ include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/fl
 
 ### flag 变量
 
-co.flag 中的宏定义的全局变量，称为 **flag 变量**。如下面的代码定义了一个 flag 变量，变量名是 `FLG_x`。
+co.flag 中的宏定义的**配置项**，实际上是全局变量，称为 **flag 变量**。如下面的代码定义了一个 flag 变量，变量名是 `FLG_x`。
 
 ```cpp
 DEF_int32(x, 0, "xxx"); // int32 FLG_x = 0;
@@ -32,7 +32,11 @@ bool, int32, int64, uint32, uint64, double, string
 
 ### command line flag
 
-命令行参数中，以 `-x=y` 的形式出现，其中 `x` 被称为一个 **command line flag**(以下简称为 flag)。命令行中的 flag `x` 对应代码中的全局变量 `FLG_x`，命令行中的 `-x=y` 就相当于将 `FLG_x` 的值设置为 `y`。为了方便，下面可能将 flag 与 flag 变量统一称为 flag。
+命令行参数中，以 `-x=y` 的形式出现，其中 `x` 被称为一个 **command line flag**(以下简称为 flag)。命令行中的 flag `x` 对应代码中的全局变量 `FLG_x`，命令行中的 `-x=y` 就相当于将 `FLG_x` 的值设置为 `y`。
+
+{{< hint info >}}
+为了方便，本文档中可能将 command line flag、flag 变量统一称为 flag。
+{{< /hint >}}
 
 co.flag 为了简便易用，设计得非常灵活：
 

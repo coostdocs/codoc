@@ -1,0 +1,8 @@
+{{ if .Params.author }}
+<div class="book-title">
+<h1 class="title">{{ .Title }}</h1>
+<p class="author">
+  {{ .Params.author }} | {{ .Params.day }}
+</p>
+</div>
+{{ end }}

@@ -3,17 +3,6 @@ weight: 2
 title: "简介"
 ---
 
-## 文档付费声明
-
-{{< hint warning >}}
-本文档采取付费阅读模式，每个用户可支付 59￥，获得本文档永久阅读权。感谢您的支持。
-
-**[支付页面](../sponsor/)**
-{{< /hint >}}
-
-
-
-
 ## coost 简介
 
 [![stars](https://img.shields.io/github/stars/idealvin/coost?style=social)](https://github.com/idealvin/coost)

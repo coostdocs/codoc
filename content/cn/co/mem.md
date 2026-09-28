@@ -1,432 +1,331 @@
 ---
-weight: 3
+weight: 2
 title: "内存分配"
 ---
 
-include: [co/mem.h](https://github.com/idealvin/coost/blob/master/include/co/mem.h).
-
-
-
-### co::alloc
+## 头文件
 
 ```cpp
-1. void* alloc(size_t size);
-2. void* alloc(size_t size, size_t align);
+#include "co/mem.h"
 ```
 
-- 1, 分配 `size` 字节的内存。
-- 2, 分配 `size` 字节的内存，内存边界是 `align` 字节对齐的(align <= 1024)。
+API 在 `co` 命名空间。
 
-{{< hint warning >}}
-第 2 个版本中，`align` 必须是 2 的幂，且不能超过 1024。
-{{< /hint >}}
+`_` 开头的 API 一般是 coost 内部使用的，不建议用户调用。
 
+内部通过 `co::xx::MemInit` 静态对象（nifty counter）初始化，只会初始化一次，用户不需要显式初始化。
 
+---
 
-### co::free
+## 概述
+
+coost 内存分配器与 glibc 不同：**内部不保存所分配内存的大小**，因此释放时需要用户传入大小。
+
+分配器把内存按大小分为三个等级：
+
+| 等级   | 大小范围            | 对齐                             |
+| ---- | --------------- | ------------------------------ |
+| 小内存  | `<= S`（S 小于 4K） | 16 字节对齐                        |
+| 中等内存 | `<= 128K`       | 4K 对齐                          |
+| 大内存  | `> 128K`        | 页对齐，直接 `mmap` / `VirtualAlloc` |
+
+说明：
+
+- `co::free(p, n)` 根据 `n` 判断内存属于哪一类，再回收。
+- 因此 `n` 要求与 `alloc` / `realloc` 时传入的 size 一致。
+- 传错 `n` 可能导致未定义行为。
+- coost 分配的内存至少是 16 字节对齐。
+
+---
+
+## 基础分配函数
 
 ```cpp
-void free(void* p, size_t size);
+void* co::alloc(size_t n);
+
+// @align: must be power of 2, and its maximum value is 256
+void* co::alloc(size_t n, size_t align);
+
+// @p: may be NULL
+// @n: MUST be the same as the size used in alloc or realloc
+void co::free(void* p, size_t n);
+
+// @p: may be NULL
+// @o: old size, must be the same as the size used in alloc() or a previous realloc()
+// @n: new size, must be greater than @o
+// return: may be the same as @p, or NULL on failure
+void* co::realloc(void* p, size_t o, size_t n);
+
+// alloc and zero-clear
+void* co::zalloc(size_t n);
+void* co::zalloc(size_t n, size_t align);
+
+// virtual alloc, page-aligned and zero-cleared
+void* co::valloc(size_t n);
+
+// virtual free
+void co::vfree(void* p, size_t n);
+
+char* co::strdup(const char* s);
 ```
 
-- 释放 [co::alloc](#coalloc) 或 [co::realloc](#corealloc) 分配的内存，`size` 是所分配内存的大小。
+### 关键约束
 
-{{< hint warning >}}
-`co::free` 不同于系统提供的 `::free`，需要额外带上一个 `size` 参数。
-{{< /hint >}}
+- `co::free(p, n)` 的 `n` 必须与分配时一致，否则未定义行为。
+- `co::realloc(p, o, n)` 要求 `n > o`，即只能扩张。
+  - 实际应用中 `realloc` 一般也只用于扩张。
+  - 失败时返回 `nullptr`，原来的 `p` 不受影响，仍然有效。
+- `align` 必须是 2 的幂，最大值是 256，有 `runtime_assert` 保证。
+- `valloc` / `vfree`：
+  - 分配按页对齐的内存，内容清零；
+  - `n` 不必是页大小的整数倍，系统 API 会自动 round up；
+  - 释放时 `n` 必须与分配时一致；
+  - 一般用于不需要 `realloc` 的大内存。
+- `strdup` 返回的内存由 coost 分配器管理，释放时用：
+  ```cpp
+  co::free(s, strlen(s) + 1);
+  ```
 
+### 线程安全
 
-
-### co::realloc
-
-```cpp
-void* realloc(void* p, size_t old_size, size_t new_size);
-```
-
-- 重新分配内存，`old_size` 是之前的内存大小，`new_size` 是新的大小，**后者必须大于前者**。
-
-
-
-### co::zalloc
-
-```cpp
-void* zalloc(size_t size);
-```
-
-- 分配 `size` 字节的内存，并将内存清零。
+- `alloc` / `free` / `realloc` 是线程安全的。
 
 
+---
 
-### ———————————
-### co::make
+## 静态对象构造
 
 ```cpp
+// make static object, which will be destructed automatically at exit
+//   - T* p = co::make_static<T>(args)
 template<typename T, typename... Args>
-inline T* make(Args&&... args);
+inline T* co::make_static(Args&&... args);
+
+// make non-dependent static object at the root level
+template<typename T, typename... Args>
+inline T* co::make_rootic(Args&&... args);
 ```
 
-- 调用 [co::alloc](#coalloc) 分配内存，并用参数 `args` 在所分配的内存上构建 `T` 类型的对象。
+说明：
 
-- 示例
+- 创建静态对象，返回的指针由 coost 管理，程序退出时自动析构，**用户不需要也不能手动 free 或 delete**。
+- `make_rootic` 慎用，它创建的静态对象总是在最后析构，一般用于创建无依赖的静态对象。
+
+
+### 使用方式
 
 ```cpp
-int* p = co::make<int>(7);
-std::string* s = co::make<std::string>(3, 'x');
+// 用户应使用：
+auto p = co::make_static<co::string>(32, 'x');
 ```
 
+---
 
-
-### co::del
+## co::unique
 
 ```cpp
 template<typename T>
-inline void del(T* p, size_t n=sizeof(T));
-```
+struct unique {
+    constexpr unique() noexcept;
+    constexpr unique(std::nullptr_t) noexcept;
+    unique(unique& x) noexcept;
+    unique(unique&& x) noexcept;
+    ~unique();
 
-- 销毁 [co::make](#comake) 创建的对象，并释放内存。
-- 参数 `n` 是 `p` 所指向对象的内存大小，默认为 `sizeof(T)`。
+    unique(const unique&) = delete;
 
-- 示例
+    unique& operator=(unique&& x) noexcept;
+    unique& operator=(unique& x) noexcept;
 
-```cpp
-int* p = co::make<int>(7);
-co::del(p);
-```
+    // 跨类型转换：要求 T 是 X 的基类，且 T 有虚析构函数
+    template<typename X> unique(unique<X>& x) noexcept;
+    template<typename X> unique(unique<X>&& x) noexcept;
+    template<typename X> unique& operator=(unique<X>&& x) noexcept;
+    template<typename X> unique& operator=(unique<X>& x) noexcept;
 
+    T* get() const noexcept;
+    T* operator->() const noexcept;   // runtime_assert(_p)
+    T& operator*() const noexcept;    // runtime_assert(_p)
 
+    bool operator==(T* p) const noexcept;
+    bool operator!=(T* p) const noexcept;
+    explicit operator bool() const noexcept;
 
-### co::make_rootic
+    void reset() noexcept;
+    void swap(unique& x) noexcept;
+    void swap(unique&& x) noexcept;
 
-```cpp
+    union { T* _p; uint32* _s; };
+};
+
 template<typename T, typename... Args>
-inline T* make_rootic(Args&&... args);
+inline unique<T> co::make_unique(Args&&... args);
 ```
 
-- 与 [co::make_static](#comake_static) 类似，只是该函数创建的静态对象比 `co::make_static` 创建的静态对象后析构。
+说明：
 
+- 类似 `std::unique_ptr`。
+- 只支持移动语义，保证 `unique` 中的对象始终由唯一一个 `unique` 对象管理。
 
-
-### co::make_static
+示例：
 
 ```cpp
-template<typename T, typename... Args>
-inline T* make_static(Args&&... args);
+auto s = co::make_unique<co::string>(32, 'x');
+co::println("*s = ", *s);
 ```
 
-- 用参数 `args` 创建 `T` 类型的静态对象，所创建的静态对象在程序退出时会自动销毁。
+---
 
-- 示例
-
-```cpp
-fastring& s = *co::make_static<fastring>(32, 'x');
-```
-
-
-
-### ———————————
-### co::shared
+## co::shared
 
 ```cpp
 template<typename T>
-class shared;
-```
+struct shared {
+    constexpr shared() noexcept;
+    constexpr shared(std::nullptr_t) noexcept;
 
-与 `std::shared_ptr` 类似，但有些细微区别。
+    shared(const shared& x) noexcept;
+    shared(shared&& x) noexcept;
+    ~shared();
 
+    shared& operator=(const shared& x) noexcept;
+    shared& operator=(shared&& x) noexcept;
 
-#### constructor
+    // 跨类型转换：要求 T 是 X 的基类，且 T 有虚析构函数
+    template<typename X> shared(const shared<X>& x) noexcept;
+    template<typename X> shared(shared<X>&& x) noexcept;
+    template<typename X> shared& operator=(const shared<X>& x) noexcept;
+    template<typename X> shared& operator=(shared<X>&& x) noexcept;
 
-```cpp
-1. constexpr shared() noexcept;
-2. constexpr shared(std::nullptr_t) noexcept;
-3. shared(const shared& x) noexcept;
-4. shared(shared&& x) noexcept;
+    T* get() const noexcept;
+    T* operator->() const noexcept;
+    T& operator*() const noexcept;
 
-5. shared(const shared<X>& x) noexcept;
-6. shared(shared<X>&& x) noexcept;
-```
+    bool operator==(T* p) const noexcept;
+    bool operator!=(T* p) const noexcept;
+    explicit operator bool() const noexcept;
 
-- 1-2, 创建空的 `shared` 对象。
-- 3, 拷贝构造函数，若 `x` 不是空对象，则将内部引用计数加 1。
-- 4, 移动构造函数，对象构造完成后，`x` 变为空对象。
-- 5-6, 从 `shared<X>` 对象构建 `shared<T>` 对象，`T` 是 `X` 的基类，且 `T` 的析构函数是 virtual 的。
+    void reset() noexcept;
+    size_t ref_count() const noexcept;
+    size_t use_count() const noexcept;
+    void swap(shared& x) noexcept;
+    void swap(shared&& x) noexcept;
 
-{{< hint warning >}}
-`co::shared` 对象不能直接从 `T*` 指针构建，coost 提供 [co::make_shared](#comake_shared) 用于构建 `co::shared` 对象。
-{{< /hint >}}
+    union { T* _p; uint32* _s; };
+};
 
-
-#### destructor
-
-```cpp
-~shared();
-```
-
-- 若对象非空，则将内部引用计数减 1，引用计数减至 0 时会销毁内部的对象，并释放内存。
-
-
-#### operator=
-
-```cpp
-1. shared& operator=(const shared& x);
-2. shared& operator=(shared&& x);
-3. shared& operator=(const shared<X>& x);
-4. shared& operator=(shared<X>&& x);
-```
-
-- 赋值操作。
-- 3-4, 用 `shared<X>` 类型的值对 `shared<T>` 类型的对象进行赋值，`T` 是 `X` 的基类，且 `T` 的析构函数是 virtual 的。
-
-
-#### get
-
-```cpp
-T* get() const noexcept;
-```
-
-- 获取内部对象的指针。
-
-
-#### operator->
-
-```cpp
-T* operator->() const;
-```
-
-- 重载 `operator->`，返回内部对象的指针。
-
-
-#### operator*
-
-```cpp
-T& operator*() const;
-```
-
-- 重载 `operator*`，返回内部对象的引用。
-
-
-#### operator==
-
-```cpp
-bool operator==(T* p) const noexcept;
-```
-
-- 判断内部对象的指针值是否与 `p` 相等。
-
-
-#### operator!=
-
-```cpp
-bool operator!=(T* p) const noexcept;
-```
-
-- 判断内部对象的指针值是否与 `p` 不相等。
-
-
-#### operator bool
-
-```cpp
-explicit operator bool() const noexcept;
-```
-
-- 内部指针为NULL时返回 false，否则返回 true。
-
-
-#### ref_count
-
-```cpp
-size_t ref_count() const noexcept;
-```
-
-- 获取内部对象的引用计数。
-
-
-#### reset
-
-```cpp
-void reset();
-```
-
-- 若内部指针不为 NULL，则将引用计数减 1(减至 0 时销毁内部对象)，再将内部指针设置为 NULL。
-
-
-#### swap
-
-```cpp
-void swap(shared& x);
-void swap(shared&& x);
-```
-
-- 交换 `co::shared` 对象的内部指针。
-
-
-#### use_count
-
-```cpp
-size_t use_count() const noexcept;
-```
-
-- 与 [ref_count](#ref_count) 等价。
-
-
-
-### co::make_shared
-
-```cpp
 template<typename T, typename... Args>
-inline shared<T> make_shared(Args&&... args);
+inline shared<T> co::make_shared(Args&&... args);
 ```
 
-- 用参数 `args` 创建 `shared<T>` 类型的对象。
+说明：
 
-- 示例
+- 与 `std::shared_ptr` 类似。
+
+
+示例：
 
 ```cpp
-co::shared<int> i = co::make_shared<int>(23);
-co::shared<fastring> s = co::make_shared<fastring>(32, 'x');
+auto s = co::make_shared<co::string>(32, 'x');
+co::println("use_count = ", s.use_count());
+auto t = s;
+co::println("use_count = ", s.use_count());
 ```
 
+## unique / shared 的构造约束
 
-
-### co::unique
+`co::unique<T>` 和 `co::shared<T>` **不允许**从动态分配的内存直接构造，只能使用：
 
 ```cpp
-template<typename T>
-class unique;
+co::make_unique<T>(args...);
+co::make_shared<T>(args...);
 ```
 
-与 `std::unique_ptr` 类似，但有些细微区别。
-
-
-#### constructor
+## co::stl_allocator
 
 ```cpp
-1. constexpr unique() noexcept;
-2. constexpr unique(std::nullptr_t) noexcept;
-3. unique(unique& x) noexcept;
-4. unique(unique&& x) noexcept;
+template<class T>
+struct stl_allocator {
+    using value_type = T;
+    using size_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using propagate_on_container_move_assignment = std::true_type;
+    using is_always_equal = std::true_type;
 
-5. unique(unique<X>& x) noexcept;
-6. unique(unique<X>&& x) noexcept;
+    typedef value_type* pointer;
+    typedef value_type const* const_pointer;
+    typedef value_type& reference;
+    typedef value_type const& const_reference;
+
+    stl_allocator() noexcept = default;
+    stl_allocator(const stl_allocator&) noexcept = default;
+    template<class U> stl_allocator(const stl_allocator<U>&) noexcept {}
+
+#if (__cplusplus >= 201703L) // C++17
+    T* allocate(size_type n);
+    T* allocate(size_type n, const void*);
+#else
+    pointer allocate(size_type n, const void* = 0);
+#endif
+
+    void deallocate(T* p, size_type n);
+
+    template<class U, class ...Args>
+    void construct(U* p, Args&& ...args);
+
+    template<class U>
+    void destroy(U* p) noexcept;
+
+    template<class U> struct rebind { using other = stl_allocator<U>; };
+    pointer address(reference x) const noexcept;
+    const_pointer address(const_reference x) const noexcept;
+
+    size_type max_size() const noexcept;
+};
+
+template<class T1, class T2>
+constexpr bool operator==(const stl_allocator<T1>&, const stl_allocator<T2>&) noexcept {
+    return true;
+}
+
+template<class T1, class T2>
+constexpr bool operator!=(const stl_allocator<T1>&, const stl_allocator<T2>&) noexcept {
+    return false;
+}
 ```
 
-- 1-2, 创建空的 `unique` 对象。
-- 3-4, 将 `x` 内部的指针转移到所构建的 `unique` 对象中，`x` 内部指针变为 NULL。
-- 5-6, 从 `unique<X>` 对象构建 `unique<T>` 对象，`T` 是 `X` 的基类，且 `T` 的析构函数是 virtual 的。
+说明：
 
-{{< hint warning >}}
-`co::unique` 对象不能直接从 `T*` 指针构建，coost 提供 [co::make_unique](#comake_unique) 用于构建 `co::unique` 对象。
-{{< /hint >}}
+- 用于 STL 容器，替代 `std::allocator`。
+- `co/stl.h` 提供常用的 STL 容器，内存分配器已替换为 `co::stl_allocator`。
 
-
-#### destructor
+示例：
 
 ```cpp
-~unique();
+std::vector<int, co::stl_allocator<int>> v;
+v.push_back(1);
+v.push_back(2);
 ```
 
-- 销毁内部对象，并释放内存。
+---
 
+## 与标准库的关系
 
-#### operator=
+- coost 分配器**不能替代**全局 `operator new` / `operator delete`。
+- `co::free` 需要带内存大小，`co::realloc` 需要带 old size，与 `new` / `delete` 语义不同。
+- 用 `new` 分配的内存不能用 `co::free` 释放，反之亦然。
+- `co::stl_allocator` 与 `std::allocator` 接口兼容，但底层使用 coost 分配器。
 
-```cpp
-1. unique& operator=(unique& x);
-2. unique& operator=(unique&& x);
-3. unique& operator=(unique<X>& x);
-4. unique& operator=(unique<X>&& x);
-```
+---
 
-- 赋值操作。
-- 3-4, 用 `unique<X>` 类型的值对 `unique<T>` 类型的对象进行赋值，`T` 是 `X` 的基类，且 `T` 的析构函数是 virtual 的。
+## 注意事项
 
-
-#### get
-
-```cpp
-T* get() const noexcept;
-```
-
-- 获取内部对象的指针。
-
-
-#### operator->
-
-```cpp
-T* operator->() const;
-```
-
-- 重载 `operator->`，返回内部对象的指针。
-
-
-#### operator*
-
-```cpp
-T& operator*() const;
-```
-
-- 重载 `operator*`，返回内部对象的引用。
-
-
-#### operator==
-
-```cpp
-bool operator==(T* p) const noexcept;
-```
-
-- 判断内部对象的指针值是否与 `p` 相等。
-
-
-#### operator!=
-
-```cpp
-bool operator!=(T* p) const noexcept;
-```
-
-- 判断内部对象的指针值是否与 `p` 不相等。
-
-
-#### operator bool
-
-```cpp
-explicit operator bool() const noexcept;
-```
-
-- 内部指针为NULL时返回 false，否则返回 true。
-
-
-#### reset
-
-```cpp
-void reset();
-```
-
-- 销毁内部对象，并释放内存。
-
-
-#### swap
-
-```cpp
-void swap(unique& x);
-void swap(unique&& x);
-```
-
-- 交换 `co::unique` 对象的内部指针。
-
-
-
-### co::make_unique
-
-```cpp
-template<typename T, typename... Args>
-inline unique<T> make_unique(Args&&... args);
-```
-
-- 用参数 `args` 创建 `unique<T>` 类型的对象。
-
-- 示例
-
-```cpp
-co::unique<int> i = co::make_unique<int>(23);
-co::unique<fastring> s = co::make_unique<fastring>(32, 'x');
-```
+- `co::free(p, n)` 的 `n` 必须与分配时一致，否则未定义行为。
+- `co::realloc(p, o, n)` 要求 `n > o`；失败时返回 `nullptr`，原 `p` 仍有效。
+- `co::alloc(n, align)` 的 `align` 必须是 2 的幂，最大 256。
+- `co::strdup` 返回的内存需用 `co::free(s, strlen(s) + 1)` 释放。
+- `_` 开头的 API 是 coost 内部使用的，不建议用户调用。
+- `co::unique<T>` 只支持移动语义。
+- `co::shared<T>` 与 `std::shared_ptr` 语义一致，引用计数线程安全，不支持 `weak_ptr`。
+- `co::stl_allocator<T>` 用于替代 `std::allocator`。
+- 用 `new` 分配的内存不能用 `co::free` 释放。

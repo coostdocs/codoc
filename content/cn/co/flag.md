@@ -3,497 +3,404 @@ weight: 4
 title: "配置"
 ---
 
-include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/flag.h).
-
-
-## 基本概念
-
-**co.flag** 是一个命令行参数及配置文件解析库，其原理很简单，代码中定义全局变量，然后在程序启动时解析命令行参数或配置文件，修改这些全局变量的值。
-
-
-
-### flag 变量
-
-co.flag 中的宏定义的**配置项**，实际上是全局变量，称为 **flag 变量**。如下面的代码定义了一个 flag 变量，变量名是 `FLG_x`。
+## 头文件
 
 ```cpp
-DEF_int32(x, 0, "xxx"); // int32 FLG_x = 0;
+#include <co/flag.h>
 ```
 
-co.flag 支持 7 种类型的 flag 变量：
+如果同时使用日志，可以只包含 `co/log.h`，它已包含 `co/flag.h`。
+
+API 在 `flag` 命名空间。
+
+---
+
+## 概述
+
+`flag` 提供命令行参数与配置文件解析功能，coost 中所有组件的配置项都通过 flag 定义。
+
+- 定义 flag 即定义全局变量，变量名是 `FLG_<name>`；
+- 支持命令行参数与配置文件两种方式；
+- 命令行中支持 `-help` 打印帮助信息、`-mkconf` 生成配置文件、`-version` 显示程序版本；
+
+---
+
+## 定义 flag
+
+### DEF 宏
 
 ```cpp
-bool, int32, int64, uint32, uint64, double, string
+DEF_bool(name, value, help, ...);
+DEF_int32(name, value, help, ...);
+DEF_int64(name, value, help, ...);
+DEF_uint32(name, value, help, ...);
+DEF_uint64(name, value, help, ...);
+DEF_double(name, value, help, ...);
+DEF_string(name, value, help, ...);
 ```
 
-每个 flag 变量都有一个默认值，用户可以通过命令行参数或配置文件修改 flag 变量的值。如前面定义的 `FLG_x`，在命令行中可以用 `-x=23`，在配置文件中可以用 `x = 23`，设置一个新的值。
+定义后通过全局变量访问，例如 `FLG_name`。
+
+类型对应关系：
+
+| 宏 | 类型 | 内部标识 |
+|---|---|---|
+| `DEF_bool` | `bool` | `'b'` |
+| `DEF_int32` | `int32` | `'i'` |
+| `DEF_int64` | `int64` | `'I'` |
+| `DEF_uint32` | `uint32` | `'u'` |
+| `DEF_uint64` | `uint64` | `'U'` |
+| `DEF_double` | `double` | `'d'` |
+| `DEF_string` | `co::string&` | `'s'` |
+
+### DEC 宏
+
+```cpp
+DEC_bool(name);
+DEC_int32(name);
+DEC_int64(name);
+DEC_uint32(name);
+DEC_uint64(name);
+DEC_double(name);
+DEC_string(name);
+```
+
+用于跨文件声明，类型必须与 `DEF_xxx` 一致，否则同一项目中编译会报错。
 
 
+### string 类型
 
-### command line flag
+`DEF_string` 中 `FLG_<name>` 是 `co::string&`，内部由 coost 内存分配器管理。默认值可以是 `const char*`、`co::string`、`std::string` 等。
 
-命令行参数中，以 `-x=y` 的形式出现，其中 `x` 被称为一个 **command line flag**(以下简称为 flag)。命令行中的 flag `x` 对应代码中的全局变量 `FLG_x`，命令行中的 `-x=y` 就相当于将 `FLG_x` 的值设置为 `y`。
+---
 
-{{< hint info >}}
-为了方便，本文档中可能将 command line flag、flag 变量统一称为 flag。
-{{< /hint >}}
+## 解析参数
 
-co.flag 为了简便易用，设计得非常灵活：
+```cpp
+co::vector<co::string> parse(int argc, char** argv, bool command_line_only=false);
+```
 
-- `-x=y` 可以省略前面的 `-`，简写为 `x=y`.
-- `-x=y` 也可以写成 `-x y`.
-- `x=y` 前面可以添加任意数量的 `-`.
-- bool 类型的 flag，`-b=true` 可以简写为 `-b`.
+- 返回值包含所有非 flag 参数；
+- 默认同时解析命令行参数和配置文件；
+- `command_line_only == true` 时只解析命令行参数；
+- 通常在 `main` 开头调用；
+- 遇到错误时，打印错误信息，并退出程序。
 
-- 示例
+---
+
+## 命令行参数
+
+支持两种形式：
 
 ```bash
-# b, i, s 都是 flag, xx 不是 flag
-./exe -b -i=32 -s=hello xx
+-name=value
+-name value
 ```
 
+`-` 的数量可以是 1 个或多个，`-debug`、`--debug`、`---debug` 等价。
 
-
-
-## APIs
-
-### flag::parse
-
-```cpp
-co::vector<fastring> parse(int argc, char** argv);
-void parse(const fastring& path);
-```
-
-- v3.0.1 新增。
-- 第 1 个 parse 函数，解析命令行参数及配置文件，并更新 flag 变量的值。**此函数一般需要在 main 函数开头调用一次**。大致流程如下：
-  - 对命令行参数进行预处理，此过程中可能会更新 `FLG_config` 的值。
-  - 如果 `FLG_config` 非空，解析由它指定的配置文件，更新 flag 变量的值。
-  - 解析其他命令行参数，更新 flag 变量的值。
-  - 若 `FLG_mkconf` 为 true，则生成配置文件，并退出程序。
-  - 若 `FLG_daemon` 为 true，则将程序放入后台运行 (仅适用于 linux 平台)。
-  - 遇到任何错误时，输出错误信息，并立即退出程序。
-  - 若未发生任何错误，返回 non-flag 列表。如执行 `./exe x y` 时，此函数将返回 `["x", "y"]`。
-
-- 第 2 个 parse 函数，解析配置文件，并更新 flag 变量的值。参数 `path` 是配置文件的路径。遇到错误时，会输出错误信息，并退出程序。
-
-{{< hint warning >}}
-**flag::init**  
-v3.0.1 中，`flag::init()` 被标记为 deprecated，请使用 `flag::parse()`。
-{{< /hint >}}
-
-- 示例
-
-```cpp
-#include "co/flag.h"
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-}
-```
-
-
-
-### flag::set_value
-
-```cpp
-fastring set_value(const fastring& name, const fastring& value)
-```
-
-- v3.0 新增，设置 flag 变量的值，`name` 是 flag 名。
-- 此函数非线程安全，一般需要在 main 函数开头调用。
-
-
-- 示例
-
-```cpp
-DEF_bool(b, false, "");
-DEF_int32(i, 0, "");
-DEF_string(s, "", "");
-
-int main(int argc, char** argv) {
-    flag::set_value("b", "true"); // FLG_b -> true
-    flag::set_value("i", "23");   // FLG_i -> 23
-    flag::set_value("s", "xx");   // FLG_s -> "xx"
-    flag::parse(argc, argv);
-}
-```
-
-
-
-### flag::alias
-
-```cpp
-bool alias(const char* name, const char* new_name);
-```
-
-- v3.0 新增，给 flag 取别名，在**命令行参数或配置文件中**可以用别名取代原名。
-- 此函数非线程安全，需要在 `flag::parse()` 之前调用。
-
-
-- 示例
-
-```cpp
-DEF_bool(all, false, "");
-
-int main(int argc, char** argv) {
-    flag::alias("all", "a");
-    flag::parse(argc, argv);
-}
-```
-
-
-
-
-## 代码中使用 flag 变量
-
-
-### 定义 flag 变量
-
-```cpp
-DEF_bool(name, value, help, ...)
-DEF_int32(name, value, help, ...)
-DEF_int64(name, value, help, ...)
-DEF_uint32(name, value, help, ...)
-DEF_uint64(name, value, help, ...)
-DEF_double(name, value, help, ...)
-DEF_string(name, value, help, ...)
-```
-
-- 上面的 7 个宏，分别用于定义 7 种不同类型的 flag 变量。
-- 参数 `name` 是 flag 名，对应的全局变量名是 `FLG_name`，参数 `value` 是默认值，参数 `help` 是注释信息。
-- flag 变量是全局变量，一般不要在头文件中定义。
-- flag 变量的名字是唯一的，不能定义两个名字相同的 flag 变量。
-- flag 变量一般在命名空间之外定义，否则可能无法使用 FLG_name 访问 flag 变量。
-
-
-- 示例
-
-```cpp
-DEF_bool(b, false, "comments"); // bool FLG_b = false;
-DEF_int32(i32, 32, "comments"); // int32 FLG_i32 = 32;
-DEF_int64(i64, 64, "comments"); // int64 FLG_i64 = 64;
-DEF_uint32(u32, 0, "comments"); // uint32 FLG_u32 = 0;
-DEF_uint64(u64, 0, "comments"); // uint64 FLG_u64 = 0;
-DEF_double(d, 2.0, "comments"); // double FLG_d = 2.0;
-DEF_string(s, "x", "comments"); // fastring& FLG_s = ...;
-```
-
-{{< hint info >}}
-v3.0.1 中，`DEF_string` 实际上定义了一个 `fastring` 类型的引用。
-{{< /hint >}}
-
-
-
-
-### flag 添加别名
-
-- v3.0 新增，定义 flag 变量时，可以为 flag 添加任意数量的别名。
-- 在命令行或配置文件中，可以用别名取代原名。
-
-
-- 示例
-
-```cpp
-DEF_bool(debug, false, "");         // no alias
-DEF_bool(debug, false, "", d);      // d is an alias of debug
-DEF_bool(debug, false, "", d, dbg); // 2 aliases
-```
-
-
-
-### 声明 flag 变量
-
-```cpp
-DEC_bool(name)
-DEC_int32(name)
-DEC_int64(name)
-DEC_uint32(name)
-DEC_uint64(name)
-DEC_double(name)
-DEC_string(name)
-```
-
-- 上面的 7 个宏，分别用于声明 7 种不同类型的 flag 变量。
-- 参数 `name` 是 flag 名，对应的全局变量名是 `FLG_name`。
-- 一个 flag 变量只能定义一次，但可以声明多次，可以在任何需要的地方声明它们。
-- flag 变量一般在命名空间之外声明，否则可能无法使用 FLG_name 访问 flag 变量。
-
-
-- 示例
-
-```cpp
-DEC_bool(b);     // extern bool FLG_b;
-DEC_int32(i32);  // extern int32 FLG_i32;
-DEC_int64(i64);  // extern int64 FLG_i64;
-DEC_uint32(u32); // extern uint32 FLG_u32;
-DEC_uint64(u64); // extern uint64 FLG_u64;
-DEC_double(d);   // extern double FLG_d;
-DEC_string(s);   // extern fastring& FLG_s;
-```
-
-
-
-### 使用 flag 变量
-
-定义或声明 flag 变量后，就可以像普通变量一样使用它们：
-
-```cpp
-#include "co/flag.h"
-
-DEC_bool(b);
-DEF_string(s, "hello", "xxx");
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    
-    if (!FLG_b) std::cout << "b is false" << std::endl;
-    FLG_s += " world";
-    std::cout << FLG_s << std::endl;
-    
-    return 0;
-}
-```
-
-
-
-
-## 命令行中使用 flag
-
-
-### 修改 flag 变量的值
-
-假设程序中定义了如下的 flag：
-
-```cpp
-DEF_bool(x, false, "bool x");
-DEF_bool(y, false, "bool y");
-DEF_int32(i, -32, "int32");
-DEF_uint64(u, 64, "uint64");
-DEF_string(s, "nice", "string");
-```
-
-程序启动时，可以通过命令行参数修改 flag 变量的值：
+### bool 类型
 
 ```bash
-# -x=y, x=y, -x y, 三者是等价的
-./xx -i 8 -u 88 -s "hello world"
-./xx -i=8 u=88 -s=xxx
-./xx -i8       # 仅适用于单字母命名的整数类型 flag
-
-# bool 类型设置为 true 时, 可以略去值
-./xx -x        # -x=true
-
-# 多个单字母命名的 bool flag, 可以合并设置为 true
-./xx -xy       # -x=true -y=true
-
-# 整数类型的 flag 可以带单位 k, m, g, t, p, 不区分大小写
-./xx -i -4k    # i=-4096
-
-# 整数类型的 flag 可以传 8 进制 或 16 进制数
-./xx i=032     # i=26     8 进制
-./xx u=0xff    # u=255   16 进制
+-debug          # 等价于 -debug=true
+-debug=true
+-debug=false
 ```
 
+### 整数单位
 
-
-### 查看帮助信息(--help)
-
-co.flag 支持用 `--help` 命令查看程序的帮助信息，该命令会显示 usage 信息及用户定义的 flag 列表。
+整数类型支持单位 `k, m, g, t, p`，不分大小写，`1k = 1024`。
 
 ```bash
-$ ./xx --help
-usage:  $exe [-flag] [value]
-        $exe -x -i 8k -s ok        # x=true, i=8192, s="ok"
-        $exe --                    # print all flags
-        $exe -mkconf               # generate config file
-        $exe -conf xx.conf         # run with config file
-
-flags:
-    -n  int32
-        type: int32       default: 0
-        from: test/flag.cc
-    -s  string
-        type: string      default: "hello world"
-        from: test/flag.cc
+-co_stack_size=2m   # 2 * 1024 * 1024
 ```
 
+### 单字母 flag 的简写语法
 
+coost 对单字母 flag 提供了两种简写，仅用于命令行，配置文件不支持：
 
-### 查看 flag 列表(--)
+- 多个单字母 bool flag 可以合并：假设 x、y、z 都是 bool flag，则 `-xyz` 可以将三者都置为 true。
+- 单字母整数 flag 可以连写值：`-n8` 相当于 `-n=8`。
 
-co.flag 可以用 `--` 命令查看程序中定义的全部 flag 列表(包括co内部定义的flags)：
+### 别名
 
-```bash
-$ ./xx --
-flags:
-    -boo  bool flag
-        type: bool        default: false
-        from: test/flag.cc
-    -co_sched_num  number of coroutine schedulers, default: os::cpunum()
-        type: uint32      default: os::cpunum()
-        from: src/co/sched.cc
-```
-
-
-
-### 查看程序版本信息
-
-- `version` 是 coost 内部定义的 flag，命令行中可以使用 `-version` 命令查看版本信息。
-- `version` 默认值为空，用户需要在调用 `flag::parse()` 前，修改其值。
-
-
-- 示例
+`DEF_xxx` 的最后一个变参可以给 flag 指定最多一个别名：
 
 ```cpp
-#include "co/flag.h"
-
-int main(int argc, char** argv) {
-    FLG_version = "v3.0.0";
-    flag::parse(argc, argv);
-    return 0;
-}
+DEF_string(version, "3.0", "xxx", v); // v 是 version 的别名
 ```
 
-```bash
-$ ./xx -version
-v3.0.0
-```
+别名会显示在帮助信息中，例如 `-version,v`；配置文件中也可以使用别名。
 
-
-
+---
 
 ## 配置文件
 
-
-### 配置文件格式
-
-co.flag 的配置文件格式比较灵活：
-
-- 一行一个配置项，每个配置项对应一个 flag，形式统一为 `x = y`，看起来一目了然。
-- `#` 或 `//` 表示注释，支持行尾注释。
-- 引号中的 `#` 或 `//`  不是注释。
-- 忽略行前、行尾的空白字符，书写更自由，不容易出错。
-- `=` 号前后可以任意添加空白字符，书写更自由。
-- 可以用 `\` 续行，以免一行太长，影响美观。
-- 字符串不支持转义，以免产生歧义。
-- 字符串可以用双引号、单引号或 3个反引号括起来。
-
-
-- 配置文件示例
-
-```yaml
-   # config file: xx.conf
-     boo = true                # bool 类型
-
-     s =                       # 空字符串
-     s = hello \
-         world                 # s = "helloworld"
-     s = "http://github.com"   # 引号中的 # 与 // 不是注释
-     s = "I'm ok"              # 字符串中含有单引号，两端可以用双引号括起来
-     s = 'how are "U"'         # 字符串中含有双引号，两端可以用单引号括起来
-     s = ```I'm "ok"```        # 字符串两端也可以用 3 个反引号括起来
-
-     i32 = 4k                  # 4096, 整型可以带单位 k,m,g,t,p, 不区分大小写
-     i32 = 032                 #  8 进制, i32 = 26
-     i32 = 0xff                # 16 进制, i32 = 255
-     pi = 3.14159              # double 类型
-```
-
-
-
-### 自动生成配置文件
-
-- `mkconf` 是 coost 内部定义的 flag，它是自动生成配置文件的开关。
-- 命令行中可以用 `-mkconf` 自动生成配置文件。
+默认第一个非 flag 参数且以 `.conf` 结尾的文件作为配置文件：
 
 ```bash
-./xx -mkconf            # 在 xx 所在目录生成 xx.conf
-./xx -mkconf -x u=88    # 自定义配置项的值
-```
-
-
-
-### 调整配置项的顺序
-
-自动生成的配置文件中，配置项按 flag 级别、所在文件名、所在代码行数进行排序。如果用户想让某些配置项的排序靠前些，可以将 flag 的级别设成较小的值，反之可以将 flag 级别设成较大的值。
-
-定义 flag 时可以在注释开头用 `#n` 指定级别，**n 必须是 0 到 9 之间的整数**，若注释非空，n 后面必须有一个空格。不指定时，默认 flag 级别为 5。
-
-```cpp
-DEF_bool(x, false, "comments");    // 默认级别为 5
-DEF_bool(y, false, "#3");          // 级别为 3, 注释为空
-DEF_bool(z, false, "#3 comments"); // 级别为 3, 注释非空, 3 后面必须有一个空格
-```
-
-
-
-### 禁止配置项生成到配置文件
-
-注释以 `.` 开头的 flag，带有**隐藏**属性，不会生成到配置文件中，但用 `--` 命令可以查看。注释为空的 flag，则是完全不可见的，既不会生成到配置文件中，也不能用 `--` 命令查看。
-
-```cpp
-DEF_bool(x, false, ".say something here");
-DEF_string(s, "good", "");
-```
-
-
-
-### 程序启动时指定配置文件
-
-```cpp
-DEF_string(config, "", ".path of config file", conf);
-```
-
-- `config` 是 coost 内部定义的 flag，表示配置文件的路径，它有一个别名 `conf`。
-- 命令行中可以用 `-config` 或 `-conf` 指定配置文件。
-- 代码中可以在调用 `flag::parse()` 之前，修改 `FLG_config` 的值，以指定配置文件。
-
-```bash
-./xx -config xx.conf
-./xx -conf xx.conf
-
-# 若配置文件名以 .conf 或 config 结尾, 且是命令行的
-# 第一个 non-flag 参数, 则可省略 -config
 ./xx xx.conf
-./xx xx.conf -x
 ```
 
+多个 `.conf` 参数时，只有第一个作为配置文件。
 
+也可以用 `set_config_path` (需要在 parse 前调用)设置默认配置文件路径，命令行传入的 `.conf` 会覆盖它。
 
+配置文件格式：
 
-## 自定义帮助信息
+```ini
+# 注释
+debug = true
+threads = 8
+port = 8080
+name = "my app"
+n = 8M
+```
 
-- `help` 是 coost 内部定义的 flag，命令行中可以使用 `--help` 命令查看帮助信息。
-- `FLG_help` 默认为空，使用 coost 内部提供的默认帮助信息。
-- 用户想自定义帮助信息时，可以在调用 `flag::parse()` 前，修改 `FLG_help` 的值。
+规则：
 
+- `#` 表示注释；
+- 支持空行；
+- 行首或行尾可以有空格；
+- key 不加 `--`；
+- `=` 前后可以有空格；
+- string 首尾有空格时需要加引号，单引号和双引号都支持；
+- 字符串中支持常见转义字符，具体见 `co::string::unescape`；
+- bool 支持 `true/false`、`1/0`，其余值都当作 `false`；
+- 整数支持 `k, m, g, t, p` 单位；
+- 配置文件中可以使用别名；
+- 配置文件中出现未定义 flag 时，会在终端打印一行 warning 信息，不会退出程序；
+- flag 名大小写敏感。
 
-- 示例
+### 优先级
+
+- 命令行参数与配置文件同时存在时，命令行参数会覆盖配置文件中的值；
+- 命令行传入的 `.conf` 覆盖 `set_config_path` 设置的默认路径。
+
+---
+
+## 内部 flag
+
+coost 内部定义了三个 bool 类型 flag：
 
 ```cpp
-#include "co/flag.h"
+DEF_bool(help, false, s_help);
+DEF_bool(version, false, s_version);
+DEF_bool(mkconf, false, s_mkconf);
+```
+
+### -help
+
+打印帮助信息。
+
+```bash
+./xx -help
+```
+
+帮助信息格式示例：
+
+```text
+usage:  flag [flag.conf] [-flag [value]] [-flag=value]...
+
+flags:  -name[,alias]  type  comments  (default value)
+  -help       b  显示帮助信息  (false)
+  -version,v  b  显示版本信息  (false)
+  -mkconf     b  生成配置文件  (false)
+
+  -boo        b  bool flag  (false)
+  ...
+```
+
+如果用户 include 了 coost 相关组件头文件，coost 组件内部定义的 flag 会显示在帮助信息中。
+
+### -version
+
+显示程序版本，需要在 `flag::parse` 前调用 `flag::set_program_version` 设置版本号。未设置时打印空字符串。
+
+### -mkconf
+
+生成配置文件：
+
+```bash
+./xx -mkconf
+```
+
+- 在当前执行命令的目录生成配置文件；
+- 文件名规则：可执行文件名去掉 `.exe`，再加上 `.conf`；
+- 不包含 `help`、`version`、`mkconf`；
+- 包含所有用户 flag，除非被 `flag::hide` 隐藏；
+- 如果用户 include 了 coost 相关组件，组件内部 flag 也会出现在生成的配置文件中。
+
+---
+
+## 运行时 API
+
+```cpp
+// 添加别名，@new_name 必须有静态生命周期
+// 如果 @new_name 为空，则移除已有别名
+void flag::alias(const char* name, const char* new_name);
+
+// 设置默认配置文件路径
+void flag::set_config_path(const char* path);
+
+// 设置程序版本，需在 flag::parse 前调用
+void flag::set_program_version(const char* ver);
+
+// 隐藏 flag，使其不出现在帮助信息与 -mkconf 生成的配置文件中
+void flag::hide(const char* name);
+
+// 与 hide 相反
+void flag::unhide(const char* name);
+
+// 设置 flag 的值，出错时返回 false
+bool flag::set_value(const char* flag_name, const char* value);
+
+// 注册回调，在 flag::parse 解析完命令行参数后执行
+void flag::run_after_parse(void(*cb)());
+
+// 注册回调，在 flag::parse 解析命令行参数前执行
+void flag::run_before_parse(void(*cb)());
+```
+
+### alias
+
+- `new_name` 必须有静态生命周期；
+- 如果 `new_name` 为空，则移除已有别名；
+- 别名会显示在帮助信息中，例如 `-version,v`；
+- 配置文件中可以使用别名；
+- 必须在 `flag::parse` 前调用，否则 `flag::parse` 看不到这个别名，`-help` 也不会显示。
+
+### set_config_path
+
+- 设置默认配置文件路径，默认值为空；
+- 设置后，用户在命令行中可以不传配置文件路径，`flag` 会从默认路径解析配置文件；
+- 需在 `flag::parse` 前调用；
+- 多次调用时，后设置的值覆盖之前的值；
+- 命令行传入的 `.conf` 会覆盖这个默认路径。
+
+### set_program_version
+
+- 设置程序版本号；
+- 必须在 `flag::parse` 前调用，若在 `flag::parse` 后调用，`./xx -version` 无法显示版本信息。
+
+### hide / unhide
+
+- `hide` 隐藏 flag，使其不出现在 `-help` 和 `-mkconf` 生成的配置文件中；
+- `unhide` 与 `hide` 相反；
+- 必须在 `flag::parse` 前调用，因为 `-help` / `-mkconf` 的输出是 `flag::parse` 解析后立即执行的。
+
+### set_value
+
+- 按名字设置 flag 的值，`value` 是字符串形式，内部按 flag 类型解析；
+- 出错时返回 `false`，并用 `co::println` 打印错误信息，不会退出程序；
+- 一般在 `flag::parse` 前调用，用于修改 flag 默认值，这样 `flag::parse` 传入的值依旧可以覆盖它；
+- 在 `flag::parse` 后调用，会覆盖掉命令行或配置文件中确定的值，使命令行、配置文件中的设置失去作用，通常不建议这样做。
+
+### run_after_parse
+
+- 注册的回调在 `flag::parse` 解析完命令行参数与配置文件后执行；
+- 允许注册多个回调，按注册顺序执行；
+- **coost 内部用它启动协程调度线程、日志线程**，所以必须调用 `flag::parse`，这些线程才会启动。
+
+### run_before_parse
+
+- 注册的回调在 `flag::parse` 解析参数前执行；
+- 允许注册多个回调，按注册顺序执行；
+- coost 内部用它来 unhide 组件相关的 flag，例如包含 `co/rpc.h` 后，RPC 组件会在回调中调用 `flag::unhide("rpc_max_msg_size")` 等。
+
+---
+
+## 运行时 API 的调用时机
+
+`flag::parse` 是解析的入口。`-help`、`-version`、`-mkconf` 这三个内部 flag，都是 `flag::parse` 解析到后立即执行并退出的。因此：
+
+> 所有影响 `-help` / `-version` / `-mkconf` 输出内容、影响 `flag::parse` 解析行为的配置，都必须在 `flag::parse` 前设置。
+
+具体来说：
+
+- `set_program_version`：必须在 parse 前，否则 `-version` 读不到版本号；
+- `alias`：必须在 parse 前，否则 `-help` 看不到别名，命令行也不能用别名；
+- `set_config_path`：必须在 parse 前，因为配置文件读取发生在 parse 过程中；
+- `hide` / `unhide`：必须在 parse 前，因为 `-help` / `-mkconf` 的输出在 parse 中生成；
+- `run_before_parse` / `run_after_parse`：需要在 parse 前注册才有效。
+
+`set_value` 是个例外：
+
+- parse 前调用：修改默认值，parse 时命令行 / 配置文件仍可覆盖；
+- parse 后调用：直接覆盖当前值，使命令行 / 配置文件中的设置失去作用，一般不建议这样用。
+
+
+---
+
+## 线程安全
+
+flag 本质是全局变量或全局对象，访问 `FLG_xxx` 不是线程安全的。需要用户自己保证并发安全。
+
+---
+
+## 示例
+
+```cpp
+#include <co/log.h> // 已包含 co/flag.h
+
+DEF_bool(debug, false, "enable debug mode");
+DEF_int32(threads, 4, "number of threads");
+DEF_uint32(port, 8080, "server port");
+DEF_string(name, "coost", "app name", n); // n 为别名
 
 int main(int argc, char** argv) {
-    FLG_help << "usage:\n"
-             << "\t./xx -ip 127.0.0.1 -port 7777\n";
-    flag::parse(argc, argv);
+    flag::set_program_version("1.0.0");
+    flag::set_value("also_log2console", "true");
+    
+    // 可选：设置默认配置文件路径
+    // flag::set_config_path("my.conf");
+
+    co::vector<co::string> non_flags = flag::parse(argc, argv);
+
+    log::info("debug=", FLG_debug);
+    log::info("threads=", FLG_threads);
+    log::info("port=", FLG_port);
+    log::info("name=", FLG_name);
+
+    for (auto& s : non_flags) {
+        log::info("non-flag: ", s);
+    }
+
     return 0;
 }
 ```
 
-
-
-
-## 让程序在后台运行
-
-- `daemon` 是 coost 内部定义的 flag，若为 true，程序将在后台运行，仅支持 linux 平台。
-
-- 命令行中可以用 `-daemon` 指定程序以 daemon 形式在后台运行。
-
-
-- 示例
+运行：
 
 ```bash
-./xx -daemon
+./app -debug -threads=8 -port 8080 -name=myapp xx.conf
+```
+
+配置文件 `xx.conf`：
+
+```ini
+# comment
+debug = true
+threads = 8
+port = 8080
+name = "my app"
+```
+
+生成配置：
+
+```bash
+./app -mkconf
+```
+
+查看帮助：
+
+```bash
+./app -help
+```
+
+查看版本：
+
+```bash
+./app -version
 ```
 

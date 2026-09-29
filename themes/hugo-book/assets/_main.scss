@@ -46,6 +46,10 @@ a {
   color: var(--color-link);
 }
 
+a:focus {
+  outline: none;
+}
+
 img {
   vertical-align: baseline;
 }
@@ -74,14 +78,6 @@ aside nav ul {
 
   a:hover {
     text-decoration: underline;
-  }
-
-  a:focus {
-    outline: none;
-  }
-
-  span:focus {
-    outline: none;
   }
 
   ul {

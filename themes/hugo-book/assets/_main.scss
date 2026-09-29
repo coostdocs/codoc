@@ -80,6 +80,10 @@ aside nav ul {
     outline: none;
   }
 
+  span:focus {
+    outline: none;
+  }
+
   ul {
     padding-inline-start: $padding-16;
   }

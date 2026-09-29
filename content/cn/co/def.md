@@ -81,7 +81,7 @@ constexpr int cache_line_size = 64;
 各架构对应值：
 
 | 架构 | 缓存行大小 |
-|||
+| --- | --- |
 | `__s390x__` | 256 |
 | `__powerpc64__` / `_M_PPC64` | 128 |
 | `__aarch64__` / `_M_ARM64` | 128 |

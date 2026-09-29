@@ -13,9 +13,8 @@ API 在 `co` 命名空间。
 
 `_` 开头的 API 一般是 coost 内部使用的，不建议用户调用。
 
-内部通过 `co::xx::MemInit` 静态对象（nifty counter）初始化，只会初始化一次，用户不需要显式初始化。
+内部通过静态对象（nifty counter）初始化，只会初始化一次，用户不需要显式初始化。
 
----
 
 ## 概述
 
@@ -36,7 +35,6 @@ coost 内存分配器与 glibc 不同：**内部不保存所分配内存的大�
 - 传错 `n` 可能导致未定义行为。
 - coost 分配的内存至少是 16 字节对齐。
 
----
 
 ## 基础分配函数
 
@@ -71,27 +69,20 @@ char* co::strdup(const char* s);
 
 ### 关键约束
 
+- 上述 API 都是线程安全的。
 - `co::free(p, n)` 的 `n` 必须与分配时一致，否则未定义行为。
 - `co::realloc(p, o, n)` 要求 `n > o`，即只能扩张。
   - 实际应用中 `realloc` 一般也只用于扩张。
   - 失败时返回 `nullptr`，原来的 `p` 不受影响，仍然有效。
-- `align` 必须是 2 的幂，最大值是 256，有 `runtime_assert` 保证。
+- `align` 必须是 2 的幂，最大值是 256 保证。
 - `valloc` / `vfree`：
   - 分配按页对齐的内存，内容清零；
   - `n` 不必是页大小的整数倍，系统 API 会自动 round up；
   - 释放时 `n` 必须与分配时一致；
-  - 一般用于不需要 `realloc` 的大内存。
-- `strdup` 返回的内存由 coost 分配器管理，释放时用：
-  ```cpp
-  co::free(s, strlen(s) + 1);
-  ```
-
-### 线程安全
-
-- `alloc` / `free` / `realloc` 是线程安全的。
+  - 一般用于不需要 `realloc` 的大块内存。
+- `strdup` 返回的内存由 coost 分配器管理，释放时用 `co::free(s, strlen(s) + 1)`：
 
 
----
 
 ## 静态对象构造
 
@@ -108,18 +99,16 @@ inline T* co::make_rootic(Args&&... args);
 
 说明：
 
-- 创建静态对象，返回的指针由 coost 管理，程序退出时自动析构，**用户不需要也不能手动 free 或 delete**。
+- 创建静态对象，返回的指针由 coost 管理，程序退出时自动析构，**用户不需要、也不能手动 free 或 delete**。
 - `make_rootic` 慎用，它创建的静态对象总是在最后析构，一般用于创建无依赖的静态对象。
 
 
-### 使用方式
+示例：
 
 ```cpp
-// 用户应使用：
-auto p = co::make_static<co::string>(32, 'x');
+co::string* g_s = co::make_static<co::string>(32, 'x');
 ```
 
----
 
 ## co::unique
 
@@ -170,11 +159,13 @@ inline unique<T> co::make_unique(Args&&... args);
 示例：
 
 ```cpp
-auto s = co::make_unique<co::string>(32, 'x');
+co::unique<co::string> s = co::make_unique<co::string>(32, 'x');
 co::println("*s = ", *s);
+
+// move 语义，s -> nullptr
+co::unique<co::string> x = s;
 ```
 
----
 
 ## co::shared
 
@@ -221,15 +212,28 @@ inline shared<T> co::make_shared(Args&&... args);
 说明：
 
 - 与 `std::shared_ptr` 类似。
+- 若内部持有的指针为 `nullptr`，拷贝并不会增加引用计数。
 
 
 示例：
 
 ```cpp
-auto s = co::make_shared<co::string>(32, 'x');
-co::println("use_count = ", s.use_count());
-auto t = s;
-co::println("use_count = ", s.use_count());
+co::shared<co::string> s = co::make_shared<co::string>(32, 'x');
+co::println("use_count = ", s.use_count()); // 1
+
+// 拷贝，增加引用计数
+co::shared<co::string> t = s;
+co::println("use_count = ", s.use_count()); // 2
+
+// 空对象内部指针为 nullptr, 拷贝不形成共享
+co::shared<int> x;
+co::shared<int> y;
+y = x;
+
+// *x == 7, y == nullptr
+x = co::make_shared<int>(7);
+co::println(x.use_count()); // 1
+co::println(y.use_count()); // 0
 ```
 
 ## unique / shared 的构造约束
@@ -243,61 +247,9 @@ co::make_shared<T>(args...);
 
 ## co::stl_allocator
 
-```cpp
-template<class T>
-struct stl_allocator {
-    using value_type = T;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
-    using propagate_on_container_move_assignment = std::true_type;
-    using is_always_equal = std::true_type;
+用于替换 STL 容器中的 `std::allocator`。
 
-    typedef value_type* pointer;
-    typedef value_type const* const_pointer;
-    typedef value_type& reference;
-    typedef value_type const& const_reference;
-
-    stl_allocator() noexcept = default;
-    stl_allocator(const stl_allocator&) noexcept = default;
-    template<class U> stl_allocator(const stl_allocator<U>&) noexcept {}
-
-#if (__cplusplus >= 201703L) // C++17
-    T* allocate(size_type n);
-    T* allocate(size_type n, const void*);
-#else
-    pointer allocate(size_type n, const void* = 0);
-#endif
-
-    void deallocate(T* p, size_type n);
-
-    template<class U, class ...Args>
-    void construct(U* p, Args&& ...args);
-
-    template<class U>
-    void destroy(U* p) noexcept;
-
-    template<class U> struct rebind { using other = stl_allocator<U>; };
-    pointer address(reference x) const noexcept;
-    const_pointer address(const_reference x) const noexcept;
-
-    size_type max_size() const noexcept;
-};
-
-template<class T1, class T2>
-constexpr bool operator==(const stl_allocator<T1>&, const stl_allocator<T2>&) noexcept {
-    return true;
-}
-
-template<class T1, class T2>
-constexpr bool operator!=(const stl_allocator<T1>&, const stl_allocator<T2>&) noexcept {
-    return false;
-}
-```
-
-说明：
-
-- 用于 STL 容器，替代 `std::allocator`。
-- `co/stl.h` 提供常用的 STL 容器，内存分配器已替换为 `co::stl_allocator`。
+`co/stl.h` 提供常用的 STL 容器，内存分配器已替换为 `co::stl_allocator`。
 
 示例：
 
@@ -305,18 +257,24 @@ constexpr bool operator!=(const stl_allocator<T1>&, const stl_allocator<T2>&) no
 std::vector<int, co::stl_allocator<int>> v;
 v.push_back(1);
 v.push_back(2);
+
+#include "co/stl.h"
+
+co::vecotr<int> x;
+x.push_back(8);
+co::println("x: ", x);
 ```
 
----
+
 
 ## 与标准库的关系
 
-- coost 分配器**不能替代**全局 `operator new` / `operator delete`。
-- `co::free` 需要带内存大小，`co::realloc` 需要带 old size，与 `new` / `delete` 语义不同。
-- 用 `new` 分配的内存不能用 `co::free` 释放，反之亦然。
+- coost 分配器**不能替代** `malloc, free` 或 `operator new, operator delete`。
+- `co::free` 需要带内存大小，`co::realloc` 需要带 old size，与标准库语义不同。
+- 用 `malloc` 或 `new` 分配的内存不能用 `co::free` 释放，反之亦然。
 - `co::stl_allocator` 与 `std::allocator` 接口兼容，但底层使用 coost 分配器。
 
----
+
 
 ## 注意事项
 
@@ -324,8 +282,5 @@ v.push_back(2);
 - `co::realloc(p, o, n)` 要求 `n > o`；失败时返回 `nullptr`，原 `p` 仍有效。
 - `co::alloc(n, align)` 的 `align` 必须是 2 的幂，最大 256。
 - `co::strdup` 返回的内存需用 `co::free(s, strlen(s) + 1)` 释放。
-- `_` 开头的 API 是 coost 内部使用的，不建议用户调用。
 - `co::unique<T>` 只支持移动语义。
-- `co::shared<T>` 与 `std::shared_ptr` 语义一致，引用计数线程安全，不支持 `weak_ptr`。
-- `co::stl_allocator<T>` 用于替代 `std::allocator`。
-- 用 `new` 分配的内存不能用 `co::free` 释放。
+- `malloc` 或 `new` 分配的内存不能用 `co::free` 释放。

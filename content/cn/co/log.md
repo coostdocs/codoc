@@ -33,7 +33,6 @@ void log::close();
 - 用户一般不需要显示调用此 API。
 - 调用此函数，会刷新日志缓冲，退出日志线程。
 
----
 
 ## 打印日志
 
@@ -64,10 +63,9 @@ log::info("hello ", false, ' ', 23);
 - 字符类型：`char, signed char, unsigned char`；
 - 整数类型；
 - 浮点数类型：`double, float`；
-- 字符类型：`char, signed char, unsigned char`；
 - 字符串类型：`const char*`, `std::string`, `co::string`；
 - 指针类型：`void*, T*`，输出 `0x` 开头的十六进制值；
-- STL 容器类型：`std::vector, std::map, co::vector, co::map` 等，需要包含 `co/stl.h`。
+- STL 容器：`std::vector, std::map, co::vector, co::map` 等，需要包含 `co/stl.h`。
 
 自定义类型需要实现：
 ```cpp
@@ -90,13 +88,13 @@ int main(int argc, char** argv) {
     flag::parse(argc, argv);
 
     Point p{1, 2};
+    co::println("point: ", p);
     log::info("point: ", p);
 
     return 0;
 }
 ```
 
----
 
 ## 断言
 
@@ -122,12 +120,31 @@ log::check_le(2, 2, "2 <= 2");
 log::check_ge(2, 2, "2 >= 2");
 ```
 
-check 失败行为：
-- 将缓存中日志输出到目标。
-- 打印堆栈信息。
-- 调用 `abort()` 终止程序。
+- check 失败，会刷新日志缓冲，打印堆栈信息，调用 `abort()` 终止程序；
+- check 成功时，不会输出任何信息。
 
----
+
+## 打印堆栈信息
+
+coost 会捕捉程序中产生的异常或异常信号，在程序崩溃退出前打印堆栈信息。
+
+在非 Windows 平台，此功能依赖 [libbacktrace](https://github.com/ianlancetaylor/libbacktrace)。Linux 上 GCC 一般已经内置 backtrace 库，macOS 通常需要用户手动安装。
+
+非 Windows 平台构建时用下述方式启用此功能：
+```sh
+# xmake
+xmake f --with_backtrace=true   # 使用 backtrace 库
+xmake                           # 编译 libco
+xmake b stack                   # 编译 test/stack.cc
+xmake r stack                   # 执行 stack 测试程序
+
+# cmake
+mkdir cmakebuild && cd cmakebuild
+cmake .. -DWITH_BACKTRACE=ON
+make -j8
+```
+
+
 
 ## 写日志回调
 
@@ -143,13 +160,13 @@ void log::set_write_cb(
 - `data` 中可能包含多条日志，`size` 可能很大，用 `UDP` 发送日志时需要注意。
 - callback 在写日志的线程中执行(**coost只有单个线程写日志**)。
 - 如果 `also_log2local == true`，日志也写本地文件。
-- 该函数一般需要在 `flag::parse` 前调用；
+- **该函数建议在 `flag::parse` 前调用**，因为 `flag::parse` 在解析命令行参数后启动日志线程，在日志线程启动前设置 callback 更安全。
 
 示例：
 
 ```cpp
 #include <co/log.h>
-#include <cstdio>
+#include <stdio.h>
 
 static void my_write_cb(const void* data, size_t size) {
     fwrite(data, 1, size, stdout);
@@ -166,13 +183,12 @@ int main(int argc, char** argv) {
 }
 ```
 
----
 
 ## 日志配置项
 
 `log` 内部通过 [flag](../flag/) 定义了一些配置项，可通过命令行参数与配置文件控制日志行为。
 
-| flag 名                |     类型 |                 默认值 | 含义                                           |
+| flag 名               |     类型 |                 默认值 | 含义                                           |
 | --------------------- | -----: | ------------------: | -------------------------------------------- |
 | `log_dir`             | string |            `"logs"` | 日志目录                                         |
 | `min_log_level`       | uint32 |                 `0` | 输出日志的最小级别，0-4 对应 debug/info/warn/error/fatal |
@@ -184,19 +200,10 @@ int main(int argc, char** argv) {
 | `also_log2console`    |   bool |             `false` | 日志也输出到终端                                     |
 | `log_daily`           |   bool |             `false` | 日志文件按天轮转                                     |
 
-`min_log_level` 语义：
 
-- `0`：debug
-- `1`：info
-- `2`：warn
-- `3`：error
-- `4`：fatal
+`min_log_level` 可以过滤掉低级别的日志，级别大于或等于 `min_log_level` 的日志才输出。
 
-日志级别大于等于 `min_log_level` 才输出。
 
-`min_log_level` 过滤在产生日志的线程完成。
-
----
 
 ## 最小示例
 
@@ -204,6 +211,7 @@ int main(int argc, char** argv) {
 #include <co/log.h>
 
 int main(int argc, char** argv) {
+    # parse 是必须的，解析命令行参数后，启动日志线程
     flag::parse(argc, argv);
 
     log::debug("This is debug.. ", 23);

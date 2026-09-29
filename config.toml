@@ -111,7 +111,8 @@ enableGitInfo = true
   # Can be overwritten by same param in page frontmatter
   BookComments = true
 
-  cdn = "//cdn.bootcss.com"
+  # cdn = "//cdn.bootcss.com"
+  cdn = "//cdn.bootcdn.net/ajax/libs"
   jqueryVersion = "3.5.1"
   mathjaxVersion = "3.0.5"
   highlightjsVersion = "11.1.0"

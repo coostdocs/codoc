@@ -49,7 +49,7 @@ void* co::alloc(size_t n, size_t align);
 void co::free(void* p, size_t n);
 
 // @p: may be NULL
-// @o: old size, must be the same as the size used in alloc() or a previous realloc()
+// @o: old size, must be the same as the size used in alloc() or realloc()
 // @n: new size, must be greater than @o
 // return: may be the same as @p, or NULL on failure
 void* co::realloc(void* p, size_t o, size_t n);

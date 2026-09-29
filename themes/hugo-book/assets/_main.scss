@@ -80,11 +80,6 @@ aside nav ul {
     outline: none;
   }
 
-  a:focus-visible {
-    outline: 2px solid #4d90fe;
-    outline-offset: 2px;
-  }
-
   ul {
     padding-inline-start: $padding-16;
   }

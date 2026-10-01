@@ -143,7 +143,7 @@ __thread int g_v;
 __thread void* g_p;
 ```
 
-### `__unlikely` 宏
+### `__unlikely`
 
 - 提示编译器条件为假概率更高。
 - 旧版本中名为 `unlikey`，为避免与 C++20 `[[unlikely]]` 冲突，改为 `__unlikely`。

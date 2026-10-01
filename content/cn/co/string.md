@@ -146,7 +146,7 @@ char pop_back() noexcept;
 - `append_nomchk` 不做自引用检查，调用方需保证 `p` 不在 `_p` 内部。
 
 
-### operator<< 重载
+### `operator<<` 重载
 
 `co::string` 支持流式拼接：
 

@@ -3,412 +3,153 @@ weight: 2
 title: "简介"
 ---
 
-## coost 简介
 
-[![stars](https://img.shields.io/github/stars/idealvin/coost?style=social)](https://github.com/idealvin/coost)
-[![forks](https://img.shields.io/github/forks/idealvin/coost?style=social)](https://github.com/idealvin/coost)
-[![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## 定位
 
+[coost](https://github.com/idealvin/coost) 是一个轻量的跨平台 C++ 基础库，提供协程、网络、RPC、日志、配置、JSON 等组件，风格接近 golang，追求极简，同时保持高性能，不依赖 Boost、folly 等三方库。
 
-**[coost](https://github.com/idealvin/coost)** 是一个**兼具性能与易用性**的跨平台 C++ 基础库，其目标是打造一把 C++ 开发神器，让 C++ 编程变得简单、轻松、愉快。
+适合如下场景：
+- 需要轻量协程；
+- 需要基于协程的网络框架；
+- 不想引入较重或较多的三方库；
+- 希望配置、日志、内存管理等有一致的风格。
 
-coost 简称为 co，曾被称为小型 [boost](https://www.boost.org/) 库，与 boost 相比，coost 小而精美，在 **linux 与 mac 上编译出来的静态库仅 1M 左右大小**，却包含了不少强大的功能：
 
+## 设计原则
 
-{{< columns >}}
+coost 的核心设计原则是 keep simple，同时保持高性能。
 
-- 命令行与配置文件解析(flag)
-- **高性能日志库(log)**
-- 单元测试框架
-- 基准测试框架
-- **go-style 协程**
-- 基于协程的网络编程框架
-- **基于 JSON 的 RPC 框架**
+具体来说：
+- 单个组件保持极简，只提供常用功能；
+- 简单组件组合起来，覆盖大部分应用场景；
+- 在保持简单的同时追求性能，兼顾易用性与性能。
 
-<--->
+基于上述原则：
+- coost 通常会提供简短、语义清晰的命名；
+- coost 一般不会为了支持一些较少使用的功能，而增加代码的复杂度、维护难度；
+- coost 内部不使用异常，用户不需要 `try / catch`。
 
-- 原子操作(atomic)
-- **高效字符流(fastream)**
-- 高效字符串(fastring)
-- 字符串操作(str)
-- 时间库(time)
-- 线程库(thread)
-- 定时任务调度器
 
-<--->
+## 它解决什么问题
 
-- **面向玄学编程**
-- 高效 JSON 库
-- hash 库
-- path 库
-- 文件系统操作(fs)
-- 系统操作(os)
-- **高性能内存分配器**
+C++ 项目开发中，通常会遇到下面问题：
+- **并发模型复杂**：多线程 + 回调 + 锁，逻辑容易写乱，异步代码可读性差、难以调试。
+- **依赖多**：项目可能引入多个三方库，代码风格、内存管理方式等不统一，集成、调试和优化成本高。
+- **依赖重**：项目可能引入 Boost、folly 等大型三方库，编译慢、上手成本高。
+- **全局对象管理混乱**：不同 .cc 文件的静态对象，初始化与析构顺序未定义，程序可能因访问未初始化或已析构的静态对象而崩溃。
 
-{{< /columns >}}
 
+## coost 的解决方案
 
+- 用协程简化并发模型，用同步写法获得异步性能。
+- 用 coost 一个库覆盖配置、日志、协程、网络、RPC、JSON、单元测试、基准测试等常用基础组件，减少三方依赖。
+- 核心组件自研，不依赖 Boost、folly 等大型三方库。
+- 用 `co::make_static / co::make_rootic` 接管静态对象，借助 nifty counter 技巧保证被依赖的对象先构造、后析构。
 
+此外，coost 还统一了：
+- **配置方式**：所有组件通过 flag 配置，支持命令行和配置文件。
+- **输出方式**：终端输出、日志都基于 `co::string` 流式接口，自定义类型只需实现 `operator<<(co::string&, const T&)`。
+- **内存分配**：所有组件统一使用 coost 内存分配器。
 
-## coost 发展历程
 
-- **2013-2015** 年，[Alvin(idealvin)](https://github.com/idealvin) 在使用 google gflags、glog、gtest 等时，感到有些繁琐，就自己动手实现了相应的功能，即现今 coost 中的 **flag、log、unitest** 等组件。
-
-- **2015-2018** 年，Alvin 将自研的这套基础库引入实际项目中，供自己与同事使用，大幅度提升了 C++ 开发效率，coost 也得以经受工业项目的检验，并在实践中不断完善、扩充新的功能。
-
-- **2019** 年，Alvin 实现了**类似 goroutine 的协程机制**，以及基于协程的网络编程框架，之后**将项目命名为 co，在 [github](https://github.com/idealvin/coost) 上发布 1.0 版本**。
-
-- **2020-2021** 年，完善 hook 机制、协程同步机制，增加 golang 中的 channel、defer 等特性，**发布 2.x 版本**。在此期间，**码友们提供了很多宝贵的改进意见，并帮忙完善了 [xmake](https://github.com/xmake-io/xmake)、cmake 编译脚本以及 coost 中的很多功能**。
-
-- **2022** 年，新增**内存分配器**、提升整体性能，对 flag、log、JSON、RPC、fastring、fastream 等很多组件做出了重大改进，并**将项目更名为 coost，发布 3.0 版本**。
-
-
-
-
-## 快速上手
-
-### 编译
-
-建议安装 [xmake](https://github.com/xmake-io/xmake)，在 coost 根目录执行如下命令构建所有子项目：
-```sh
-xmake -a
-```
-
-如果需要使用 http::Client, SSL 或 HTTPS 特性，则可以用下面的命令构建：
-```sh
-xmake f --with_libcurl=true --with_openssl=true
-xmake -a
-```
-
-xmake 会自动从网络安装 libcurl 与 openssl，视网络情况，这个过程可能会较慢。`xmake -a` 会编译 [libco](https://github.com/idealvin/coost/tree/master/src), [gen](https://github.com/idealvin/coost/tree/master/gen), [unitest](https://github.com/idealvin/coost/tree/master/unitest) 以及 [test](https://github.com/idealvin/coost/tree/master/test) 目录下面的所有测试代码。编译完后可以执行如下命令，运行 coost 中的测试程序：
-
-```sh
-xmake r unitest
-xmake r flag
-xmake r log -cout
-xmake r co
-```
-
-
-
-### 使用 coost 开发 C++ 项目
-
-最简单的，可以直接包含 [co/all.h](https://github.com/idealvin/coost/blob/master/include/co/all.h)，使用 coost 中的所有特性。如果担心影响编译速度，也可以只包含需要用到的头文件，如包含 [co/co.h](https://github.com/idealvin/coost/blob/master/include/co/co.h)，可以使用 flag, log 以及协程相关的所有特性。
-
-```cpp
-#include "co/all.h"
-
-DEF_string(s, "nice", "xxx");
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    LOG << FLG_s;
-    return 0;
-}
-```
-
-coost 中的部分组件用 flag 定义配置项，因此一般需要在 main 函数开头调用 `flag::parse()` 解析命令行参数。
-
-
-
-
-## 性能
-
-### 内存分配器
-
-ptmalloc、jemalloc、tcmalloc 以及 mimalloc 等内存分配器，小内存释放后大概率不会归还给操作系统，这可能**造成释放大量小内存后内存占用量却始终不降的疑似内存泄漏的现象**。为解决此问题，coost 设计了一个专用的内存分配器，在兼顾性能的同时，会尽可能多的将释放的内存归还给系统，有利于降低程序的内存占用量，在实测中也取得了良好的效果。
-
-[co/test](https://github.com/idealvin/coost/blob/master/test/mem.cc) 中提供了简单的测试代码，可以执行如下命令编译及运行：
-
-```sh
-xmake b mem
-xmake r mem -t 4 -s
-```
-
-`-t` 指定线程数量，`-s` 表示与系统内存分配器进行对比。下面是在不同系统中的测试结果(4线程)：
-
-| os/cpu | co::alloc | co::free | ::malloc | ::free | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| win/AMD 3.2G | 7.32 | 6.83 | 86.05 | 105.06 | 11.7/15.3 |
-| mac/i7 2.4G | 9.91 | 9.86 | 55.64 | 60.20 | 5.6/6.1 |
-| linux/i7 2.2G | 10.80 | 7.51 | 1070.5 | 21.17 | 99.1/2.8 |
-
-表中数据为平均耗时，单位为纳秒(ns)，linux 是在 Windows WSL 中运行的 ubuntu 系统，speedup 是 coost 内存分配器相对于系统内存分配器的性能提升倍数。
-
-可以看到，**co::alloc 在 Linux 上比 ::malloc 提升了近 99 倍**，这其中的一个重要原因是 ptmalloc 在多线程环境中锁竞争开销较大，而 coost 内存分配器在设计上尽可能避免锁的使用，小块内存的分配、释放不需要锁，跨线程释放时连自旋锁也不用。
-
-
-
-### 日志
-
-| platform | glog | co/log | speedup |
-| ------ | ------ | ------ | ------ |
-| win2012 HHD | 1.6MB/s | 180MB/s | 112.5 |
-| win10 SSD | 3.7MB/s | 560MB/s | 151.3 |
-| mac SSD | 17MB/s | 450MB/s | 26.4 |
-| linux SSD | 54MB/s | 1023MB/s | 18.9 |
-
-上表是 co/log 与 glog 在单线程连续打印 100 万条日志时测得的写速度对比，可以看到 co/log 比 glog 快了近两个数量级。
-
-| threads | linux co/log | linux spdlog | win co/log | win spdlog | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| 1 | 0.087235 | 2.076172 | 0.117704 | 0.461156 | 23.8/3.9 |
-| 2 | 0.183160 | 3.729386 | 0.158122 | 0.511769 | 20.3/3.2 |
-| 4 | 0.206712 | 4.764238 | 0.316607 | 0.743227 | 23.0/2.3 |
-| 8 | 0.302088 | 3.963644 | 0.406025 | 1.417387 | 13.1/3.5 |
-
-上表是分别[用 1、2、4、8 个线程打印 100 万条日志](https://github.com/idealvin/coost/tree/benchmark)的耗时，单位为秒，speedup 是 co.log 在 linux、windows 平台相对于 spdlog 的性能提升倍数。
-
-
-
-### JSON 库
-
-| os | co/json stringify | co/json parse | rapidjson stringify | rapidjson parse | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| win | 569 | 924 | 2089 | 2495 | 3.6/2.7 |
-| mac | 783 | 1097 | 1289 | 1658 | 1.6/1.5 |
-| linux | 468 | 764 | 1359 | 1070 | 2.9/1.4 |
-
-上表是将 [twitter.json](https://raw.githubusercontent.com/simdjson/simdjson/master/jsonexamples/twitter.json) 最小化后测得的 stringify 及 parse 的平均耗时，单位为微秒(us)，speedup 是 co.json 在 stringify、parse 方面相对于 rapidjson 的性能提升倍数。
-
-
-
-
-## 核心组件
-
-### 面向玄学编程
-
-[co/god.h](https://github.com/idealvin/coost/blob/master/include/co/god.h) 提供模板相关的一些功能。模板用到深处有点玄，有些 C++ 程序员称之为面向玄学编程。
-
-```cpp
-#include "co/god.h"
-
-void f() {
-    god::bless_no_bugs();
-    god::align_up<8>(31); // -> 32
-    god::is_same<T, int, bool>(); // T is int or bool?
-}
-```
-
-
-### flag
-
-**[flag](../../co/flag/)** 是一个简单易用的命令行参数与配置文件解析库，coost 中的一些组件用它定义配置项。
-
-每个 **flag(配置项)** 都有一个默认值，在缺省情况下，程序可以按默认配置参数运行。用户也可以从**命令行或配置文件**传入参数，在需要配置文件时，还可以用 `-mkconf` **自动生成配置文件**。
-
-```cpp
-// xx.cc
-#include "co/flag.h"
-#include "co/cout.h"
-
-DEF_bool(x, false, "x");
-DEF_bool(debug, false, "dbg", d);
-DEF_uint32(u, 0, "xxx");
-DEF_string(s, "", "xx");
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    co::print("x: ", FLG_x);
-    co::print("y: ", FLG_y);
-    co::print("debug: ", FLG_debug);
-    co::print("u: ", FLG_u);
-    co::print(FLG_s, '|', FLG_s.size());
-    return 0;
-}
-```
-
-上述代码中 `DEF_` 开头的宏定义了 4 个 flag，每个 flag 对应一个全局变量，变量名是 `FLG_` 加 flag 名，其中 flag `debug` 还有一个别名 `d`。上述代码编译后，可以按如下方式运行：
-
-```sh
-./xx                  # 按默认配置运行
-./xx -x -s good       # x -> true, s -> "good"
-./xx -debug           # debug -> true
-./xx -xd              # x -> true, debug -> true
-./xx -u 8k            # u -> 8192, 整数可带单位(k,m,g,t,p), 不分大小写
-
-./xx -mkconf          # 自动生成配置文件 xx.conf
-./xx xx.conf          # 从配置文件传入参数
-./xx -conf xx.conf    # 与上同
-```
-
-
-
-### log
-
-**[log](../../co/log/)** 是一个高性能日志组件，coost 中的一些组件用它打印日志。
-
-log 支持两种类型的日志：一种是 level log，分为 debug, info, warning, error, fatal 5 个级别，**打印 fatal 级别的日志会终止程序的运行**；另一种是 topic log，日志按 topic 分类，不同 topic 的日志写入不同的文件。
-
-```cpp
-#include "co/log.h"
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-
-    TLOG("xx") << "s" << 23; // topic log
-    DLOG << "hello " << 23;  // debug
-    LOG << "hello " << 23;   // info
-    WLOG << "hello " << 23;  // warning
-    ELOG << "hello " << 23;  // error
-    FLOG << "hello " << 23;  // fatal
-
-    return 0;
-}
-```
-
-log 还提供了一系列 `CHECK` 宏，可以视为加强版的 `assert`，它们在 debug 模式下也不会被清除。CHECK 断言失败时，log 会打印函数调用栈信息，然后终止程序的运行。
-
-```cpp
-void* p = malloc(32);
-CHECK(p != NULL) << "malloc failed..";
-CHECK_NE(p, NULL) << "malloc failed..";
-```
-
-
-
-### unitest
-
-[unitest](../../co/unitest/) 是一个简单易用的单元测试框架，coost 中的很多组件用它写单元测试代码，为 coost 的稳定性提供了重要保障。
-
-```cpp
-#include "co/unitest.h"
-#include "co/os.h"
-
-namespace test {
-    
-DEF_test(os) {
-    DEF_case(homedir) {
-        EXPECT_NE(os::homedir(), "");
-    }
-
-    DEF_case(cpunum) {
-        EXPECT_GT(os::cpunum(), 0);
-    }
-}
-    
-} // namespace test
-```
-
-上面是一个简单的例子，`DEF_test` 宏定义了一个测试单元，实际上就是一个函数。`DEF_case` 宏定义了测试用例，每个测试用例实际上就是一个代码块。main 函数一般只需要下面几行：
-
-```cpp
-#include "co/unitest.h"
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    unitest::run_tests();
-    return 0;
-}
-```
-
-[unitest](https://github.com/idealvin/coost/tree/master/unitest) 目录下面是 coost 中的单元测试代码，编译后可执行下述命令运行：
-
-```sh
-xmake r unitest      # 运行所有单元测试用例
-xmake r unitest -os  # 仅运行 os 单元中的测试用例
-```
-
-
-### 基准测试
-
-[benchmark](../../co/benchmark/) 是一个简单易用的基准测试框架。
-
-```cpp
-#include "co/benchmark.h"
-#include "co/mem.h"
-
-BM_group(malloc) {
-    void* p;
-
-    BM_add(::malloc)(
-        p = ::malloc(32);
-    );
-    BM_use(p);
-
-    BM_add(co::alloc)(
-        p = co::alloc(32);
-    );
-    BM_use(p);
-}
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    bm::run_benchmarks();
-    return 0;
-}
-```
-
-上例中，`BM_group` 定义了一个测试组，`BM_add` 添加了两个需要进行比较的测试用例，`BM_use` 防止编译器将测试代码优化掉。
-
-基准测试结果以 markdown table 格式输出，如下所示：
-![bm.png](/images/bm.png)
-
-
-
-### JSON
-
-coost v3.0 中，**[Json](https://github.com/idealvin/coost/blob/master/include/co/json.h)** 采用**流畅(fluent)接口设计**，用起来更加方便。
-
-```cpp
-// {"a":23,"b":false,"s":"123","v":[1,2,3],"o":{"xx":0}}
-Json x = {
-    { "a", 23 },
-    { "b", false },
-    { "s", "123" },
-    { "v", {1,2,3} },
-    { "o", {
-        {"xx", 0}
-    }},
-};
-
-// equal to x
-Json y = Json()
-    .add_member("a", 23)
-    .add_member("b", false)
-    .add_member("s", "123")
-    .add_member("v", Json().push_back(1).push_back(2).push_back(3))
-    .add_member("o", Json().add_member("xx", 0));
-
-x.get("a").as_int();       // 23
-x.get("s").as_string();    // "123"
-x.get("s").as_int();       // 123, string -> int
-x.get("v", 0).as_int();    // 1
-x.get("v", 2).as_int();    // 3
-x.get("o", "xx").as_int(); // 0
-
-x["a"] == 23;          // true
-x["s"] == "123";       // true
-x.get("o", "xx") != 0; // false
-```
-
-
+## 核心组件与设计选择
 
 ### 协程
 
-coost 实现了类似 golang 中 goroutine 的协程机制，它有如下特性：
+coost 协程与 golang 中 goroutine 类似：
+- 使用 `go()` 创建协程；
+- 支持多线程调度，默认调度线程数为系统 CPU 核数；
 
-- 支持多线程调度，默认线程数为系统 CPU 核数。
-- 共享栈，同一线程中的协程共用若干个栈(大小默认为 1MB)，内存占用低。
-- 各协程之间为平级关系，可以在任何地方(包括在协程中)创建新的协程。
-- 支持[协程同步事件](../../co/concurrency/coroutine/event/)、[协程锁](../../co/concurrency/coroutine/mutex/)、[channel](../../co/concurrency/coroutine/chan/)、[waitgroup](../../co/concurrency/coroutine/wg/) 等协程同步机制。
+区别于 C++20 无栈协程，coost 协程没有「代码污染」问题：不需要 `co_await / co_yield / co_return`，不需要引入 `task<T> / promise_type`等类型，不需要改函数签名。
+
+#### 共享栈
+
+coost 协程采用共享栈设计，**同一调度器中的协程共享固定数量的栈**，每个协程的栈内存开销极低，单机支持千万级协程并发。
+
+需要特别注意，由于协程的栈不是独占的，通常**不能通过指针、引用跨协程访问协程栈上的对象**。
+
+#### go 的参数传递
+
+`go()` 接受的参数与 `std::thread` 构造函数类似，可以是普通函数、成员函数、lambda、函数对象，以及任意数量和类型的参数。
+
+go 函数大致长这样：`go(f, args...)`，args 传引用是安全的；但**如果 f 是 lambda，则一般不能按引用捕获协程栈上的对象**，因为协程的栈是共享的，栈上数据可能被其他协程覆盖。
+
+
+#### 同步机制
+
+coost 协程提供 `co::mutex / co::event / co::wait_group` 三种同步机制。
+
+golang 是全协程环境，而 coost 需要同时面对协程与非协程环境。coost 将上述同步机制设计为：**既支持协程，也支持非协程**。实现成本更高，但方便用户在混合环境下使用。
+
+另外，由于是共享栈，coost 需要像 golang 一样，在协程中贯彻**按值传递参数**的语义。因此上述同步机制均采用基于引用计数的设计，拷贝操作只会增加引用计数。
+
+
+### 内存分配器
+
+coost 自研了一套内存分配器，所有组件统一使用，便于内存管理 、统计、调试和优化。
+
+分配器将内存分为三类：
+- 小内存：`< 4k`，16 字节对齐；
+- 中等内存：`<= 128k`，4k 字节对齐；
+- 大内存：`> 128k`，直接 mmap / VirtualAlloc，页对齐。
+
+与一般分配器不同，coost 内存分配器不保存所分配内存的大小，free 时需要传大小。这样做的好处是：
+
+- 分配器不需要在内存头部写元数据，用户拿到的内存布局紧凑，没有额外开销；
+- free 时根据大小直接判断属于哪一级，不需要读元数据，路径简单；
+- 缓存友好，分配和释放更快。
+
+#### 容器低成本迁移
+
+`co/stl.h` 提供**使用 coost 内存分配器的 STL 容器**别名。用户只需要将 `std::vector / std::map / std::unordered_map` 等替换成 `co::vector / co::map / co::hash_map` 等，就能带来性能上的提升，不需要修改代码结构。
+
+#### 静态对象管理
+
+C++ 不同 .cc 文件中的静态对象，初始化与析构顺序未定义，程序可能因访问未初始化或已析构的静态对象而崩溃。coost 给出的解决方案是：
+- 不直接定义静态对象，而是定义全局指针，由 coost 接管；
+- 通过 nifty counter 技巧，调用 `co::make_static<T>(args...)` 创建静态对象，并用其返回值初始化全局指针。
+
+nifty counter 天然保证被依赖的对象先构造完成，coost 则在程序退出时，按照先构造、后析构的顺序，析构接管的对象。
+
+另外，coost 也提供 `co::make_rootic<T>(args...)`，用于**创建无依赖的静态对象**，coost 保证 make_rootic 构建的对象总是在最后析构。make_rootic 一般用于无法使用 nifty counter 技巧的场景，如无依赖的线程局部对象的初始化。
+
+#### 写内存友好的代码
+
+`co/def.h` 定义了 `co::cache_line_size`，以及 `__cacheline_aligned` 宏。定义结构体时可以写 `struct __cacheline_aligned S`，语义更明确。
+
+`co::alloc(n, align)` 分配指定对齐的内存，align 最大是 256(co::cache_line_size 的最大可能值)。用户可以用 `co::alloc(n, co::cache_line_size)` 分配缓存行对齐的内存。
+
+
+### flag / log / unitest / benchmark
+
+coost 提供 flag、log、unitest、benchmark 四个基础组件，分别对应 gflags、glog、gtest、google benchmark 的常用场景。
+
+- flag 提供更强的功能，支持 flag 别名、自动生成配置文件，整型 flag 值可以带单位(k,m,g,t,p)，用起来更方便。
+- log 性能比 glog 更好，通常有 1 到 2 个数量级的提升。业务代码中打印大量日志可能影响处理性能，所以 log 在设计上特别重视性能的提升。
+- unitest 写单元测试更简单，`DEF_test` 定义的测试单元实际是一个函数，`DEF_case` 只是其中的代码块，用户可以在函数中自由添加代码，如各测试用例共用的初始化代码。
+- benchmark 设计上与 unitest 类似，`BM_group` 定义的基准测试组也是一个函数，`BM_add` 只是其中的代码块，用起来更方便。
+
+
+## 一个最小示例
 
 ```cpp
 #include "co/co.h"
+#include "co/flag.h"
+#include "co/log.h"
+#include "co/print.h"
 
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
 
-    co::wait_group wg;
-    wg.add(2);
+    co::wait_group wg(2);
 
     go([wg](){
-        LOG << "hello world";
+        co::println("hello world");
         wg.done();
     });
 
     go([wg](){
-        LOG << "hello again";
+        log::info("hello again");
         wg.done();
     });
 
@@ -417,113 +158,94 @@ int main(int argc, char** argv) {
 }
 ```
 
-上面的代码中，`go()` 创建的协程会根据默认策略分配到不同的调度线程中。用户也可以自行控制协程的调度：
+这个示例展示了 coost 的基本用法：
+- `flag::parse` 解析命令行参数，没有这一行，日志线程、协程调度线程不会启动；
+- `co::wait_group wg(2)` 创建一个计数器为 2 的等待组；
+- `go` 启动两个协程，lambda 按值捕获 `wg`，因为协程是共享栈，不能按引用捕获协程栈上的对象(虽然示例中 wg 并不在协程栈上，按引用捕获也是可以的，但为安全起见，建议统一按值捕获)；
+- `co::println` 立即输出到终端，`log::info` 默认写文件，不输出终端，想在终端看日志内容可以在命令行加 `-also_log2console=true`；
+- `wg.wait()` 在主线程等待两个协程执行完，然后退出。
 
-```cpp
-// run f1 and f2 in the same scheduler
-auto s = co::next_sched();
-s->go(f1);
-s->go(f2);
 
-// run f in all schedulers
-for (auto& s : co::scheds()) {
-    s->go(f);
-}
+## 编译与运行
+
+coost 支持的编译器有 gcc、clang、MSVC，需要编译器支持 C++17。coost 支持用 xmake 或 cmake 构建，推荐用 xmake，用起来更方便。
+
+常用命令（在 coost 根目录下执行）：
+```bash
+# 默认编译 libco
+xmake
+
+# 编译及运行单元测试代码
+xmake b unitest
+xmake r unitest
+xmake r unitest -os
+
+# 编译及运行性能测试代码
+xmake b benchmark
+xmake r benchmark
+xmake r benchmark -mem
+
+# 编译及运行 test 目录下的测试代码
+xmake b xx
+xmake r xx
 ```
 
+用户可以在 [test](https://github.com/idealvin/coost/tree/master/test) 目录添加自己的 `xxx.cc` 文件，直接 `xmake b xxx` 构建、`xmake r xxx` 运行。
 
 
-### 网络编程
+## 和同类库的比较
 
-coost 提供了一套基于协程的网络编程框架：
+| 维度         | coost            | Boost            | folly            |
+| ---------- | ---------------- | ---------------- | ---------------- |
+| 定位         | 轻量级基础库集合         | 大型通用库集合          | Facebook 内部基础库集合 |
+| 协程         | 有，共享栈，非 C++20 协程 | C++20 协程         | 有                |
+| 网络         | TCP/UDP/RPC      | Asio（TCP/UDP）    | 多种               |
+| RPC        | 内置               | 无                | 有                |
+| JSON       | 内置               | 有                | 有                |
+| flag / log | 内置               | 无（需 gflags/glog） | 有                |
+| 单元 / 基准测试  | 内置               | Boost.Test       | 有                |
+| 内存分配器      | 自研               | 标准               | 自研               |
+| 配置         | 统一使用 flag        | 各组件独立            | 各组件独立            |
+| 依赖         | 无                | 各组件依赖不同          | 大量               |
+| 上手难度       | 中                | 高                | 高                |
+| 体量         | 小                | 大                | 大                |
 
-- **[协程化的 socket API](../../co/net/sock/)**，形式上与系统 socket API 类似，熟悉 socket 编程的用户，可以轻松的用同步的方式写出高性能的网络程序。
-- [TCP](../../co/net/tcp/)、[HTTP](../../co/net/http/)、[RPC](../../co/net/rpc/) 等高层网络编程组件，兼容 IPv6，同时支持 SSL，用起来比 socket API 更方便。
-
-
-**RPC server**
-
-```cpp
-#include "co/co.h"
-#include "co/rpc.h"
-#include "co/time.h"
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-
-    rpc::Server()
-        .add_service(new xx::HelloWorldImpl)
-        .start("127.0.0.1", 7788, "/xx");
-
-    for (;;) sleep::sec(80000);
-    return 0;
-}
-```
-
-rpc::Server 同时支持 HTTP 协议，可以用 HTTP 的 POST 方法调用 RPC 服务：
-
-```sh
-curl http://127.0.0.1:7788/xx --request POST --data '{"api":"ping"}'
-```
+coost 并不完全对标 Boost 或 folly。coost 的定位是「轻量级基础库集合」，覆盖面比 Boost 小，但组件之间风格统一，不依赖第三方库，上手成本更低。上表只从部分维度做对照，不代表功能完全等价。
 
 
-**静态 web server**
+## 并发模型
 
-```cpp
-#include "co/flag.h"
-#include "co/http.h"
+### 服务端
 
-DEF_string(d, ".", "root dir"); // docroot for the web server
+服务端通常需要支持高并发。coost 采用「一个连接一个协程」的基本模型：
 
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    so::easy(FLG_d.c_str()); // mum never have to worry again
-    return 0;
-}
-```
+- accept 单独一个协程，负责打开监听 socket、循环 accept、关闭监听 socket；
+- 每 accept 一个新连接，单独开一个协程，负责该连接上的 recv / send / close。
+
+连接的生命周期与协程的生命周期一致。这种模型下，每个连接的处理逻辑是独立的、顺序的，用同步的写法即可，不需要回调，也不需要手动管理状态机。
 
 
-**HTTP server**
+### 客户端
 
-```cpp
-void cb(const http::Req& req, http::Res& res) {
-    if (req.is_method_get()) {
-        if (req.url() == "/hello") {
-            res.set_status(200);
-            res.set_body("hello world");
-        } else {
-            res.set_status(404);
-        }
-    } else {
-        res.set_status(405); // method not allowed
-    }
-}
+客户端需要考虑的是连接复用，而不是每个协程都建立新的连接。coost 提供 `co::pool` 解决这个问题：
+- `co::pool` 内部每个调度线程都有自己的池子，池中的元素不会跨线程共享，因此使用 co::pool 不需要加锁；
+- 客户端协程需要的时候，从 co::pool 中取出一个连接，用完立即放回；
 
-// http
-http::Server().on_req(cb).start("0.0.0.0", 80);
+使用上述模型，大量的客户端协程，通常可以共用 `co::pool` 中的少量连接，而不用为每个协程创建一个连接。
 
-// https
-http::Server().on_req(cb).start(
-    "0.0.0.0", 443, "privkey.pem", "certificate.pem"
-);
-```
+有了 `co::pool`，coost 中 `co::tcp_client`、`co::rpc_client` 的设计就很简单，一个 client 在同一时刻只允许一个协程使用，用户可以将 client 放入 co::pool，达到复用的目的。简言之，co::pool 提供了在协程环境复用客户端连接的通用方法。
 
 
-**HTTP client**
+## 推荐阅读顺序
 
-```cpp
-void f() {
-    http::Client c("https://github.com");
-
-    c.get("/");
-    LOG << "response code: "<< c.status();
-    LOG << "body size: "<< c.body().size();
-    LOG << "Content-Length: "<< c.header("Content-Length");
-    LOG << c.header();
-
-    c.post("/hello", "data xxx");
-    LOG << "response code: "<< c.status();
-}
-
-go(f);
-```
+1. flag：命令行与配置文件解析；
+2. log：日志；
+3. print：终端输出；
+4. string：字符串；
+5. mem：内存分配器；
+6. co：协程；
+7. sock：socket；
+8. tcp：TCP；
+9. json：JSON；
+10. rpc：RPC；
+11. gen：RPC 代码生成。

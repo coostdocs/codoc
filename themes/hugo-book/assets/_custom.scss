@@ -1,3 +1,18 @@
 /* You can add custom styles here. */
 
 // @import "plugins/numbered";
+
+// 针对水平滚动条（代码块横向溢出时）
+.highlight pre code::-webkit-scrollbar {
+  height: 2px; // 调整滚动条粗细
+}
+
+// 针对垂直滚动条
+.highlight pre code::-webkit-scrollbar {
+  width: 2px; // 调整滚动条粗细
+}
+
+// 隐藏滚动条两端的箭头按钮
+.highlight pre code::-webkit-scrollbar-button {
+  display: none;
+}

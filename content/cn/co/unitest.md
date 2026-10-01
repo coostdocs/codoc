@@ -15,10 +15,10 @@ title: "单元测试"
 公开函数只有一个，在 `co` 命名空间：
 
 ```cpp
-int co::run_unitests(); // 返回失败的 case 数量
+int co::run_unitests();
 ```
 
-- 运行代码中定义的单元测试，返回失败的测试用例数；
+- 运行单元测试，返回失败用例数；
 - `main` 一般是固定写法：
 
 ```cpp
@@ -31,59 +31,48 @@ int main(int argc, char** argv) {
 }
 ```
 
-说明：
-
-- 必须调用 `flag::parse`，否则测试单元对应的 flag 无法生效。
-- 失败的测试用例会在最后统一汇总。
-
 
 ## 定义测试单元
 
 ```cpp
 DEF_test(name) {
     // 测试代码
+    // DEF_case(xxx) {}
 }
 ```
 
-说明：
-
-- 定义一个测试单元，实际相当于一个函数；
-- `name` 必须是合法的 flag 名 / 变量名；
-- 程序中可以有多个 `DEF_test`，只要 `name` 不重复。
+- `DEF_test` 宏定义一个测试单元，实际是一个函数，用户可以在其中自由添加代码，如各测试用例共用的初始化代码；
+- `name` 必须是合法变量名；
+- 有多个 `DEF_test` 时，`name` 不能重复。
 
 
 ## 定义测试用例
 
 ```cpp
 DEF_case(name) {
-    // 用例代码
+    // 测试用例代码
 }
 ```
 
-说明：
-
-- 定义测试用例，相当于 DEF_test 所定义函数中的代码块；
-- `name` 只要求能转成字符串，不要求是合法变量名，可重复。
-- `DEF_test` 定义的函数中可以不包含任何 DEF_case，这时会创建一个默认的测试用例。
+- `DEF_case` 宏定义一个测试用例，实际是 `DEF_test` 所定义函数中的代码块；
+- `name` 不要求是合法变量名；
+- `DEF_test` 中不含任何 `DEF_case` 时，会创建一个默认测试用例。
 
 
 ## EXPECT 宏
 
 ```cpp
 EXPECT(x)
-EXPECT_EQ(x, y)
-EXPECT_NE(x, y)
-EXPECT_GE(x, y)
-EXPECT_LE(x, y)
-EXPECT_GT(x, y)
-EXPECT_LT(x, y)
+EXPECT_EQ(x, y)   // ==
+EXPECT_NE(x, y)   // !=
+EXPECT_GE(x, y)   // >=
+EXPECT_LE(x, y)   // <=
+EXPECT_GT(x, y)   // >
+EXPECT_LT(x, y)   // <
 ```
 
-说明：
-
-- 失败时记录信息，并继续执行后续代码。
 - 失败信息在最后统一汇总。
-- `EXPECT_XX` 宏中的参数需要支持相应的比较运算符，且可打印，即支持：
+- `EXPECT_XX` 中参数需要支持相应比较运算符，且可打印，即支持：
   ```cpp
   operator<<(co::string&, const T&);
   ```  
@@ -91,18 +80,10 @@ EXPECT_LT(x, y)
 
 ## 运行逻辑
 
-- 每个 `DEF_test` 内部定义一个 bool flag，默认 `false`。
-- 如果所有测试单元的 flag 都是默认值 `false`，则默认运行所有测试单元。
-- 如果有任意一个 flag 为 `true`，则只运行 flag 为 `true` 的测试单元。
-- 测试单元保存在 vector 中，按注册顺序执行。
-
-命令行示例：
-
-```bash
-./xx             # 运行所有测试单元
-./xx -os         # 只运行 DEF_test(os)
-./xx -os -log    # 只运行 os 和 log 两个单元
-```
+- 每个 `DEF_test` 内部定义一个 bool flag，默认值 `false`。
+- 若所有测试单元 flag 都是默认值，则运行所有测试单元。
+- 若有 flag 为 `true`，则只运行 flag 为 `true` 的测试单元。
+- 测试单元按注册顺序执行。
 
 
 ## 示例
@@ -159,9 +140,9 @@ int main(int argc, char** argv) {
 ```
 
 
-## 构建及运行测试程序
+## 构建及运行 coost 内部单元测试
 
-[unitest](https://github.com/idealvin/coost/tree/master/unitest) 目录下是 coost 内部的单元测试代码，在 coost 根目录执行下述命令构建及运行：
+[unitest](https://github.com/idealvin/coost/tree/master/unitest) 目录下是 coost 内部单元测试代码，在 coost 根目录执行下述命令构建及运行：
 
 ```bash
 # 构建

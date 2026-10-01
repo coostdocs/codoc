@@ -3,103 +3,223 @@ weight: 7
 title: "基准测试"
 ---
 
-include: [co/benchmark.h](https://github.com/idealvin/coost/blob/master/include/co/benchmark.h).
-
-
-## 基本概念
-
-**co.benchmark** 是 v3.0.1 新增的基准测试框架，可用于性能基准测试。
-
-
-### BM_group
-
-```cpp
-#define BM_group(_name_) \
-    ...... \
-    void _co_bm_group_##_name_(bm::xx::Group& _g_)
-```
-
-- `BM_group` 宏用于定义基准测试组，实际上定义了一个函数。
-- 每个 group 内可以用 [BM_add](#bm_add) 定义多条基准测试。
-
-{{< hint warning >}}
-参数 `_name_` 是组名，也是所定义函数名的一部分，如 `BM_group(atomic)` 是合理的，而 `BM_group(co.atomic)` 则是不允许的。
-{{< /hint >}}
-
-
-
-
-### BM_add
-
-```cpp
-#define BM_add(_name_) \
-    _g_.bm = #_name_; \
-    _BM_add
-```
-
-- `BM_add` 宏用于定义基准测试，它必须在 [BM_group](#bm_group) 定义的函数内使用。
-
-{{< hint warning >}}
-参数 `_name_` 是基准测试名，与 `BM_group` 不同，`BM_add(co.atomic)` 也是允许的。
-{{< /hint >}}
-
-
-
-### BM_use
-
-```cpp
-#define BM_use(v) bm::xx::use(&v, sizeof(v))
-```
-
-- `BM_use` 宏告诉编译器变量 `v` 会被使用，防止编译器将一些测试代码优化掉。
-
-
-
-
-## 编写基准测试代码
-
-
-### 测试代码示例
+## 头文件
 
 ```cpp
 #include "co/benchmark.h"
-#include "co/mem.h"
+```
 
-BM_group(malloc) {
-    void* p;
 
-    BM_add(::malloc)(
-        p = ::malloc(32);
-    );
-    BM_use(p);
+## API
 
-    BM_add(co::alloc)(
-        p = co::alloc(32);
-    );
-    BM_use(p);
-}
+公开函数只有一个，在 `co` 命名空间：
+
+```cpp
+void co::run_benchmarks();
+```
+
+- 运行基准测试，测试结果以 markdown table 格式输出。
+- `main` 一般是固定写法：
+
+```cpp
+#include "co/benchmark.h"
 
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
-    bm::run_benchmarks();
+    co::run_benchmarks();
     return 0;
 }
 ```
 
-- 上面的代码定义了一个名为 `malloc` 的基准测试组，组内用 `BM_add` 添加了 2 个基准测试。
-- 调用 `bm::run_benchmarks()`，会执行所有的基准测试代码。
 
-{{< hint warning >}}
-上例中，若无 `BM_use(p)`，编译器可能认为 `p` 是未使用的变量，将相关的测试代码优化掉，导致无法测出准确的结果。
-{{< /hint >}}
+## 定义基准测试组
+
+```cpp
+BM_group(name) {
+    // BM_add(...) { ... }
+}
+```
+
+- `BM_group` 宏定义一个基准测试组，实际是一个函数，用户可以在其中自由添加公共初始化代码、预热代码等；
+- `name` 必须是合法变量名；
+- 有多个 `BM_group` 时，`name` 不能重复。
 
 
+## 定义基准测试用例
+
+```cpp
+BM_add(name) {
+    // 测试代码
+}
+```
+
+- `BM_add` 宏定义一个基准测试用例，实际是 `BM_group` 所定义函数中的代码块；
+- `name` 不要求是合法变量名；
 
 
-### 测试结果示例
+## 子组
+
+```cpp
+BM_sub_group_begin;
+```
+
+- 在 `BM_group` 内开启一个子组，子组之间独立比较。
+- 首个 `BM_sub_group_begin` 之前的 `BM_add` 归入默认子组。
+- 每个子组以第一个测试为基准，其余测试相对该基准计算 `speedup`。
+- 基准自身 `speedup` 显示为 `-`。
+
+
+## BM_use
+
+```cpp
+BM_use(v);
+```
+
+- 防止编译器优化掉测试代码。
+- 若测试代码被优化掉，`iters/s` 会异常大，此时可使用 `BM_use`。
+- 可用于任意变量，通常放在 `BM_add` 外部，以免干扰被测代码。
+
+
+## 运行逻辑
+
+- 每个 `BM_group` 内部定义一个 bool flag，默认值 `false`。
+- 若所有 group 的 flag 都是默认值，则运行所有 group。
+- 若有 flag 为 `true`，则只运行 flag 为 `true` 的 group。
+- group 按注册顺序执行。
+
+命令行示例：
+
+```bash
+./xx            # 运行所有 group
+./xx -rand      # 只运行 rand 这个 group
+./xx -rand -log # 只运行 rand 和 log 两个 group
+```
+
+
+## 示例
+
+```cpp
+#include "co/benchmark.h"
+#include "co/atomic.h"
+#include "co/rand.h"
+#include <random>
+
+BM_group(atomic) {
+    __cacheline_aligned int i = 0;
+
+    BM_add(atomic_inc) {
+        co::atomic_inc(&i);
+    }
+    BM_use(i);
+
+    BM_add(atomic_dec) {
+        co::atomic_dec(&i);
+    }
+    BM_use(i);
+
+    BM_add(atomic_cas) {
+        co::atomic_cas(&i, 0, 1);
+    }
+    BM_use(i);
+
+    BM_add(atomic_or) {
+        co::atomic_or(&i, 11);
+    }
+    BM_use(i);
+}
+
+BM_group(rand) {
+    // 预热
+    uint32 x = ::rand();
+    x += co::rand();
+
+    BM_sub_group_begin;
+    BM_add(::rand) {
+        x = ::rand();
+    }
+    BM_use(x);
+
+    BM_add(co::rand) {
+        x = co::rand();
+    }
+    BM_use(x);
+
+    uint32 seed = co::rand();
+    BM_add(co::rand(seed)) {
+        x = co::rand(seed);
+    }
+    BM_use(x);
+
+    std::mt19937 m(std::random_device{}());
+    BM_add(std::mt19937) {
+        x = m();
+    }
+    BM_use(x);
+
+    uint64 u;
+    BM_add(co::rand64) {
+        u = co::rand64();
+    }
+    BM_use(u);
+
+    uint64 seed64 = co::rand64();
+    BM_add(co::rand64(seed)) {
+        u = co::rand64(seed64);
+    }
+    BM_use(u);
+
+    BM_sub_group_begin;
+    BM_add(co::randstr) {
+        (void)co::randstr();
+    }
+
+    BM_add(co::randstr(charsets)) {
+        (void) co::randstr("0-9a-f", 15);
+    }
+
+    char buf[16];
+    BM_add(co::randchars) {
+        co::randchars(buf, sizeof(buf));
+    }
+    BM_use(buf);
+}
+
+int main(int argc, char** argv) {
+    flag::parse(argc, argv);
+    co::run_benchmarks();
+    return 0;
+}
+```
+
+运行:
+
+```bash
+./bm            # 运行 atomic 与 rand
+./bm -atomic    # 仅运行 atomic
+./bm -rand      # 仅运行 rand
+```
+
+测试结果:
 
 ![bm.png](/images/bm.png)
 
-- 基准测试结果输出为 markdown 表格，可以轻松将测试结果复制到 markdown 文档中。
-- 多个 `BM_group` 会生成多个 markdown 表格。
-- 表格第 1 列是 group 内的所有基准测试，第 2 列是单次迭代用时(单位为纳秒)，第 3 列是每秒迭代次数，第 4 列是性能提升倍数，以第一个基准测试为基准。
+- 输出结果是 Markdown table 格式。
+- `ns/iter`：每次迭代纳秒数。
+- `iters/s`：每秒迭代次数。
+- `speedup`：相对于测试基准的加速倍数。
+
+
+## 构建及运行 coost 内部基准测试
+
+[benchmark](https://github.com/idealvin/coost/tree/master/benchmark) 目录下是 coost 内部基准测试代码，在 coost 根目录执行下述命令构建及运行：
+
+```bash
+# 构建
+xmake b benchmark
+
+# 默认运行所有基准测试代码
+xmake r benchmark
+
+# 仅运行指定的基准测试
+xmake r benchmark -rand -mem
+```

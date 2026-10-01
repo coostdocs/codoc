@@ -10,11 +10,8 @@ title: "日志"
 #include <co/log.h>
 ```
 
-`co/log.h` 已经包含 `co/flag.h`。
-
 API 在 `log` 命名空间。
 
----
 
 ## 初始化与关闭
 
@@ -29,9 +26,8 @@ flag::parse(argc, argv);
 void log::close();
 ```
 
-说明：
-- 用户一般不需要显示调用此 API。
-- 调用此函数，会刷新日志缓冲，退出日志线程。
+- 刷新日志缓冲区，退出日志线程。
+- 用户一般不需要显示调用此函数。
 
 
 ## 打印日志
@@ -46,14 +42,13 @@ log::error(...);
 log::fatal(...);
 ```
 
-说明：
-- 日志函数是线程安全的；
-- 日志函数接受任意数量的参数；
+- 上述函数均线程安全，接受任意数量参数；
 - 参数可以是 `co::string::operator<<` 支持的任意类型；
-- 日志函数自动在尾部添加换行符；
-- `fatal` 级别的日志会终止程序运行。
+- 日志尾部自动添加换行；
+- `fatal` 级别日志会终止程序。
 
 示例：
+
 ```cpp
 log::info("hello ", false, ' ', 23);
 ```
@@ -63,16 +58,11 @@ log::info("hello ", false, ' ', 23);
 - 字符类型：`char, signed char, unsigned char`；
 - 整数类型；
 - 浮点数类型：`double, float`；
-- 字符串类型：`const char*`, `std::string`, `co::string`；
-- 指针类型：`void*, T*`，输出 `0x` 开头的十六进制值；
-- STL 容器：`std::vector, std::map, co::vector, co::map` 等，需要包含 `co/stl.h`。
+- 字符串类型：`const char*`, `co::string`, `std::string`, `std::string_view`；
+- 指针类型：`void*, T*`，输出 `0x` 加十六进制值；
+- STL 容器：`std::vector, std::map, co::vector, co::map` 等，需包含 `co/stl.h`。
 
-自定义类型需要实现：
-```cpp
-operator<<(co::string&, const T&);
-```
-
-示例：
+自定义类型需实现 `operator<<(co::string&, const T&)`，如：
 
 ```cpp
 struct Point {
@@ -98,7 +88,6 @@ int main(int argc, char** argv) {
 
 ## 断言
 
-提供以下断言接口：
 ```cpp
 log::check(cond, ...);
 log::check_eq(a, b, ...);
@@ -109,7 +98,11 @@ log::check_le(a, b, ...);
 log::check_ge(a, b, ...);
 ```
 
-示例：
+- check 失败，会刷新日志缓冲，打印堆栈信息，调用 `abort()` 终止程序；
+- check 成功，不会输出任何信息。
+
+示例:
+
 ```cpp
 log::check(1 + 1 == 2, "1+1 should be 2");
 log::check_eq(1 + 1, 2, "1+1 must == 2");
@@ -120,18 +113,16 @@ log::check_le(2, 2, "2 <= 2");
 log::check_ge(2, 2, "2 >= 2");
 ```
 
-- check 失败，会刷新日志缓冲，打印堆栈信息，调用 `abort()` 终止程序；
-- check 成功时，不会输出任何信息。
-
 
 ## 打印堆栈信息
 
 coost 会捕捉程序中产生的异常或异常信号，在程序崩溃退出前打印堆栈信息。
 
-在非 Windows 平台，此功能依赖 [libbacktrace](https://github.com/ianlancetaylor/libbacktrace)。Linux 上 GCC 一般已经内置 backtrace 库，macOS 通常需要用户手动安装。
+非 Windows 平台需要 [libbacktrace](https://github.com/ianlancetaylor/libbacktrace)。Linux 上 GCC 一般已内置 backtrace 库，macOS 通常需要用户手动安装。
 
 非 Windows 平台构建时用下述方式启用此功能：
-```sh
+
+```bash
 # xmake
 xmake f --with_backtrace=true   # 使用 backtrace 库
 xmake                           # 编译 libco
@@ -145,10 +136,10 @@ make -j8
 ```
 
 
-
 ## 写日志回调
 
-coost 日志默认写本地文件，用户可以调用如下 API 设置一个 callback，自定义日志输出目标：
+coost 日志默认写本地文件，用户可以设置一个 callback 写日志：
+
 ```cpp
 void log::set_write_cb(
     void(*cb)(const void* data, size_t size),
@@ -156,11 +147,13 @@ void log::set_write_cb(
 );
 ```
 
-说明：
-- `data` 中可能包含多条日志，`size` 可能很大，用 `UDP` 发送日志时需要注意。
-- callback 在写日志的线程中执行(**coost只有单个线程写日志**)。
-- 如果 `also_log2local == true`，日志也写本地文件。
-- **该函数建议在 `flag::parse` 前调用**，因为 `flag::parse` 在解析命令行参数后启动日志线程，在日志线程启动前设置 callback 更安全。
+- `data` 中可能包含多条日志，`size` 可能较大，用 `UDP` 发送日志需注意。
+- callback 日志线程中执行(**仅单个线程写日志**)。
+- 若 `also_log2local == true`，日志也写本地文件。
+
+{{< hint warning >}}
+需要在 `flag::parse` 前调用，`flag::parse` 解析命令行参数后会启动日志线程，在日志线程启动前设置 callback 更安全。
+{{< /hint >}}
 
 示例：
 
@@ -169,7 +162,7 @@ void log::set_write_cb(
 #include <stdio.h>
 
 static void my_write_cb(const void* data, size_t size) {
-    fwrite(data, 1, size, stdout);
+    fwrite(data, 1, size, stderr);
 }
 
 int main(int argc, char** argv) {
@@ -178,15 +171,12 @@ int main(int argc, char** argv) {
 
     log::info("hello ", 23);
     log::warn("warn ", false);
-
     return 0;
 }
 ```
 
 
 ## 日志配置项
-
-`log` 内部通过 [flag](../flag/) 定义了一些配置项，可通过命令行参数与配置文件控制日志行为。
 
 | flag 名               |     类型 |                 默认值 | 含义                                           |
 | --------------------- | -----: | ------------------: | -------------------------------------------- |

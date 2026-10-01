@@ -10,12 +10,8 @@ title: "基本定义"
 #include "co/def.h"
 ```
 
-coost 很多组件都会包含这个头文件。
-
 
 ## 整型别名
-
-以下类型别名定义在**全局命名空间**，不在 `co` 命名空间：
 
 ```cpp
 typedef int8_t  int8;
@@ -28,14 +24,10 @@ typedef uint32_t uint32;
 typedef uint64_t uint64;
 ```
 
-- 这些别名在 coost 中广泛使用，例如 `co::rand()` 返回 `uint32`，`co::now.ns()` 返回 `int64`。
-- 因为定义在全局命名空间，所以直接写 `int32`、`uint64` 即可，不需要 `co::` 前缀。
-
+- 定义在**全局命名空间**。
 
 
 ## 整型极值常量
-
-定义在 `co` 命名空间，均为 `constexpr`：
 
 ```cpp
 namespace co {
@@ -56,102 +48,9 @@ constexpr int64 min_int64 = (int64) ~max_int64;
 } // co
 ```
 
+- 定义在 `co` 命名空间，均为 `constexpr`。
 
-
-## 缓存行大小
-
-```cpp
-namespace co {
-
-#if defined(__s390x__)
-constexpr int cache_line_size = 256;
-#elif defined(__powerpc64__) || defined(_M_PPC64)
-constexpr int cache_line_size = 128;
-#elif defined(__aarch64__) || defined(_M_ARM64)
-constexpr int cache_line_size = 128;
-#else
-constexpr int cache_line_size = 64;
-#endif
-
-} // co
-```
-
-各架构对应值：
-
-| 架构 | 缓存行大小 |
-| --- | --- |
-| `S390X` | 256 |
-| PowerPC64 | 128 |
-| ARM64 | 128 |
-| 其它（x86、x64 等） | 64 |
-
-
-
-
-## 宏
-
-**`__arch64 & __arch32`**
-
-```cpp
-#if SIZE_MAX == UINT64_MAX
-#define __arch64 1
-#elif SIZE_MAX == UINT32_MAX
-#define __arch32 1
-#else
-#error "platform not supported"
-#endif
-```
-
-- 64 位平台定义 `__arch64`；
-- 32 位平台定义 `__arch32`；
-
-
-
-**`__cacheline_aligned`**
-
-```cpp
-#ifndef __cacheline_aligned
-#define __cacheline_aligned alignas(co::cache_line_size)
-#endif
-```
-
-用于让变量或结构体按缓存行对齐。
-
-示例：
-
-```cpp
-struct __cacheline_aligned Foo {
-    int x;
-};
-```
-
-**`__thread`**
-
-- 用于定义线程局部对象。
-
-示例：
-
-```cpp
-__thread int g_v;
-__thread void* g_p;
-```
-
-**`__unlikely`**
-
-- 提示编译器 `x` 为假的概率更高。
-- 旧版本中名为 `unlikey`，为避免与 C++20 中的 `[[unlikely]]` 属性冲突，改为 `__unlikely`。
-
-示例：
-
-```cpp
-fs::file f;
-bool r = f.open("xx.log", 'r');
-if (__unlikely(!r)) co::println("open file failed");
-```
-
-
-
-## 示例
+示例:
 
 ```cpp
 #include "co/def.h"
@@ -164,4 +63,95 @@ int main() {
     co::println("cache_line_size = ", co::cache_line_size);
     return 0;
 }
+```
+
+
+## 缓存行大小
+
+提供编译期常量 `co::cache_line_size`，常用于内存对齐、避免伪共享。各架构取值如下：
+
+| 架构 | `co::cache_line_size` |
+| --- | --- |
+| S390X | 256 |
+| PowerPC64 | 128 |
+| ARM64 | 128 |
+| 其它（x86、x64 等） | 64 |
+
+{{< hint warning >}}
+`co::cache_line_size` 可能大于实际缓存行大小，对齐或填充时会多占少量内存，通常影响较小。
+{{< /hint >}}
+
+示例:
+
+```cpp
+// 分配缓存行对齐的内存
+co::alloc(n, co::cache_line_size);
+```
+
+
+## 宏
+
+### 架构
+
+```cpp
+#if SIZE_MAX == UINT64_MAX
+#define __arch64 1
+#elif SIZE_MAX == UINT32_MAX
+#define __arch32 1
+#else
+#error "platform not supported"
+#endif
+```
+
+- 64 位平台定义 `__arch64` 宏，值为 1；
+- 32 位平台定义 `__arch32` 宏，值为 1；
+
+### 缓存行对齐
+
+```cpp
+#ifndef __cacheline_aligned
+#define __cacheline_aligned alignas(co::cache_line_size)
+#endif
+```
+
+- `__cacheline_aligned` 宏让变量或结构体按缓存行对齐。
+
+示例：
+
+```cpp
+struct __cacheline_aligned Foo {
+    int x;
+};
+```
+
+### 线程局部存储
+
+```cpp
+#ifdef _MSC_VER
+#ifndef __thread
+#define __thread __declspec(thread)
+#endif
+#endif
+```
+
+- `__thread` 用于定义线程局部变量；
+- gcc/clang 已内置 `__thread`，Windows 上(使用 MSVC)将其定义为 `__declspec(thread)`。
+
+示例：
+
+```cpp
+__thread int g_v;
+__thread void* g_p;
+```
+
+### `__unlikely` 宏
+
+- 提示编译器条件为假概率更高。
+- 旧版本中名为 `unlikey`，为避免与 C++20 `[[unlikely]]` 冲突，改为 `__unlikely`。
+
+示例：
+
+```cpp
+fs::file f("xx.log", 'r');
+if (__unlikely(!f)) co::println("open file failed");
 ```

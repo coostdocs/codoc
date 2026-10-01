@@ -60,7 +60,6 @@ int main() {
     co::println("max_uint32 = ", co::max_uint32);
     co::println("max_int32  = ", co::max_int32);
     co::println("min_int32  = ", co::min_int32);
-    co::println("cache_line_size = ", co::cache_line_size);
     return 0;
 }
 ```

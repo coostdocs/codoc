@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
 
 ## 混用 print 与 println 注意事项
 
-`co::print` 和 `co::println` 使用**完全独立的线程局部缓冲区**，二者混用时，不一定按代码顺序输出到终端，如：
+`co::print` 和 `co::println` 使用**独立线程局部缓冲区**，二者混用时，不一定按代码顺序输出到终端，如：
 
 ```cpp
 co::print("a");

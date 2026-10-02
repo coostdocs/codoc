@@ -26,8 +26,8 @@ any(any& v);              // 移动（非 const）
 any(const any&) = delete;
 void operator=(const any&) = delete;
 
-any& operator=(any&& v);
-any& operator=(any& v);
+any& operator=(any&& v);  // 移动
+any& operator=(any& v);   // 移动
 
 any dup() const;          // 显式深拷贝
 
@@ -98,13 +98,13 @@ co::string  as_string() const;
 若 JSON 不是相应类型，`as_xxx()` 会尝试类型转换：
 
 - `as_bool()`：非 0 为 true，字符串 `"true"` 或 `"1"` 为 true，其余 false。
-- `as_int64()`：字符串用 `co::stoi64`。
-- `as_double()`：字符串用 `co::stod`。
+- `as_int64()`：字符串用 [co::stoi64](../string/#字符串转数值)。
+- `as_double()`：字符串用 [co::stod](../string/#字符串转数值)。
 - `as_c_str()`：非 string 返回 `""`。
 - `as_string()`：null 返回 `""`，非 string 返回 `str()`。
 
 
-### 访问与修改(get/set)
+### 访问与修改
 
 ```cpp
 any& get() const;
@@ -176,13 +176,11 @@ void erase(int i);
 void erase(const char* key);
 ```
 
-- `add_member` 添加 key-value 到 object 中(非 object 先重置为 object)，允许重复 key；
-- `push_back` 添加元素到 array 末尾(非 array 先重置为 array)；
+- `add_member` 添加 key-value 到 object 中(非 object 先重置为 object)，允许重复 key。
+- `push_back` 添加元素到 array 末尾(非 array 先重置为 array)。
 - 参数 `v` 采用 move 语义；调用后 `v` 变为 null。
-
 - `remove`、`erase` 删除 array 或 object 中元素。
-- `remove` 是 O(1)，`erase` 是 O(n)。
-
+- `remove` 是 `O(1)`，可能打乱元素顺序；`erase` 是 `O(n)`，移动元素保持顺序。
 
 示例:
 

@@ -133,7 +133,7 @@ const any& operator[](const char* key) const noexcept;
 - `set` 不存在时创建，最后一个参数是值，其余参数是索引或 key。
 - `operator[]`:
   - const 版本只读，等价于 `get(i)` / `get(key)`;
-  - 非 const 版本不存在时创建对应元素或成员，并返回可写引用；若当前类型不匹配，会先重置为 array 或 object。
+  - 非 const 版本不存在时创建，若当前类型不匹配，会先重置为 array 或 object。
 
 示例:
 

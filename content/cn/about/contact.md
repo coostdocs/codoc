@@ -1,9 +1,7 @@
 ---
 weight: 5
-title: "联系"
+title: "联系方式"
 ---
-
-**联系方式**
 
 - Email:   idealvin at qq.com
 - github:  [https://github.com/idealvin/coost](https://github.com/idealvin/coost)

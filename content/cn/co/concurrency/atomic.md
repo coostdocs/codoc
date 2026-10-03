@@ -36,8 +36,8 @@ template<typename T, typename V>
 void atomic_store(T* p, V v, memorder_t mo = mo_seq_cst);
 ```
 
-- `atomic_load` 支持内存序：`mo_relaxed`、`mo_consume`、`mo_acquire`、`mo_seq_cst`。
-- `atomic_store` 支持内存序：`mo_relaxed`、`mo_release`、`mo_seq_cst`。
+- `atomic_load` 支持：`mo_relaxed`、`mo_consume`、`mo_acquire`、`mo_seq_cst`。
+- `atomic_store` 支持：`mo_relaxed`、`mo_release`、`mo_seq_cst`。
 
 示例:
 

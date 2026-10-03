@@ -13,7 +13,7 @@ title: "随机值"
 API 在 `co` 命名空间，无需 `flag::parse`。
 
 
-## 接口
+## 随机数
 
 ```cpp
 // 线程安全，返回 0 < x < 2^31-1
@@ -27,7 +27,17 @@ uint64 co::rand64();
 
 // splitmix64，seed 可为 0，调用后更新
 uint64 co::rand64(uint64& seed);
+```
 
+- `rand()` / `rand64()` 线程安全，内部使用 thread_local 状态。
+- `rand(seed)` 的 seed 不能为 0，否则后续返回值恒为 0；也不能为 `2^31-1`。
+- `rand64(seed)` 对 seed 初值无要求。
+- 带 seed 的版本线程安全取决于调用方对 seed 的使用。
+
+
+## 随机字符串
+
+```cpp
 // 写随机字符到 buf，末尾不添加 '\0'
 void co::randchars(void* buf, size_t bufsize);
 
@@ -38,12 +48,10 @@ co::string co::randstr(uint32 n=15);
 co::string co::randstr(const char* charset, uint32 n);
 ```
 
-- `rand()` / `rand64()` / `randstr()` 线程安全，内部使用 thread_local 状态。
-- `rand(seed)` 的 seed 不能为 0，否则后续返回值恒为 0；也不能为 `2^31-1`。
-- `rand64(seed)` 对 seed 初值无要求。
+- `randstr()` 线程安全，内部使用 thread_local 状态。
 - `randchars` 默认字符集：`a-z`、`A-Z`、`0-9`、`_`、`-`，共 64 个字符。
 - `randstr(charset, n)` 支持范围缩写，如 `"0-9"`、`"a-f"`、`"0-9A-Za-z"`。
-- 带 seed 的版本线程安全取决于调用方对 seed 的使用。
+- `randchars` 不写结尾 `'\0'`。
 
 
 ## 示例
@@ -53,6 +61,7 @@ co::string co::randstr(const char* charset, uint32 n);
 #include "co/print.h"
 
 int main() {
+    // 随机数
     co::println("rand()   = ", co::rand());
     co::println("rand64() = ", co::rand64());
 
@@ -64,6 +73,7 @@ int main() {
     co::println("rand64(seed) = ", co::rand64(seed64));
     co::println("seed64 = ", seed64);
 
+    // 随机字符串
     co::println("randstr()        = ", co::randstr());
     co::println("randstr(8)       = ", co::randstr(8));
     co::println("randstr(0-9, 8)  = ", co::randstr("0-9", 8));

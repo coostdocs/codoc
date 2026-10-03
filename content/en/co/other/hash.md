@@ -1,225 +1,136 @@
 ---
-weight: 8
-title: "Hash"
+weight: 13
+title: "Hash and Encoding"
 ---
 
-include: [co/hash.h](https://github.com/idealvin/coost/blob/master/include/co/hash.h).
-
-
-## Hash
-
-### hash32
+## Header
 
 ```cpp
-uint32 hash32(const void* s, size_t n);
-uint32 hash32(const char* s);
-uint32 hash32(const fastring& s)
-uint32 hash32(const std::string& s);
+#include "co/base64.h"
+#include "co/md5.h"
+#include "co/murmur_hash.h"
+#include "co/sha256.h"
 ```
 
-- This function returns a 32-bit murmur hash value.
-- When `s` is a pointer, it is required to be `sizeof(void*)` byte aligned.
+The API is in the `co` namespace. All functions have overloads for `(const void*, size_t)`, `(const char*)`, `(const co::string&)`, and `(const std::string&)`.
 
-
-
-### hash64
+## base64
 
 ```cpp
-uint64 hash64(const void* s, size_t n);
-uint64 hash64(const char* s);
-uint64 hash64(const fastring& s);
-uint64 hash64(const std::string& s);
+co::string co::base64_encode(const void* s, size_t n);
+co::string co::base64_decode(const void* s, size_t n);
 ```
 
-- This function returns a 64-bit murmur hash value.
-- When `s` is a pointer, it is required to be 8-byte aligned.
-
-
-
-### murmur_hash
-
-```cpp
-size_t murmur_hash(const void* s, size_t n);
-```
-
-- This function returns a hash value of `size_t` type. This value is 64-bit on 64-bit platform and 32-bit on 32-bit platform.
-- The parameter s is generally required to be `sizeof(void*)` byte-aligned.
-
-
-
+- base64 encoding / decoding.
+- `decode` returns an empty string on error.
 
 ## md5
 
-### md5digest
-
 ```cpp
-void md5digest(const void* s, size_t n, char res[16]);
-fastring md5digest(const void* s, size_t n);
-fastring md5digest(const char* s);
-fastring md5digest(const fastring& s);
-fastring md5digest(const std::string& s);
-```
+typedef struct {
+    uint32 lo, hi;
+    uint32 a, b, c, d;
+    uint8  buffer[64];
+    uint32 block[16];
+} md5_ctx_t;
 
-- This function calculates the md5 of a string and returns a 16-byte binary string.
-
-
-
-### md5sum
-
-```cpp
-void md5sum(const void* s, size_t n, char res[32]);
-fastring md5sum(const void* s, size_t n);
-fastring md5sum(const char* s);
-fastring md5sum(const fastring& s);
-fastring md5sum(const std::string& s);
-```
-
-- This function calculates the md5 of a string and returns a 32-byte string containing only hexadecimal characters(0-9,a-f).
-
-
-
-### Lower level APIs
-
-```cpp
 void md5_init(md5_ctx_t* ctx);
 void md5_update(md5_ctx_t* ctx, const void* s, size_t n);
 void md5_final(md5_ctx_t* ctx, uint8 res[16]);
 ```
 
-- The above 3 APIs can be used to calculate md5 incrementally.
+- Streaming interface, suitable for large files.
 
-
-- Example
+### md5digest
 
 ```cpp
-char buf[4096];
-uint8 res[16];
-md5_ctx_t ctx;
-md5_init(&ctx);
-
-while (true) {
-    int r = read(fd, buf, 4096);
-    if (r > 0) {
-        md5_update(&ctx, buf, r);
-    } else {
-        break;
-    }
-}
-
-md5_final(&ctx, res);
+void md5digest(const void* s, size_t n, char res[16]);
+co::string md5digest(const void* s, size_t n);
 ```
 
+- Outputs 16-byte binary.
 
+### md5sum
 
+```cpp
+void md5sum(const void* s, size_t n, char res[32]);
+co::string md5sum(const void* s, size_t n);
+```
+
+- Outputs a 32-byte hexadecimal string.
 
 ## sha256
 
-### sha256digest
-
 ```cpp
-void sha256digest(const void* s, size_t n, char res[32]);
-fastring sha256digest(const void* s, size_t n);
-fastring sha256digest(const char* s);
-fastring sha256digest(const fastring& s);
-fastring sha256digest(const std::string& s);
-```
+typedef struct {
+    uint32 state[8];
+    uint64 count;
+    uint8  buffer[64];
+} sha256_ctx_t;
 
-- This function calculates the sha256 of a string and returns a 32-byte binary string.
-
-
-
-### sha256sum
-
-```cpp
-void sha256sum(const void* s, size_t n, char res[64]);
-fastring sha256sum(const void* s, size_t n);
-fastring sha256sum(const char* s);
-fastring sha256sum(const fastring& s);
-fastring sha256sum(const std::string& s);
-```
-
-- This function calculates the sha256 of a string and returns a 64-byte string containing only hexadecimal characters(0-9,a-f).
-
-
-
-### Lower level APIs
-
-```cpp
 void sha256_init(sha256_ctx_t* ctx);
 void sha256_update(sha256_ctx_t* ctx, const void* s, size_t n);
 void sha256_final(sha256_ctx_t* ctx, uint8 res[32]);
 ```
 
-- The above 3 APIs can be used to calculate sha256 incrementally like that in md5.
+- Streaming interface.
 
-
-
-
-## base64
-
-### base64_encode
+### sha256digest
 
 ```cpp
-fastring base64_encode(const void* s, size_t n);
-fastring base64_encode(const char* s);
-fastring base64_encode(const fastring& s);
-fastring base64_encode(const std::string& s);
+void sha256digest(const void* s, size_t n, char res[32]);
+co::string sha256digest(const void* s, size_t n);
 ```
 
-- `base64` encoding, `\r\n` is not added in this implementation.
+- Outputs 32-byte binary.
 
-
-
-### base64_decode
+### sha256sum
 
 ```cpp
-fastring base64_decode(const void* s, size_t n);
-fastring base64_decode(const char* s);
-fastring base64_decode(const fastring& s);
-fastring base64_decode(const std::string& s);
+void sha256sum(const void* s, size_t n, char res[64]);
+co::string sha256sum(const void* s, size_t n);
 ```
 
-- `base64` decoding, if the input is not valid base64-encoded data, the decoding will fail and an empty string will be returned.
+- Outputs a 64-byte hexadecimal string.
 
-
-
-
-## url
-
-### url_encode
+## murmur_hash
 
 ```cpp
-fastring url_encode(const void* s, size_t n);
-fastring url_encode(const char* s);
-fastring url_encode(const fastring& s);
-fastring url_encode(const std::string& s);
+size_t co::murmur_hash(const void* s, size_t n);
 ```
 
-- url encoding, reserved characters `!()*#$&'+,/:;=?@[]` and `a-z A-Z 0-9 -_.~` will not be encoded, all other characters will be encoded.
+- Non-cryptographic hash, returns `size_t`.
+- Suitable for hashing and indexing; not for security scenarios.
 
-
-
-### url_decode
+## Example
 
 ```cpp
-fastring url_decode(const void* s, size_t n);
-fastring url_decode(const char* s);
-fastring url_decode(const fastring& s);
-fastring url_decode(const std::string& s);
+#include "co/base64.h"
+#include "co/md5.h"
+#include "co/sha256.h"
+#include "co/murmur_hash.h"
+#include "co/print.h"
+
+int main() {
+    const char* s = "hello";
+
+    co::println("base64 = ", co::base64_encode(s));
+    co::println("decode = ", co::base64_decode("aGVsbG8="));
+
+    co::println("md5sum  = ", co::md5sum(s));
+    co::println("sha256sum = ", co::sha256sum(s));
+
+    co::println("murmur = ", co::murmur_hash(s, strlen(s)));
+
+    // streaming md5
+    md5_ctx_t ctx;
+    co::md5_init(&ctx);
+    co::md5_update(&ctx, "he", 2);
+    co::md5_update(&ctx, "llo", 3);
+    char res[16];
+    co::md5_final(&ctx, (uint8*)res);
+    co::println("md5digest = ", co::string(res, 16));
+
+    return 0;
+}
 ```
-
-- url decoding, if the input is not a reasonably encoded url, the decoding will fail and an empty string will be returned.
-
-
-
-
-## crc16
-
-```cpp
-uint16_t crc16(const void* s, size_t n);
-uint16_t crc16(const char* s);
-uint16_t crc16(const fastring& s);
-uint16_t crc16(const std::string& s);
-```
-
-- This function calculates the crc16 value of a string. The implementation is taken from [redis](https://github.com/antirez/redis/) and will be used when implementing the redis cluster client.

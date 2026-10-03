@@ -1,9 +1,9 @@
 ---
-weight: 2
+weight: 5
 title: "Contact"
 ---
 
-**Contact**
+**You can contact the author in the following ways**:
 
 - Email:   idealvin at qq.com
 - github:  [https://github.com/idealvin/coost](https://github.com/idealvin/coost)

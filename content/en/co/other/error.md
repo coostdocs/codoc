@@ -3,27 +3,32 @@ weight: 2
 title: "Error"
 ---
 
-include: [co/error.h](https://github.com/idealvin/coost/blob/master/include/co/error.h).
+## Header
 
+```cpp
+#include "co/error.h"
+```
+
+The API is in the `co` namespace.
 
 ## co::error
 
 ```cpp
-1. int error();
-2. void error(int e);
+int error();
+void error(int e);
 ```
 
-- 1, returns the current error code.
-- 2, set the current error code to `e`.
-
-
+- `error()` returns the current error code.
+- `error(e)` sets the current error code to `e`.
+- Thread-safe.
 
 ## co::strerror
 
 ```cpp
-1. const char* strerror(int e);
-2. const char* strerror();
+const char* strerror(int e);
+const char* strerror();
 ```
 
-- 1, get the description information of the error code `e`, thread-safe.
-- 2, get the description information of the current error code, thread-safe.
+- Returns the description corresponding to `e` or the current error code.
+- Thread-safe.
+- The returned string must not be stored for a long time.

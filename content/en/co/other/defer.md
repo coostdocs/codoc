@@ -3,24 +3,28 @@ weight: 2
 title: "defer"
 ---
 
-include: [co/defer.h](https://github.com/idealvin/coost/blob/master/include/co/defer.h).
+## Header
 
+```cpp
+#include "co/defer.h"
+```
 
 ## defer
 
-**defer** is a macro provided by coost, which is similar to defer in golang. It accepts one or more statements as the arguments.
+- The **defer** macro implements functionality similar to defer in golang.
+- The defer argument can be one or more statements.
 
 ```cpp
 void f() {
-     void* p = malloc(32);
-     defer(free(p));
+    void* p = co::alloc(32);
+    defer(co::free(p, 32));
 
-     defer(
-         std::cout << "111" << std::endl;
-         std::cout << "222" << std::endl;
-     );
-     std::cout << "333" << std::endl;
+    defer(
+        co::println("111");
+        co::println("222");
+    );
+    co::println("333");
 }
 ```
 
-In the above example, the code in `defer` will be executed at the end of function `f`, so `333` is printed before `111` and `222`.
+In the above example, the code in `defer` will be executed when the function `f` ends, so `333` is printed before `111` and `222`.

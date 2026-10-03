@@ -1,30 +1,47 @@
 ---
 weight: 1
-title: "Byte order"
+title: "Byte Order"
 ---
 
-include: [co/byte_order.h](https://github.com/idealvin/coost/blob/master/include/co/byte_order.h).
 
-
-Data in the computer is stored in bytes (8 bit). Big-endian computers use big-endian byte order, that is, the high-order byte is at the lower address, and the low-order byte is at the higher address. The little-endian machine uses little-endian byte order, that is, the low-order byte is at the lower address, and the high-order byte is at the higher address. 
-
-
-A single byte is exactly the same on big endian and little endian machines, while basic data types of multiple bytes are different. The basic data types mentioned here refer to built-in types like `int`, `double`. String is not included here, as it is a sequence of single byte and have the same storage format on big or little endian machines. 
-
-The data transmitted on network is in big-endian byte order, which is also called network byte order. When sending data to the network, the basic multi-byte type needs to be converted into network byte order, and when receiving data from the network, it needs to be converted into the byte order of the host. 
-
-
-`byte_order.h` defines the following methods:
+## Header
 
 ```cpp
-ntoh16 ntoh32 ntoh64
-hton16 hton32 hton64
+#include "co/byte_order.h"
 ```
 
-These methods are applicable to integers with lengths of 2, 4, and 8 bytes. The `ntoh` series converts network byte order to host byte order, and the `hton` series converts host byte order to network byte order. . 
+The API is in the `co` namespace.
 
 
-- Code example
+## Overview
+
+- Data is stored in memory with bytes (8 bits) as the basic unit.
+- Big-endian machine: high-order bytes are at lower addresses, low-order bytes are at higher addresses.
+- Little-endian machine: low-order bytes are at lower addresses, high-order bytes are at higher addresses.
+- A single byte is identical on big-endian and little-endian machines.
+- Multi-byte primitive types (such as `int`, `double`) have different byte orders on big-endian and little-endian machines.
+- Strings (co::string / std::string) are composed of single bytes and are not affected by byte order.
+- Network transmission uses big-endian byte order (network byte order).
+
+Before sending data to the network, multi-byte primitive types must be converted to network byte order; after receiving, they must be converted back to host byte order.
+
+
+## API
+
+```cpp
+uint16 hton16(uint16 v);
+uint32 hton32(uint32 v);
+uint64 hton64(uint64 v);
+uint16 ntoh16(uint16 v);
+uint32 ntoh32(uint32 v);
+uint64 ntoh64(uint64 v);
+```
+
+- They apply to 2-, 4-, and 8-byte integers respectively.
+- The `hton` series: host byte order → network byte order.
+- The `ntoh` series: network byte order → host byte order.
+
+Example:
 
 ```cpp
 uint32 h = 777;

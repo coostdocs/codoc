@@ -1,230 +1,128 @@
 ---
 weight: 32
-title: "Compiling"
+title: "Compilation"
 ---
 
+## Compiler Requirements
 
-## Compiler requirements
+**The latest version of coost requires compiler support for C++17**:
 
-The compilers required are as follows:
+- Linux: [gcc](https://gcc.gnu.org/projects/cxx-status.html#cxx17)
+- Mac: [clang](https://clang.llvm.org/cxx_status.html)
+- Windows: [MSVC](https://visualstudio.microsoft.com/)
 
-- Linux: [gcc 4.8+](https://gcc.gnu.org/projects/cxx-status.html#cxx11)
-- Mac: [clang 3.3+](https://clang.llvm.org/cxx_status.html)
-- Windows: [vs2015+](https://visualstudio.microsoft.com/)
+## Building with xmake
 
+coost recommends using [xmake](https://github.com/xmake-io/xmake) as the build tool.
 
-
-
-## xmake
-
-Coost recommends using [xmake](https://github.com/xmake-io/xmake) as the build tool. 
-
-
-
-### Install xmake
-
-For Windows, mac and debian/ubuntu, you can go directly to the [release page of xmake](https://github.com/xmake-io/xmake/releases) to get the installation package. For other systems, please refer to xmake's [Installation instructions](https://xmake.io/#/guide/installation).
-
-
-
-### Build
-
-Run commands below in the root directory of co to build libco and other projects:
+### Quick Start
 
 ```sh
-xmake -a   # build all projects (libco, gen, test, unitest)
+# All commands are executed in the coost root directory; this will not be repeated below.
+xmake       # Build libco by default
+xmake -a    # Build all projects (libco, benchmark, gen, test, unitest)
 ```
 
-To enable HTTP and SSL features, build with the following commands:
-
-```sh
-xmake f --with_libcurl=true --with_openssl=true
-xmake -a
-```
-
-Xmake may install libcurl and openssl from the network, which may be slow.
-
-`-a` in the command line means to build all projects in coost. If `-a` is not added, only libco will be built by default. In addition, users may use `-v` or `-vD` to print more detailed compiling information:
+In addition, you can use `-v` or `-vD` to make xmake print more detailed compilation information:
 
 ```sh
 xmake -v -a
 ```
 
+### Enable the backtrace feature
 
-### Compiling options
+To print stack traces when a program crashes on Linux and macOS, [libbacktrace](https://github.com/ianlancetaylor/libbacktrace) is required. Newer versions of gcc on Linux have a built-in backtrace library; on macOS it generally needs to be installed manually.
 
-Xmake provides the `xmake f` command to configure compiling options. Note that **multiple options must be set in a single xmake f command**.
-
-
-#### Build debug version of libco
-
-```bash
-xmake f -m debug
+```sh
+# First use xmake f to enable the backtrace feature, then compile.
+xmake f --with_backtrace=true
 xmake -v
 ```
 
+### Install libco
 
-#### Build dynamic library
-
-```bash
-xmake f -k shared
-xmake -v
+```sh
+xmake install -o pkg          # Package and install to the pkg directory
+xmake i -o pkg                # Same as above
+xmake install -o /usr/local   # Install to the /usr/local directory
 ```
 
+### Build and Run coost Test Code
 
-#### Build 32-bit libco
+- Unit test code [unitest](https://github.com/idealvin/coost/tree/master/unitest):
 
-- Windows
-
-```bash
-xmake f -a x86
-xmake -v
+```sh
+xmake b unitest
+xmake r unitest            # Run all unit tests
+xmake r unitest -os -json  # Run only os, json
 ```
 
-- Linux
+- Benchmark test code [benchmark](https://github.com/idealvin/coost/tree/master/benchmark):
 
-```bash
-xmake f -a i386
-xmake -v
+```sh
+xmake b benchmark
+xmake r benchmark             # Run all benchmarks
+xmake r benchmark -mem -rand  # Run only mem, rand 
 ```
 
-The `-a` in `xmake f` command means arch. The arch supported by different platforms may be different. Run `xmake f --help` to see the details.
+- Other test code [test](https://github.com/idealvin/coost/tree/master/test):
 
+```sh
+# For xx.cc in the directory, use xmake b xx to compile.
+xmake b flag                   # Compile test/flag.cc
+xmake b log                    # Compile test/log.cc
+xmake b json                   # Compile test/json.cc
+xmake b rpc                    # Compile test/rpc.cc
 
-#### set vs_runtime on Windows
-
-On Windows, CO uses the **MT** runtime library by default, and users can use `xmake f` to configure it:
-
-```cpp
-xmake f --vs_runtime=MD
-xmake -v
+xmake r flag -xz               # Run the flag test program
+xmake r log -also_log2console  # Run the log test program
+xmake r log -perf              # log performance test
+xmake r json                   # Run the json test program
+xmake r rpc                    # Start rpc server
+xmake r rpc -c                 # Start rpc client
 ```
 
+### Other Compilation Options
 
-#### Android and IOS support
+Execute the following command to view supported compilation options:
 
-Coost can also be built on Android and IOS platforms, see [Github Actions](https://github.com/idealvin/coost/actions) for details. Coost has not been tested on Android and IOS yet.
-
-- android
-
-```bash
-xmake f -p android --ndk=/path/to/android-ndk-r21
-xmake -v
+```sh
+xmake f --help
 ```
 
-- ios
+### Build the code generation tool gen
 
 ```bash
-xmake f -p iphoneos
-xmake -v
-```
-
-
-
-### Build and run unitest code
-
-[co/unitest](https://github.com/idealvin/coost/tree/master/unitest) contains some unit test code, run the following commands to build and run the test program:
-
-```bash
-xmake -b unitest       # build unitest
-xmake r unitest -a     # run all unit tests
-xmake r unitest -os    # run unit test: os
-xmake r unitest -json  # run unit test: json
-```
-
-
-
-### Build and run test code
-
-[co/test](https://github.com/idealvin/coost/tree/master/test) contains some test code, add `xx.cc` source file in the co/test directory or its subdirectories, and then run `xmake -b xx` in the root directory of CO to build it.
-
-```bash
-xmake -b flag      # compile test/flag.cc
-xmake -b log       # compile test/log.cc
-xmake -b json      # compile test/json.cc
-xmake -b rpc       # compile test/rpc.cc
-
-xmake r flag -xz   # test flag library
-xmake r log        # test log library
-xmake r log -cout  # also log to terminal
-xmake r log -perf  # test performance of log library
-xmake r json       # test json
-xmake r rpc        # start rpc server
-xmake r rpc -c     # start rpc client
-```
-
-
-
-### Build and use gen
-
-```bash
-xmake -b gen
+xmake b gen
 cp gen /usr/local/bin/
 gen hello_world.proto
 ```
 
+## Building with cmake
 
+### Build libco
 
-### Install libco
-
-After building libco, you can use the `xmake install` command to install libco to the specified directory:
-
-```bash
-xmake install -o pkg   # install to pkg
-xmake i -o pkg         # same as above
-xmake i -o /usr/local  # install to /usr/local
-```
-
-
-
-### Install libco from xmake repo
-
-```cpp
-xrepo install -f "openssl=true,libcurl=true" coost
-```
-
-
-
-
-## cmake
-
-[izhengfan](https://github.com/izhengfan) helped to provide the cmakefile:
-
-- Only build libco by default.
-- The library files are in build/lib directory, and the executable files are in build/bin directory.
-- You can use **BUILD_ALL** to build all projects.
-- You can use **CMAKE_INSTALL_PREFIX** to specify the installation directory.
-
-
-
-### Build libco by default
-
-```bash
-mkdir build && cd build
+```sh
+mkdir cmakebuild && cd cmakebuild
 cmake ..
 make -j8
 ```
 
-
-
 ### Build all projects
 
-```bash
-mkdir build && cd build
+```sh
+mkdir cmakebuild && cd cmakebuild
 cmake .. -DBUILD_ALL=ON -DCMAKE_INSTALL_PREFIX=/usr/local
 make -j8
-make install
+
+cd bin
+./unitest  # Run the unit test program
 ```
 
-
-
-### Enable HTTP and SSL features
-
-To use HTTP or SSL features, libcurl, zlib, and openssl 1.1.0 or above must be installed.
+### Enable the backtrace feature
 
 ```sh
-mkdir build && cd build
-cmake .. -DBUILD_ALL=ON -DWITH_LIBCURL=ON -DWITH_OPENSSL=ON
+mkdir cmakebuild && cd cmakebuild
+cmake .. -DWITH_BACKTRACE=ON -DBUILD_ALL=ON
 make -j8
 ```
-

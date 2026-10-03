@@ -1,115 +1,97 @@
 ---
-weight: 13
+weight: 12
 title: "Operating System"
 ---
 
-include: [co/os.h](https://github.com/idealvin/coost/blob/master/include/co/os.h).
-
-
-## os
-
-
-### os::cpunum
+## Header
 
 ```cpp
-int cpunum();
+#include "co/os.h"
 ```
 
-- Returns the number of system CPU cores.
+The API is in the `os` namespace; `flag::parse` is not required.
 
-
-
-### os::cwd
+## Environment Variables
 
 ```cpp
-fastring cwd();
+co::string os::env(const char* name);
+bool       os::env(const char* name, const char* value);
 ```
 
-- Returns path of the current working directory.
-- On windows, `\` in the results will be converted to `/`.
+- `env(name)`: gets the value of an environment variable; returns an empty string if it does not exist.
+- `env(name, value)`: sets the value of an environment variable. If `value` is `nullptr` or an empty string, the variable is deleted. Returns `true` on success.
+- The value is not UTF-8 transcoded.
 
-
-
-### os::daemon
+## Paths
 
 ```cpp
-void daemon();
+co::string os::homedir();  // current user's home directory
+co::string os::cwd();      // current working directory
+co::string os::exepath();  // executable file path
+co::string os::exedir();   // directory containing the executable
+co::string os::exename();  // executable file name
 ```
 
-- Put the current process to run in the background, **for linux only**.
+- Returns an empty string on failure.
+- On Windows, returns UTF-8, consistent with `fs`.
+- `exename()` includes the extension.
 
-
-
-### os::env
+## Process and Hardware
 
 ```cpp
-1. fastring env(const char* name);
-2. bool env(const char* name, const char* value);
+int    os::pid();
+int    os::cpunum();
+size_t os::pagesize();
 ```
 
-- 1, get value of the environment variable.
-- 2, added in v2.0.2, set value of the environment variable, return true on success, otherwise false.
+- `pid()`: current process id.
+- `cpunum()`: number of logical CPU cores.
+- `pagesize()`: page size (in bytes).
 
-
-
-### os::exename
-
-```cpp
-fastring exename();
-```
-
-- Returns name of the current process (without path).
-
-
-
-### os::exepath
-
-```cpp
-fastring exepath();
-```
-
-- Returns the full path of the current process.
-- On windows, `\` in the results will be converted to `/`.
-
-
-
-### os::homedir
-
-```cpp
-fastring homedir();
-```
-
-- Returns path of the home directory of the current user.
-- On windows, `\` in the results will be converted to `/`.
-
-
-
-### os::pid
-
-```cpp
-int pid();
-```
-
-- Returns the id of the current process.
-
-
-
-### os::signal
+## Signals
 
 ```cpp
 typedef void (*sig_handler_t)(int);
-sig_handler_t signal(int sig, sig_handler_t handler, int flag=0);
+
+sig_handler_t os::signal(int sig, sig_handler_t handler, int flag=0);
 ```
 
-- Set a handler for a signal, the parameter `sig` is the signal value, and the parameter `flag` is the combination of `SA_RESTART`, `SA_ONSTACK` or other options.
-- The parameter `flag` is only applicable to linux/mac platforms.
-- This function returns the old signal handler.
+- Just a simple wrapper around `::signal`.
+- Returns the old handler.
+- `flag` is not supported on Windows.
 
-- Example
+## Executing Commands
 
 ```cpp
-void f(int);
-os::signal(SIGINT, f);        // user defined handler
-os::signal(SIGABRT, SIG_DFL); // default handler
-os::signal(SIGPIPE, SIG_IGN); // ignore SIGPIPE
+bool os::system(const char* cmd);
+```
+
+- There is no `std::string` overload; you need to call `.c_str()` first.
+- On non-Windows, it is based on `popen` / `pclose`; output goes directly to the terminal.
+- Returns `bool`, indicating whether the command executed successfully.
+
+## Example
+
+```cpp
+#include "co/os.h"
+#include "co/print.h"
+
+int main() {
+    co::println("homedir = ", os::homedir());
+    co::println("cwd     = ", os::cwd());
+    co::println("exepath = ", os::exepath());
+    co::println("pid     = ", os::pid());
+    co::println("cpunum  = ", os::cpunum());
+    co::println("page    = ", os::pagesize());
+
+    co::println("PATH = ", os::env("PATH"));
+
+    os::env("MY_VAR", "hello");
+    co::println("MY_VAR = ", os::env("MY_VAR"));
+
+    os::env("MY_VAR", nullptr);
+
+    os::system("echo hello coost");
+    return 0;
+}
 ```

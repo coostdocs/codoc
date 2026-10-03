@@ -3,123 +3,149 @@ weight: 1
 title: "Basic Definitions"
 ---
 
-include: [co/def.h](https://github.com/idealvin/coost/blob/master/include/co/def.h).
-
-
-## typedefs
-
-
-### Fixed-length integer type
-
-`co/def.h` defines the following 8 types of integers:
+## Header
 
 ```cpp
-typedef int8_t   int8;
-typedef int16_t  int16;
-typedef int32_t  int32;
-typedef int64_t  int64;
+#include "co/def.h"
+```
+
+## Integer Type Aliases
+
+```cpp
+typedef int8_t  int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
 typedef uint8_t  uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 ```
 
-These types have the same length on different platforms, and there is no portability problem. [Google Code Style](https://google.github.io/styleguide/cppguide.html#Integer_Types) recommends not to use built-in integer types such as short, long, long long, etc.
+- Defined in the **global namespace**.
 
-
-
-
-## macros
-
-
-### Maximum and minimum values of integer types
+## Integer Extreme Value Constants
 
 ```cpp
-MAX_UINT8  MAX_UINT16  MAX_UINT32  MAX_UINT64
-MAX_INT8   MAX_INT16   MAX_INT32   MAX_INT64
-MIN_INT8   MIN_INT16   MIN_INT32   MIN_INT64
+namespace co {
+
+constexpr uint8  max_uint8  = (uint8)  ~((uint8) 0);
+constexpr uint16 max_uint16 = (uint16) ~((uint16)0);
+constexpr uint32 max_uint32 = (uint32) ~((uint32)0);
+constexpr uint64 max_uint64 = (uint64) ~((uint64)0);
+constexpr int8  max_int8  = (int8)  (max_uint8  >> 1);
+constexpr int16 max_int16 = (int16) (max_uint16 >> 1);
+constexpr int32 max_int32 = (int32) (max_uint32 >> 1);
+constexpr int64 max_int64 = (int64) (max_uint64 >> 1);
+constexpr int8  min_int8  = (int8)  ~max_int8;
+constexpr int16 min_int16 = (int16) ~max_int16;
+constexpr int32 min_int32 = (int32) ~max_int32;
+constexpr int64 min_int64 = (int64) ~max_int64;
+
+} // co
 ```
 
-These macros respectively defines the maximum and minimum values of the 8 integer types.
+- Defined in the `co` namespace; all are `constexpr`.
 
-
-
-### DISALLOW_COPY_AND_ASSIGN
-
-This macro is used to disable copy constructor and assignment operations in C++ classes. 
-
-- Example
+Example:
 
 ```cpp
-class T {
-  public:
-    T();
-    DISALLOW_COPY_AND_ASSIGN(T);
-};
-```
+#include "co/def.h"
+#include "co/print.h"
 
-
-
-### __arch64, __arch32
-
-`__arch64` is defined as 1 on 64 bit platforms, `__arch32` is defined as 1 on 32 bit platforms.
-
-- Example
-
-```cpp
-#if __arch64
-inline size_t murmur_hash(const void* s, size_t n) {
-    return murmur_hash64(s, n, 0);
+int main() {
+    co::println("max_uint32 = ", co::max_uint32);
+    co::println("max_int32  = ", co::max_int32);
+    co::println("min_int32  = ", co::min_int32);
+    return 0;
 }
+```
+
+## Cache Line Size
+
+Provides the compile-time constant `co::cache_line_size`, commonly used for memory alignment and avoiding false sharing. Values for each architecture are as follows:
+
+| Architecture | `co::cache_line_size` |
+| --- | --- |
+| S390X | 256 |
+| PowerPC64 | 128 |
+| ARM64 | 128 |
+| Others (x86, x64, etc.) | 64 |
+
+{{< hint warning >}}
+`co::cache_line_size` may be larger than the actual cache line size. When aligning or padding, it will occupy a small amount of extra memory, which usually has little impact.
+{{< /hint >}}
+
+Example:
+
+```cpp
+// Allocate cache-line-aligned memory
+co::alloc(n, co::cache_line_size);
+```
+
+## Macros
+
+### Architecture
+
+```cpp
+#if SIZE_MAX == UINT64_MAX
+#define __arch64 1
+#elif SIZE_MAX == UINT32_MAX
+#define __arch32 1
 #else
-inline size_t murmur_hash(const void* s, size_t n) {
-    return murmur_hash32(s, n, 0);
-}
+#error "platform not supported"
 #endif
 ```
 
+- On 64-bit platforms, the `__arch64` macro is defined with a value of 1;
+- On 32-bit platforms, the `__arch32` macro is defined with a value of 1;
 
-
-### __forceinline
-
-[__forceinline](https://docs.microsoft.com/en-us/cpp/cpp/inline-functions-cpp?view=vs-2019#inline-__inline-and-__forceinline) is a keyword in VS. Linux and mac platforms use the following macro simulation:
+### Cache Line Alignment
 
 ```cpp
-#define __forceinline __attribute__((always_inline))
+#ifndef __cacheline_aligned
+#define __cacheline_aligned alignas(co::cache_line_size)
+#endif
 ```
 
+- The `__cacheline_aligned` macro aligns a variable or struct to a cache line.
 
-
-### __thread
-
-[__thread](https://gcc.gnu.org/onlinedocs/gcc-4.7.4/gcc/Thread-Local.html) is a keyword in gcc/clang to support [TLS](https://wiki.osdev.org/Thread_Local_Storage), the windows platform uses the following macro simulation:
+Example:
 
 ```cpp
+struct __cacheline_aligned Foo {
+    int x;
+};
+```
+
+### Thread-Local Storage
+
+```cpp
+#ifdef _MSC_VER
+#ifndef __thread
 #define __thread __declspec(thread)
+#endif
+#endif
 ```
 
-- Example
+- `__thread` is used to define thread-local variables;
+- gcc/clang already have built-in `__thread`; on Windows (using MSVC), it is defined as `__declspec(thread)`.
+
+Example:
 
 ```cpp
-// get id of the current thread
-__forceinline unsigned int gettid() {
-    static __thread unsigned int id = 0;
-    if (id != 0) return id;
-    return id = __gettid();
-}
+__thread int g_v;
+__thread void* g_p;
 ```
 
+### `__unlikely`
 
+- Hints to the compiler that a condition is more likely to be false.
+- In older versions it was named `unlikey`; to avoid conflict with C++20 `[[unlikely]]`, it was changed to `__unlikely`.
 
-### unlikely
-
-This macro is used for branch prediction optimization. It only supports gcc/clang.
-
-- Example
+Example:
 
 ```cpp
-// It is logically equivalent to if (v == 0)
-if (unlikey(v == 0)) {
-    cout << "v == 0" << endl;
-}
+fs::file f("xx.log", 'r');
+if (__unlikely(!f)) co::println("open file failed");
 ```

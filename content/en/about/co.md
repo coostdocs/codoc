@@ -1,434 +1,146 @@
 ---
-weight: 1
-title: "Introduction"
+weight: 2
+title: "Overview"
 ---
 
-## What is coost
+## Introduction
 
-[![stars](https://img.shields.io/github/stars/idealvin/coost?style=social)](https://github.com/idealvin/coost)
-[![forks](https://img.shields.io/github/forks/idealvin/coost?style=social)](https://github.com/idealvin/coost)
-[![MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[coost](https://github.com/idealvin/coost) is a lightweight cross-platform C++ base library. It provides components such as coroutines, networking, RPC, logging, configuration, and JSON. Its style is close to golang, it pursues minimalism while maintaining high performance, and it does not depend on third-party libraries such as Boost or folly.
 
+It is suitable for the following scenarios:
+- You need lightweight coroutines;
+- You need a coroutine-based network framework;
+- You do not want to introduce heavy or numerous third-party libraries;
+- You want configuration, logging, memory management, etc. to have a consistent style.
 
-**[coost](https://github.com/idealvin/coost)** is an elegant and efficient cross-platform C++ base library. Its goal is to create a sword of C++ to make C++ programming easy and enjoyable.
+## Design Principles
 
-Coost, **co** for short, is like [boost](https://www.boost.org/), but more lightweight, **the static library built on linux or mac is only about 1MB in size**. However, it still provides enough powerful features:
+coost's core design principle is keep simple, while maintaining high performance.
 
+Specifically:
+- Each component remains minimal and only provides commonly used functionality;
+- Simple components combine to cover most application scenarios;
+- While remaining simple, it pursues performance, balancing ease of use and performance.
 
-{{< columns >}}
+Based on the above principles:
+- coost usually provides short, semantically clear names;
+- coost generally does not increase code complexity or maintenance difficulty just to support some rarely used features;
+- coost does not use exceptions internally, so users do not need `try / catch`.
 
-- Command line and config file parser (flag)
-- **High performance log library (log)**
-- Unit testing framework
-- Benchmark testing framework
-- **go-style coroutine**
-- Coroutine-based network library
-- **JSON RPC framework**
+## What Problems It Solves
 
-<--->
+During C++ project development, the following problems are commonly encountered:
+- **Complex concurrency model**: Multithreading + callbacks + locks make logic easy to get messy, and asynchronous code is hard to read and debug.
+- **Many dependencies**: A project may introduce multiple third-party libraries with inconsistent code styles, memory management approaches, etc., resulting in high integration, debugging, and optimization costs.
+- **Heavy dependencies**: A project may introduce large third-party libraries such as Boost or folly, leading to slow compilation and a high learning curve.
+- **Chaotic global object management**: Static objects in different .cc files have undefined initialization and destruction order; the program may crash due to accessing uninitialized or already destroyed static objects.
 
-- Atomic operation (atomic)
-- **Efficient stream (fastream)**
-- Efficient string (fastring)
-- String utility (str)
-- Time library (time)
-- Thread library (thread)
-- Timed Task Scheduler
+## coost's Solutions
 
-<--->
+- Use coroutines to simplify the concurrency model and achieve asynchronous performance with synchronous code.
+- Use coost as a single library to cover common base components such as configuration, logging, coroutines, networking, RPC, JSON, unit testing, and benchmarking, reducing third-party dependencies.
+- Core components are self-developed and do not depend on large third-party libraries such as Boost or folly.
+- Use `co::make_static / co::make_rootic` to take over static objects, and rely on the nifty counter technique to ensure that depended-upon objects are constructed first and destroyed later.
 
-- **God-oriented programming**
-- Efficient JSON library
-- Hash library
-- Path library
-- File utilities (fs)
-- System operations (os)
-- **Fast memory allocator**
- 
-{{< /columns >}}
+In addition, coost also unifies:
+- **Configuration**: All components are configured through flags, supporting command line and configuration files.
+- **Output**: Terminal output and logs are based on the `co::string` streaming interface; custom types only need to implement `operator<<(co::string&, const T&)`.
+- **Memory allocation**: All components uniformly use the coost memory allocator.
 
+## Core Components and Design Choices
 
+### Coroutines
 
+coost coroutines are similar to goroutines in golang:
+- Use `go()` to create a coroutine;
+- Support multi-threaded scheduling; the default number of scheduling threads is the number of system CPU cores;
 
-## History of coost
+Unlike C++20 stackless coroutines, coost coroutines do not have the "code pollution" problem: they do not require `co_await / co_yield / co_return`, do not require introducing types such as `task<T> / promise_type`, and do not require changing function signatures.
 
-- **2013-2015**, [Alvin(idealvin)](https://github.com/idealvin) felt a little cumbersome when using google's gflags, glog, gtest, etc., so he implemented the corresponding functions by himself, that is, the **flag, log, unitest, etc.** in today's coost.
+#### Shared Stack
 
-- **2015-2018**, Alvin introduced this library into actual projects for use by himself and his colleagues, which greatly improved the efficiency of C++ development. It has also been tested by industrial projects, and continuously improved and expanded new features in practice.
+coost coroutines use a shared stack design. **Coroutines in the same scheduler share a fixed number of stacks**, so the stack memory overhead per coroutine is extremely low, and a single machine can support tens of millions of concurrent coroutines.
 
-- **In 2019**, Alvin implemented a **go-style coroutine** and a network programming framework based on coroutines, and then **named the project co and release v1.0 on [github](https://github.com/idealvin/coost)**.
+Special attention is required: because a coroutine's stack is not exclusive, it is generally **not possible to access objects on a coroutine stack across coroutines through pointers or references**.
 
-- **2020-2021**, improve hook mechanism, coroutine synchronization mechanism, add channel, defer and other features in golang, **release 2.x version**. During this period, **some githubers provided a lot of valuable suggestions, and helped to improve [xmake](https://github.com/xmake-io/xmake), cmake building scripts and many features in coost**.
+#### Parameter Passing in go
 
-- **2022**, add **a fast memory allocator**, improve overall performance, make major improvements to many components such as flag, log, JSON, RPC, fastring, fastream, and **rename the project coost, release version 3.0**.
+`go()` accepts parameters similar to the `std::thread` constructor; it can accept ordinary functions, member functions, lambdas, function objects, and any number and type of parameters.
 
+The go function looks roughly like this: `go(f, args...)`. Passing args by reference is safe; however, **if f is a lambda, it generally cannot capture objects on the coroutine stack by reference**, because the coroutine stack is shared, and data on the stack may be overwritten by other coroutines.
 
+#### Synchronization Mechanisms
 
+coost coroutines provide three synchronization mechanisms: `co::mutex / co::event / co::wait_group`.
 
-## Quick Start
+golang is a fully coroutine environment, while coost needs to handle both coroutine and non-coroutine environments. coost designs the above synchronization mechanisms to **support both coroutines and non-coroutines**. The implementation cost is higher, but it is convenient for users in mixed environments.
 
+In addition, because of the shared stack, coost needs to follow the semantics of **passing parameters by value** in coroutines, just like golang. Therefore, the above synchronization mechanisms all use a reference-counting-based design, and copy operations only increase the reference count.
 
-### Compiling
+### Memory Allocator
 
-It is recommended to install [xmake](https://github.com/xmake-io/xmake) and run the following command in the root directory of coost to build all sub-projects:
+coost has developed its own memory allocator, which is uniformly used by all components, making memory management, statistics, debugging, and optimization easier.
 
-```sh
-xmake -a
-```
+The allocator divides memory into three categories:
+- Small memory: `< 4k`, 16-byte aligned;
+- Medium memory: `<= 128k`, 4k-byte aligned;
+- Large memory: `> 128k`, directly mmap / VirtualAlloc, page-aligned.
 
-If you need to use http::Client, SSL or HTTPS features, you can use the following command to build:
+Unlike ordinary allocators, the coost memory allocator does not store the size of allocated memory; free requires passing the size. The benefits are:
 
-```sh
-xmake f --with_libcurl=true --with_openssl=true
-xmake -a
-```
+- The allocator does not need to write metadata at the beginning of memory; the memory layout obtained by users is compact, with no extra overhead;
+- During free, the level can be determined directly from the size without reading metadata, making the path simple;
+- It is cache-friendly, and allocation and deallocation are faster.
 
-Xmake will automatically install libcurl and openssl from the network. Depending on the network, this process may be slow. `xmake -a` will build [libco](https://github.com/idealvin/coost/tree/master/src), [gen](https://github.com/idealvin/coost/tree/master/gen), [co/unitest](https://github.com/idealvin/coost/tree/master/unitest) and [co/test](https://github.com/idealvin/coost/tree/master/test). Users can run test programs in coost with the following commands:
+#### Low-Cost Container Migration
 
-```sh
-xmake r unitest
-xmake r flag
-xmake r log -cout
-xmake r co
-```
+`co/stl.h` provides aliases for **STL containers that use the coost memory allocator**. Users only need to replace `std::vector / std::map / std::unordered_map`, etc. with `co::vector / co::map / co::hash_map`, etc., to gain performance improvements without changing the code structure.
 
+#### Static Object Management
 
+Static objects in different .cc files in C++ have undefined initialization and destruction order; the program may crash due to accessing uninitialized or already destroyed static objects. coost's solution is:
+- Do not directly define static objects; instead, define global pointers and let coost take over;
+- Through the nifty counter technique, call `co::make_static<T>(args...)` to create a static object, and use its return value to initialize the global pointer.
 
-### Develop C++ programs with coost
+The nifty counter naturally guarantees that depended-upon objects are constructed first. When the program exits, coost destroys the objects it has taken over in the order of first constructed, later destroyed.
 
-The simplest, you can directly include [co/all.h](https://github.com/idealvin/coost/blob/master/include/co/all.h) and use all the features in coost. If you are worried about the compiling speed, you can also include only the header files that you need, such as including [co/co.h](https://github.com/idealvin/coost/blob/master/include/co/co.h), you can use co/flag, co/log and all features related to coroutines.
+In addition, coost also provides `co::make_rootic<T>(args...)`, used to **create static objects without dependencies**. coost guarantees that objects constructed by make_rootic are always destroyed last. make_rootic is generally used in scenarios where the nifty counter technique cannot be used, such as the initialization of dependency-free thread-local objects.
 
-```cpp
-#include "co/all.h"
+#### Writing Memory-Friendly Code
 
-DEF_string(s, "nice", "");
+`co/def.h` defines `co::cache_line_size` and the `__cacheline_aligned` macro. When defining a struct, you can write `struct __cacheline_aligned S`, making the semantics clearer.
 
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    LOG << FLG_s;
-    return 0;
-}
-```
+`co::alloc(n, align)` allocates memory with the specified alignment; align is at most 256 (the maximum possible value of co::cache_line_size). Users can use `co::alloc(n, co::cache_line_size)` to allocate cache-line-aligned memory.
 
-The above is a simple example. The first line of the main function is used to parse the command-line flags and the config file. Some components in coost use co/flag to define config items. Therefore, it is generally necessary to call `flag::parse()` at the beginning of the main function for initialization.
+### flag / log / unitest / benchmark
 
-Users can also use the macro `DEF_main` to define the main function:
+coost provides four base components: flag, log, unitest, and benchmark, corresponding to common scenarios of gflags, glog, gtest, and google benchmark, respectively.
 
-```cpp
-#include "co/all.h"
+- flag provides more powerful features, supports flag aliases and automatic configuration file generation, and integer flag values can carry units (k, m, g, t, p), making it more convenient to use.
+- log has better performance than glog, usually improving by 1 to 2 orders of magnitude. Printing a large number of logs in business code may affect processing performance, so log places special emphasis on performance improvement in its design.
+- unitest makes writing unit tests simpler. The test unit defined by `DEF_test` is actually a function, and `DEF_case` is just a code block within it. Users can freely add code in the function, such as initialization code shared by test cases.
+- benchmark is designed similarly to unitest. The benchmark group defined by `BM_group` is also a function, and `BM_add` is just a code block within it, making it more convenient to use.
 
-DEF_string(s, "nice", "");
-
-DEF_main(argc, argv) {
-    LOG << FLG_s;
-    return 0;
-}
-```
-
-`DEF_main` puts code in the main function into a coroutine, and `flag::parse()` has been called internally, and users needn't call it manually.
-
-
-
-
-## Performance
-
-### Memory allocator
-
-For memory allocators such as ptmalloc, jemalloc, tcmalloc and mimalloc, there is a high probability that the small memory will not be returned to the operating system after they are freed. To solve this problem, coost has designed a dedicated memory allocator (co/malloc), which will return as much released memory to the system as possible while taking into account performance, which is conducive to reducing the memory footprint of the program.
-
-[co/test](https://github.com/idealvin/coost/blob/master/test/mem.cc) provides a simple test code, which can be built and run as follow:
-
-````sh
-xmake b mem
-xmake r mem -t 4 -s
-````
-
-`-t` specifies the number of threads, `-s` means to compare with the system memory allocator. Here are the test results on different platforms (4 threads):
-
-| os/cpu | co::alloc | co::free | ::malloc | ::free | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| win/AMD 3.2G | 7.32 | 6.83 | 86.05 | 105.06 | 11.7/15.3 |
-| mac/i7 2.4G | 9.91 | 9.86 | 55.64 | 60.20 | 5.6/6.1 |
-| linux/i7 2.2G | 10.80 | 7.51 | 1070.5 | 21.17 | 99.1/2.8 |
-
-The data in the table is the average time, the unit is nanoseconds (ns), linux is the ubuntu system running in Windows WSL, speedup is the performance improvement multiple of coost memory allocator relative to the system memory allocator.
-
-It can be seen that **co::alloc is nearly 99 times faster than ::malloc** on Linux. One of the reasons is that ptmalloc has a large lock competition overhead in multi-threaded environment, and co/malloc is designed to avoid the use of locks as much as possible. The allocation and release of small blocks of memory do not require locks, and even spin locks are not used when releasing across threads.
-
-
-
-### Log library
-
-| platform | glog | co/log | speedup |
-| ------ | ------ | ------ | ------ |
-| win2012 HHD | 1.6MB/s | 180MB/s | 112.5 |
-| win10 SSD | 3.7MB/s | 560MB/s | 151.3 |
-| mac SSD | 17MB/s | 450MB/s | 26.4 |
-| linux SSD | 54MB/s | 1023MB/s | 18.9 |
-
-The above is the write speed of co/log and glog (single thread, 1 million logs). It can be seen that co/log is nearly two orders of magnitude faster than glog.
-
-| threads | linux co/log | linux spdlog | win co/log | win spdlog | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| 1 | 0.087235 | 2.076172 | 0.117704 | 0.461156 | 23.8/3.9 |
-| 2 | 0.183160 | 3.729386 | 0.158122 | 0.511769 | 20.3/3.2 |
-| 4 | 0.206712 | 4.764238 | 0.316607 | 0.743227 | 23.0/2.3 |
-| 8 | 0.302088 | 3.963644 | 0.406025 | 1.417387 | 13.1/3.5 |
-
-The above is the time of [printing 1 million logs with 1, 2, 4, and 8 threads](https://github.com/idealvin/coost/tree/benchmark), in seconds. Speedup is the performance improvement of co/log compared to spdlog on linux and windows platforms.
-
-
-
-### JSON library
-
-| os | co/json stringify | co/json parse | rapidjson stringify | rapidjson parse | speedup |
-| ------ | ------ | ------ | ------ | ------ | ------ |
-| win | 569 | 924 | 2089 | 2495 | 3.6/2.7 |
-| mac | 783 | 1097 | 1289 | 1658 | 1.6/1.5 |
-| linux | 468 | 764 | 1359 | 1070 | 2.9/1.4 |
-
-The above is the average time of stringifying and parsing minimized [twitter.json](https://raw.githubusercontent.com/simdjson/simdjson/master/jsonexamples/twitter.json), in microseconds (us), speedup is the performance improvement of co/json compared to rapidjson.
-
-
-
-
-## Core features
-
-
-### God-oriented programming
-
-[co/god.h](https://github.com/idealvin/coost/blob/master/include/co/god.h) provides some features based on templates.
-
-```cpp
-#include "co/god.h"
-
-void f() {
-    god::bless_no_bugs();
-    god::align_up<8>(31); // -> 32
-    god::is_same<T, int, bool>(); // T is int or bool?
-}
-```
-
-
-
-### flag
-
-**[flag](../../co/flag/)** is a simple and easy-to-use command line and config file parsing library. Some components in coost use it to define config items.
-
-Each **flag(config item)** has a default value, and by default, the program can run with the default config values. Users can also pass in parameters from the **command line or config file**, and when a config file is required, `-mkconf` can be used to **generate it automatically**.
-
-```cpp
-#include "co/flag.h"
-#include "co/cout.h"
-
-DEF_bool(x, false, "x");
-DEF_bool(debug, false, "dbg", d);
-DEF_uint32(u, 0, "xxx");
-DEF_string(s, "", "xx");
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    co::print("x: ", FLG_x);
-    co::print("y: ", FLG_y);
-    co::print("debug: ", FLG_debug);
-    co::print("u: ", FLG_u);
-    co::print(FLG_s, '|', FLG_s.size());
-    return 0;
-}
-```
-
-In the above example, the macros start with `DEF_` define 4 flags. Each flag corresponds to a global variable, whose name is `FLG_` plus the flag name. The flag `debug` has an alias `d`. After building, the above code can run as follow:
-
-```sh
-./xx                  # Run with default configs
-./xx -x -s good       # x -> true, s -> "good"
-./xx -debug           # debug -> true
-./xx -xd              # x -> true, debug -> true
-./xx -u 8k            # u -> 8192
-
-./xx -mkconf          # Automatically generate a config file: xx.conf
-./xx xx.conf          # run with a config file
-./xx -conf xx.conf    # Same as above
-```
-
-
-
-### log
-
-**[log](../../co/log/)** is a high-performance log library, some components in coost use it to print logs.
-
-log supports two types of logs: one is level log, which is divided into 5 levels: debug, info, warning, error and fatal, **printing a fatal log will terminate the program**; the other is topic log, logs are grouped by topic, and logs of different topics are written to different files.
-
-```cpp
-#include "co/log.h"
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-
-    TLOG("xx") << "s" << 23; // topic log
-    DLOG << "hello " << 23;  // debug
-    LOG << "hello " << 23;   // info
-    WLOG << "hello " << 23;  // warning
-    ELOG << "hello " << 23;  // error
-    FLOG << "hello " << 23;  // fatal
-
-    return 0;
-}
-```
-
-co/log also provides a series of `CHECK` macros, which is an enhanced version of `assert`, and they will not be cleared in debug mode.
-
-```cpp
-void* p = malloc(32);
-CHECK(p != NULL) << "malloc failed..";
-CHECK_NE(p, NULL) << "malloc failed..";
-```
-
-
-
-### unitest
-
-**[unitest](../../co/unitest/)** is a simple and easy-to-use unit test framework. Many components in coost use it to write unit test code, which guarantees the stability of coost.
-
-```cpp
-#include "co/unitest.h"
-#include "co/os.h"
-
-namespace test {
-    
-DEF_test(os) {
-    DEF_case(homedir) {
-        EXPECT_NE(os::homedir(), "");
-    }
-
-    DEF_case(cpunum) {
-        EXPECT_GT(os::cpunum(), 0);
-    }
-}
-    
-} // namespace test
-```
-
-The above is a simple example. The `DEF_test` macro defines a test unit, which is actually a function (a method in a class). The `DEF_case` macro defines test cases, and each test case is actually a code block. The main function is simple as below:
-
-```cpp
-#include "co/unitest.h"
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    unitest::run_tests();
-    return 0;
-}
-```
-
-The directory [unitest](https://github.com/idealvin/coost/tree/master/unitest) contains the unit test code in coost. Users can run unitest with the following commands:
-
-```sh
-xmake r unitest      # Run all test cases
-xmake r unitest -os  # Run test cases in the os unit
-```
-
-
-
-### Benchmark
-
-[benchmark](../../co/benchmark/) is a simple and easy-to-use benchmark testing framework.
-
-```cpp
-#include "co/benchmark.h"
-#include "co/mem.h"
-
-BM_group(malloc) {
-     void* p;
-
-     BM_add(::malloc)(
-         p = ::malloc(32);
-     );
-     BM_use(p);
-
-     BM_add(co::alloc)(
-         p = co::alloc(32);
-     );
-     BM_use(p);
-}
-
-int main(int argc, char** argv) {
-     flag::parse(argc, argv);
-     bm::run_benchmarks();
-     return 0;
-}
-```
-
-In the above example, `BM_group` defines a test group, `BM_add` adds two test cases that need to be compared, and `BM_use` prevents the compiler from optimizing out the test code.
-
-The benchmark results are output as a markdown table, as shown below:
-![bm.png](/images/bm.png)
-
-
-
-### JSON
-
-In coost v3.0, **[Json](https://github.com/idealvin/coost/blob/master/include/co/json.h)** provides **fluent APIs**, which is more convenient to use.
-
-```cpp
-// {"a":23,"b":false,"s":"123","v":[1,2,3],"o":{"xx":0}}
-Json x = {
-    { "a", 23 },
-    { "b", false },
-    { "s", "123" },
-    { "v", {1,2,3} },
-    { "o", {
-        {"xx", 0}
-    }},
-};
-
-// equal to x
-Json y = Json()
-    .add_member("a", 23)
-    .add_member("b", false)
-    .add_member("s", "123")
-    .add_member("v", Json().push_back(1).push_back(2).push_back(3))
-    .add_member("o", Json().add_member("xx", 0));
-
-x.get("a").as_int();       // 23
-x.get("s").as_string();    // "123"
-x.get("s").as_int();       // 123, string -> int
-x.get("v", 0).as_int();    // 1
-x.get("v", 2).as_int();    // 3
-x.get("o", "xx").as_int(); // 0
-
-x["a"] == 23;          // true
-x["s"] == "123";       // true
-x.get("o", "xx") != 0; // false
-```
-
-
-
-### Coroutine
-
-coost has implemented a [go-style](https://github.com/golang/go) coroutine, which has the following features:
-
-- Support multi-thread scheduling, the default number of threads is the number of system CPU cores.
-- Shared stack, coroutines in the same thread share several stacks (the default size is 1MB), and the memory usage is low.
-- There is a flat relationship between coroutines, and new coroutines can be created from anywhere (including in coroutines).
-- Support coroutine sync event, coroutine locks, channels, and waitgroups.
+## A Minimal Example
 
 ```cpp
 #include "co/co.h"
+#include "co/flag.h"
+#include "co/log.h"
+#include "co/print.h"
 
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
 
-    co::wait_group wg;
-    wg.add(2);
+    co::wait_group wg(2);
 
     go([wg](){
-        LOG << "hello world";
+        co::println("hello world");
         wg.done();
     });
 
     go([wg](){
-        LOG << "hello again";
+        log::info("hello again");
         wg.done();
     });
 
@@ -437,114 +149,89 @@ int main(int argc, char** argv) {
 }
 ```
 
-In the above code, the coroutines created by `go()` will be distributed to different scheduling threads. Users can also control the scheduling of coroutines by themselves:
+This example demonstrates the basic usage of coost:
+- `flag::parse` parses command-line arguments; without this line, the logging thread and coroutine scheduling threads will not start;
+- `co::wait_group wg(2)` creates a wait group with a counter of 2;
+- `go` starts two coroutines; the lambda captures `wg` by value, because coroutines use a shared stack and cannot capture objects on the coroutine stack by reference (although in this example wg is not on the coroutine stack, and capturing by reference would also work, for safety it is recommended to always capture by value);
+- `co::println` immediately outputs to the terminal; `log::info` writes to a file by default and does not output to the terminal. To see log content in the terminal, add `-also_log2console=true` on the command line;
+- `wg.wait()` waits on the main thread for the two coroutines to finish, then exits.
 
-```cpp
-// run f1 and f2 in the same scheduler
-auto s = co::next_sched();
-s->go(f1);
-s->go(f2);
+## Compilation and Running
 
-// run f in all schedulers
-for (auto& s : co::scheds()) {
-    s->go(f);
-}
+coost supports gcc, clang, and MSVC compilers, and requires compiler support for C++17. coost can be built with xmake or cmake; xmake is recommended because it is more convenient to use.
+
+Common commands (executed in the coost root directory):
+```bash
+# Build libco by default
+xmake
+
+# Build and run unit test code
+xmake b unitest
+xmake r unitest
+xmake r unitest -os
+
+# Build and run benchmark code
+xmake b benchmark
+xmake r benchmark
+xmake r benchmark -mem
+
+# Build and run test code under the test directory
+xmake b xx
+xmake r xx
 ```
 
+Users can add their own `xxx.cc` files in the [test](https://github.com/idealvin/coost/tree/master/test) directory, and directly use `xmake b xxx` to build and `xmake r xxx` to run.
 
+## Comparison with Similar Libraries
 
-### network programming
+| Dimension | coost | Boost | folly |
+| ---------- | ---------------- | ---------------- | ---------------- |
+| Positioning | Lightweight base library collection | Large general-purpose library collection | Facebook internal base library collection |
+| Coroutines | Yes, shared stack, non-C++20 coroutines | C++20 coroutines | Yes |
+| Networking | TCP/UDP/RPC | Asio (TCP/UDP) | Multiple |
+| RPC | Built-in | No | Yes |
+| JSON | Built-in | Yes | Yes |
+| flag / log | Built-in | No (requires gflags/glog) | Yes |
+| Unit / Benchmark Testing | Built-in | Boost.Test | Yes |
+| Memory Allocator | Self-developed | Standard | Self-developed |
+| Configuration | Uniformly uses flag | Independent per component | Independent per component |
+| Dependencies | None | Varies by component | Many |
+| Learning Difficulty | Medium | High | High |
+| Size | Small | Large | Large |
 
-Coost provides a coroutine-based network programming framework:
+coost is not fully comparable to Boost or folly. coost is positioned as a "lightweight base library collection"; its coverage is smaller than Boost, but its components have a consistent style, it does not depend on third-party libraries, and its learning cost is lower. The table above compares only some dimensions and does not mean the functionality is completely equivalent.
 
-- **[coroutineized socket API](../../co/net/sock/)**, similar in form to the system socket API, users familiar with socket programming can easily write high-performance network programs in a synchronous manner.
-- [TCP](../../co/net/tcp/), [HTTP](../../co/net/http/), [RPC](../../co/net/rpc/) and other high-level network programming components, compatible with IPv6, also support SSL, it is more convenient to use than socket API.
+## Concurrency Model
 
+### Server Side
 
-**RPC server**
+The server side usually needs to support high concurrency. coost adopts the basic model of "one connection, one coroutine":
 
-```cpp
-#include "co/co.h"
-#include "co/rpc.h"
-#include "co/time.h"
+- A single coroutine for accept is responsible for opening the listening socket, looping to accept, and closing the listening socket;
+- Each time a new connection is accepted, a separate coroutine is started, responsible for recv / send / close on that connection.
 
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
+The lifecycle of a connection is consistent with the lifecycle of a coroutine. Under this model, the processing logic for each connection is independent and sequential; synchronous code is sufficient, and no callbacks or manual state machine management are needed.
 
-    rpc::Server()
-        .add_service(new xx::HelloWorldImpl)
-        .start("127.0.0.1", 7788, "/xx");
+### Client Side
 
-    for (;;) sleep::sec(80000);
-    return 0;
-}
-```
+The client side needs to consider connection reuse, rather than establishing a new connection for every coroutine. coost provides `co::pool` to solve this problem:
+- Inside `co::pool`, each scheduling thread has its own pool, and elements in the pool are not shared across threads, so using co::pool does not require locking;
+- When a client coroutine needs one, it takes a connection from co::pool and immediately puts it back after use;
 
-`rpc::Server` also supports HTTP protocol, you may use the POST method to call the RPC service:
+With the above model, a large number of client coroutines can usually share a small number of connections in `co::pool`, instead of creating one connection per coroutine.
 
-```sh
-curl http://127.0.0.1:7788/xx --request POST --data '{"api":"ping"}'
-```
+With `co::pool`, the design of `co::tcp_client` and `co::rpc_client` in coost is very simple. A client allows only one coroutine to use it at the same time; users can put the client into co::pool to achieve reuse. In short, co::pool provides a general method for reusing client connections in a coroutine environment.
 
+## Recommended Reading Order
 
-**Static web server**
-
-```cpp
-#include "co/flag.h"
-#include "co/http.h"
-
-DEF_string(d, ".", "root dir"); // docroot for the web server
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-    so::easy(FLG_d.c_str()); // mum never have to worry again
-    return 0;
-}
-```
-
-
-**HTTP server**
-
-```cpp
-void cb(const http::Req& req, http::Res& res) {
-    if (req.is_method_get()) {
-        if (req.url() == "/hello") {
-            res.set_status(200);
-            res.set_body("hello world");
-        } else {
-            res.set_status(404);
-        }
-    } else {
-        res.set_status(405); // method not allowed
-    }
-}
-
-// http
-http::Server().on_req(cb).start("0.0.0.0", 80);
-
-// https
-http::Server().on_req(cb).start(
-    "0.0.0.0", 443, "privkey.pem", "certificate.pem"
-);
-```
-
-
-**HTTP client**
-
-```cpp
-void f() {
-    http::Client c("https://github.com");
-
-    c.get("/");
-    LOG << "response code: "<< c.status();
-    LOG << "body size: "<< c.body().size();
-    LOG << "Content-Length: "<< c.header("Content-Length");
-    LOG << c.header();
-
-    c.post("/hello", "data xxx");
-    LOG << "response code: "<< c.status();
-}
-
-go(f);
-```
-
+1. flag: command-line and configuration file parsing;
+2. log: logging;
+3. print: terminal output;
+4. string: strings;
+5. mem: memory allocator;
+6. co: coroutines;
+7. sock: socket;
+8. tcp: TCP;
+9. json: JSON;
+10. rpc: RPC;
+11. gen: RPC code generation.

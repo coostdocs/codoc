@@ -1,102 +1,95 @@
 ---
-weight: 7
+weight: 4
 title: "RPC"
 ---
 
-include: [co/rpc.h](https://github.com/idealvin/coost/blob/master/include/co/rpc.h).
+## Header
 
+```cpp
+#include "co/rpc.h"
+```
 
-Coost implements a coroutine-based RPC framework, which internally uses **JSON** as the data exchange format. Compared with RPC frameworks using binary protocols such as protobuf, it is more flexible and easier to use.
+The API is in the `co` namespace, and aliases are also provided:
 
-{{< hint info >}}
-Since v3.0, the RPC framework also supports HTTP protocol, and we are able to send a RPC request with the HTTP POST method.
-{{< /hint >}}
+```cpp
+namespace rpc {
+using service  = co::rpc_service;
+using server   = co::rpc_server;
+using client   = co::rpc_client;
+using method_t = co::rpc_method_t;
+}
+```
 
+Before use, you need to call `flag::parse(argc, argv);` at the beginning of `main`.
 
+## Overview
 
-## rpc::Service
+- A lightweight RPC based on TCP + JSON.
+- Protocol: 8-byte header + JSON body.
+- Requests specify the method through the `api` field, in the format `ServiceName.method_name`, such as `HelloWorld.hello`.
 
-````cpp
-class Service {
-   public:
-     Service() = default;
-     virtual ~Service() = default;
+## Protocol
 
-     typedef std::function<void(Json&, Json&)> Fun;
+### Header
 
-     virtual const char* name() const = 0;
-     virtual const co::map<const char*, Fun>& methods() const = 0;
+```cpp
+struct Header {
+    uint16 flags; // reserved, 0
+    uint16 magic; // 0x7777
+    uint32 len;   // body len, network byte order
+}; // 8 bytes
+```
+
+- `magic = 0x7777`, used for validation.
+- `len` is the body length, in network byte order.
+- The body is JSON text.
+
+### Request
+
+```json
+{"api": "ServiceName.method_name", ...}
+```
+
+- `api` must be a string.
+- Other fields are user parameters.
+
+### Response
+
+- Success: JSON filled in by the user method.
+- Failure: `{"error": "..."}`.
+
+## rpc_service
+
+```cpp
+struct rpc_service {
+    rpc_service() = default;
+    virtual ~rpc_service() = default;
+
+    virtual const char* name() const = 0;
+    virtual const co::map<const char*, rpc_method_t>& methods() const = 0;
 };
-````
 
-- This class is a pure interface, which represents a RPC service. A RPC server may have multiple services.
-- `name()` returns the service name, `methods()` returns all the RPC methods.
-
-
-
-
-## rpc::Server
-
-### Server::Server
-
-```cpp
-Server();
+using rpc_method_t = std::function<void(json::any&, json::any&)>;
 ```
 
-- The default constructor, users do not need to care.
+- `name()` returns the service name.
+- `methods()` returns a mapping from method names to `rpc_method_t`.
+- Registered into rpc_server through `rpc_server::add_service`.
+- `rpc_method_t`: the first parameter is the request JSON, and the second is the response JSON.
 
+## gen Tool
 
+Generates a subclass of `rpc_service` from a `.proto` file. Execute the following command in the coost root directory to build `gen`:
 
-### Server::add_service
-
-```cpp
-1. Server& add_service(rpc::Service* s);
-2. Server& add_service(const std::shared_ptr<rpc::Service>& s);
+```bash
+xmake b gen
 ```
 
-- Add a service, the parameter `s` in the first one must be dynamically created with `operator new`.
-- Users can call this method multiple times to add multiple services, and **different services must have different names**.
+### Usage
 
+`hello_world.proto`:
 
-
-### Server::start
-
-```cpp
-void start(
-    const char* ip, int port,
-    const char* url="/",
-    const char* key=0, const char* ca=0
-);
-```
-
-- Start the RPC server, this method will not block the current thread.
-- The parameter `ip` is the server ip, which can be an IPv4 or IPv6 address, and the parameter `port` is the server port. 
-- The parameter `url` is the url of the HTTP server, and must start with `/`.
-- The parameter **key** is path of a **PEM**file which stores the SSL private key, and the parameter **ca** is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
-- Starting from v3.0, the server no longer depends on the `rpc::Server` object after startup.
-
-
-
-### Server::exit
-
-```cpp
-void exit();
-```
-
-- Added since v2.0.2.
-- Exit the RPC server, close the listening socket, and no longer receive new connections.
-- Since v3.0, after the RPC server exits, previously established connections will be reset in the future.
-
-
-
-
-## RPC server example
-
-### Define a proto file
-
-Here is a simple proto file hello_world.proto:
-
-```cpp
+```proto
 package xx
 
 service HelloWorld {
@@ -105,30 +98,13 @@ service HelloWorld {
 }
 ```
 
-**package** defines the package name.
-- **package** defines the package name, which corresponds to **namespace** in C++.
-- **service** defines a RPC service, it has 2 methods, hello and world.
-
-- Since the RPC request and response are both JSON, there is no need to define the structure in the proto file.
-- At most one service can be defined in a proto file.
-
-{{< hint info >}}
-Coost v3.0.1 rewrote [gen](https://github.com/idealvin/coost/tree/master/gen) with flex and [byacc](https://invisible-island.net/byacc/), and we can alse define object (struct) in the proto file. For specific usage, please refer to [j2s](https://github.com/idealvin/coost/tree/master/test/j2s).
-{{< /hint >}}
-
-
-
-### Generate code for RPC service
-
-[gen](https://github.com/idealvin/coost/tree/master/gen) is the RPC code generator provided by coost, which can be used to generate code for RPC service.
+Execute:
 
 ```bash
-xmake -b gen             # build gen
-cp gen /usr/local/bin    # put gen in the /usr/local/bin directory
-gen hello_world.proto    # Generate code
+gen hello_world.proto
 ```
 
-The generated file hello_world.proto is as follow:
+Generates `hello_world.h`, containing the `xx::HelloWorld` class:
 
 ```cpp
 // Autogenerated.
@@ -139,10 +115,7 @@ The generated file hello_world.proto is as follow:
 
 namespace xx {
 
-class HelloWorld : public rpc::Service {
-  public:
-    typedef std::function<void(Json&, Json&)> Fun;
-
+struct HelloWorld : co::rpc_service {
     HelloWorld() {
         using std::placeholders::_1;
         using std::placeholders::_2;
@@ -156,298 +129,319 @@ class HelloWorld : public rpc::Service {
         return "HelloWorld";
     }
 
-    virtual const co::map<const char*, Fun>& methods() const {
+    virtual const co::map<const char*, co::rpc_method_t>& methods() const {
         return _methods;
     }
 
-    virtual void hello(Json& req, Json& res) = 0;
+    virtual void hello(json::any& req, json::any& res) = 0;
 
-    virtual void world(Json& req, Json& res) = 0;
+    virtual void world(json::any& req, json::any& res) = 0;
 
-  private:
-    co::map<const char*, Fun> _methods;
+    co::map<const char*, co::rpc_method_t> _methods;
 };
 
 } // xx
 ```
 
-- As you can see, the `HelloWorld` class inherits from [rpc::Service](#rpcservice), and it has already implemented `name()` and `methods()` in `rpc::Service`.
-- Users only need to inherit the `HelloWorld` class and implement the methods `hello` and `world`.
-
-
-
-### Implement the RPC service
+Users inherit from it and implement the pure virtual methods:
 
 ```cpp
+struct HelloWorldImpl : xx::HelloWorld {
+    void hello(json::any& req, json::any& res) override {
+        res.add_member("msg", "hello");
+    }
+
+    void world(json::any& req, json::any& res) override {
+        res.add_member("msg", "world");
+    }
+};
+```
+
+### proto Syntax
+
+#### Program Structure
+
+```proto
+package <package_name>
+
+service <ServiceName> {
+    method1
+    method2
+}
+
+object <ObjectName> {
+    <field_type> <field_name> [= <default_value>]
+}
+```
+
+- `package` is optional and corresponds to the namespace of the generated code.
+- A `.proto` file can contain at most one `service`.
+- `object` defines a struct type.
+
+#### service
+
+```proto
+service HelloWorld {
+    hello
+    world
+}
+```
+
+- The braces contain a list of methods, one method name per line.
+- Method names can be any valid identifier.
+- Methods can be separated by `,` or `;`, or the separators can be omitted.
+
+The generated method key format is `ServiceName.method_name`.
+
+#### object
+
+```proto
+object User {
+    int32 id
+    string name
+    int64 score = 0
+}
+```
+
+- The `object` name corresponds to the generated struct type name.
+- Field format: `<type> <name> [= <default>]`.
+
+#### Types
+
+Basic types:
+
+```text
+bool
+int
+int32
+int64
+uint32
+uint64
+double
+string
+```
+
+Object types:
+
+```proto
+User user
+```
+
+Or anonymous objects:
+
+```proto
+user {
+    int32 id
+    string name
+}
+```
+
+Array types:
+
+```proto
+[string] tags
+[int32] scores
+[User] users
+```
+
+#### Field Values
+
+```proto
+int32 id = 0
+string name = "unknown"
+double score = 3.14
+bool enabled = true
+```
+
+- `= <value>` is optional and represents the default value.
+- Supports bool, int, double, and string literals.
+
+#### Comments
+
+```proto
+// Single-line comment
+/* Multi-line comment */
+```
+
+#### Literals
+
+- Integers: `123`, `-32`, `+5`
+- Hexadecimal: `0xFF`, `-0x10`
+- Floating point: `3.14`, `1e10`, `-2.5E-3`
+- Boolean: `true`, `false`
+- Strings: single or double quotes; supports `\r`, `\n`, `\t`, `\"`, `\'`, `\\`
+
+#### Identifiers
+
+```text
+[a-zA-Z_]([a-zA-Z_0-9]|\.[a-zA-Z_0-9])*
+```
+
+- Starts with a letter or underscore.
+- Can contain letters, digits, underscores, and `.`.
+- After `.`, it must start with a letter or underscore.
+
+### Syntax Constraints
+
+- A `.proto` file can contain at most one `service`.
+- Method names must not be duplicated.
+- Object names must not be duplicated.
+- Field names within the same object must not be duplicated.
+- Custom object types must have been defined earlier.
+
+### Generated Code
+
+For each `service`, a class is generated:
+
+```cpp
+struct ServiceName : co::rpc_service {
+    ServiceName();
+    virtual ~ServiceName();
+
+    virtual const char* name() const;
+    virtual const co::map<const char*, rpc_method_t>& methods() const;
+
+    virtual void method1(json::any& req, json::any& res) = 0;
+    virtual void method2(json::any& req, json::any& res) = 0;
+
+    co::map<const char*, rpc_method_t> _methods;
+};
+```
+
+- The constructor registers all methods, with keys `ServiceName.method_name`.
+- Each method is a pure virtual function that users must implement.
+- The namespace is determined by `package`.
+
+## rpc_server
+
+```cpp
+struct rpc_server {
+    rpc_server(const char* ip, int port);
+    ~rpc_server();
+
+    rpc_server(const rpc_server&) = delete;
+    rpc_server(rpc_server&&) = delete;
+    void operator=(const rpc_server&) = delete;
+    void operator=(rpc_server&&) = delete;
+
+    rpc_server& add_service(co::unique<rpc_service>&& s);
+    void start();
+    void stop();
+};
+```
+
+- Implemented based on `co::tcp_server`, with one coroutine per connection.
+- `add_service` registers a service and returns `*this`, allowing chained calls.
+- `start()` starts the internal `tcp_server`.
+- `stop()` stops the internal `tcp_server`.
+
+Example:
+
+```cpp
+#include "co/rpc.h"
+#include "co/co.h"
 #include "hello_world.h"
 
-namespace xx {
-
-class HelloWorldImpl : public HelloWorld {
-  public:
-    HelloWorldImpl() = default;
-    virtual ~HelloWorldImpl() = default;
-
-    virtual void hello(Json& req, Json& res) {
-        res = {
-            { "result", {
-                { "hello", 23 }
-            }}
-        };
-    }
-
-    virtual void world(Json& req, Json& res) {
-        res = {
-            { "error", "not supported"}
-        };
-    }
-};
-
-} // xx
-```
-
-- The above is just a very simple example. In actual applications, it is generally necessary to perform corresponding business processing according to the parameters in `req`, and then fill in `res`.
-
-
-
-### Start RPC server
-
-```cpp
 int main(int argc, char** argv) {
     flag::parse(argc, argv);
 
-    rpc::Server()
-        .add_service(new xx::HelloWorldImpl)
-        .start("127.0.0.1", 7788, "/xx");
+    co::rpc_server s("0.0.0.0", 7788);
+    s.add_service(co::make_unique<HelloWorldImpl>());
+    s.start();
 
-    for (;;) sleep::sec(80000);
+    co::sleep(60000);
+    s.stop();
     return 0;
 }
+```
+
+## rpc_client
+
+```cpp
+struct rpc_client {
+    rpc_client(const char* server_host, int server_port)
+        : _tcp_cli(server_host, (uint16)server_port) {}
+
+    rpc_client(const rpc_client& c)
+        : _tcp_cli(c._tcp_cli) {}
+
+    ~rpc_client() = default;
+
+    rpc_client(rpc_client&&) = delete;
+    void operator=(const rpc_client& c) = delete;
+    void operator=(rpc_client&&) = delete;
+
+    void call(const json::any& req, json::any& res);
+    void ping();
+    void close() { _tcp_cli.close(); }
+
+    co::tcp_client _tcp_cli;
+};
+```
+
+- Copy construction only copies host / port, not the connection.
+- `call`: sends a request and receives a response.
+- `ping`: sends `{"api":"ping"}`.
+- `close`: closes the underlying connection.
+
+{{< hint warning >}}
+rpc_client cannot be called by multiple coroutines at the same time; you can put rpc_client into co::pool for reuse.
+{{< /hint >}}
+
+Example:
+
+```cpp
+#include "co/rpc.h"
+#include "co/co.h"
+#include "co/print.h"
+
+int main(int argc, char** argv) {
+    flag::parse(argc, argv);
+
+    go([] {
+        co::rpc_client c("127.0.0.1", 7788);
+
+        json::any req = json::object();
+        req.add_member("api", "HelloWorld.hello");
+
+        json::any res;
+        c.call(req, res);
+        co::println("res = ", res.str());
+    });
+
+    co::sleep(5000);
+    return 0;
 }
 ```
 
-- First call [add_service()](#serveradd_service) to add the service, then call [start()](#serverstart) to start the server.
+## RPC-Related Flags
 
-{{< hint info >}}
-The `start()` method will not block the current thread, so we need a for loop to prevent the main function from exiting.
-{{< /hint >}}
+| flag | Default | Meaning |
+|---|---|---|
+| `rpc_max_msg_size` | `8 << 20` (8M) | Maximum message length |
+| `rpc_recv_timeout` | `3000` | Receive timeout (milliseconds) |
+| `rpc_send_timeout` | `3000` | Send timeout (milliseconds) |
+| `rpc_conn_timeout` | `3000` | Connection timeout (milliseconds) |
+| `rpc_conn_idle_sec` | `180` | Maximum connection idle time (seconds) |
+| `rpc_max_idle_conn` | `128` | Maximum number of idle connections |
+| `rpc_log` | `false` | Print RPC logs |
 
-
-
-### Call RPC service with curl
-
-In v3.0, the RPC framework supports HTTP protocol, so we can call the RPC service with the `curl` command:
+- Can be adjusted via command line or configuration file:
 
 ```bash
-curl http://127.0.0.1:7788/xx --request POST --data '{"api":"ping"}'
-curl http://127.0.0.1:7788/xx --request POST --data '{"api":"HelloWorld.hello"}'
+./app -rpc_log=true -rpc_recv_timeout=5000
 ```
 
-- The above use `curl` to send a POST request to the RPC server, the parameter is a JSON string, and a `"api"` field must be provided to indicate the RPC method to be called.
-
-- `"ping"` is a built-in method of the RPC framework, generally used for testing or sending heartbeats.
-
-- `/xx` in the url should be consistent with the url specified when the RPC server is started.
-
-
-
-
-## rpc::Client
-
-### Client::Client
-
-```cpp
-1. Client(const char* ip, int port, bool use_ssl=false);
-2. Client(const Client& c);
-```
-
-- 1, the parameter `ip` is ip of the server, which can be a domain name, IPv4 or IPv6 address; the parameter `port` is port of the server; the parameter `use_ssl` indicates whether to enable SSL transmission, the default is false, and SSL is disabled.
-
-{{< hint info >}}
-When rpc::Client was constructed, the connection is not established immediately.
-{{< /hint >}}
-
-
-
-### Client::~Client
-
-```cpp
-Client::~Client();
-```
-
-- Destructor, close the internal connection.
-
-
-
-### Client::call
-
-```cpp
-void call(const Json& req, Json& res);
-```
-
-- Perform a RPC request, it must be called in coroutine.
-- The parameter `req` must contain the `"api"` field, its value is generally in the form of `"service.method"`.
-- The parameter `res` is the response of the RPC request.
-- If the RPC request is not sent, or no response from the server is received, res will not be filled.
-- This method checks the connection status before sending the RPC request, and establishes the connection first if it is not connected.
-
-
-
-### Client::close
-
-```cpp
-void close();
-```
-
-- Close the connection, it is safe to call this function multiple times.
-
-
-
-### Client::ping
-
-```cpp
-void ping();
-```
-
-- Send a `ping` request to the server, generally used for testing or sending heartbeats.
-
-
-
-
-## RPC client example
-
-### Use rpc::Client directly
-
-```cpp
-DEF_bool(use_ssl, false, "use ssl if true");
-DEF_int32(n, 3, "request num");
-
-void client_fun() {
-    rpc::Client c("127.0.0.1", 7788, FLG_use_ssl);
-
-    for (int i = 0; i < FLG_n; ++i) {
-        co::Json req = {
-            {"api", "HelloWorld.hello"}
-        };
-        co::Json res;
-        c.call(req, res);
-        co::sleep(1000);
-    }
-
-    c.close();
-}
-
-go(client_fun);
-```
-
-- In the above example, the client sends an RPC request to the server every 1 second.
-
-
-
-### Use connection pool
-
-When a client needs to establish a large number of connections, [co::pool](../../concurrency/coroutine/pool/) can be used to manage these connections.
-
-```cpp
-std::unique_ptr<rpc::Client> proto;
-
-co::pool pool(
-    []() { return (void*) new rpc::Client(*proto); },
-    [](void* p) { delete (rpc::Client*) p; }
-);
-
-void client_fun() {
-    co::pool_guard<rpc::Client> c(pool);
-
-    while (true) {
-        c->ping();
-        co::sleep(3000);
-    }
-}
-
-proto.reset(new rpc::Client("127.0.0.1", 7788));
-
-for (int i = 0; i < 8; ++i) {
-    go(client_fun);
-}
-```
-
-
-- In the above example, co::pool is used to store the clients, and multiple coroutines can share these clients.
-- The ccb of co::pool uses copy construction to copy a client from `proto`.
-
-
-
-
-## Config items
-
-Coost uses [co.flag](../../flag/) to define config items for RPC.
-
-
-### rpc_conn_idle_sec
-
-```cpp
-DEF_int32(rpc_conn_idle_sec, 180, "#2 connection may be closed if no data...");
-```
-
-- Timeout in **seconds** for idle connections in rpc::Server. If a connection does not receive any data within this time, the server may close the connection.
-
-
-
-### rpc_conn_timeout
-
-```cpp
-DEF_int32(rpc_conn_timeout, 3000, "#2 connect timeout in ms");
-```
-
-- Connect timeout in milliseconds for rpc::Client.
-
-
-
-### rpc_log
-
-```cpp
-DEF_bool(rpc_log, true, "#2 enable rpc log if true");
-```
-
-- Whether to print RPC logs, the default is true, rpc::Server and rpc::Client will print RPC requests and responses.
-
-
-
-### rpc_max_idle_conn
-
-```cpp
-DEF_int32(rpc_max_idle_conn, 128, "#2 max idle connections");
-```
-
-- Maximum number of idle connections for rpc::Server. The default is 128. When this number is exceeded, the server will close some idle connections.
-
-
-
-### rpc_max_msg_size
-
-```cpp
-DEF_int32(rpc_max_msg_size, 8 << 20, "#2 max size of rpc message, default: 8M");
-```
-
-- The maximum length of RPC messages, the default is 8M.
-
-
-
-### rpc_recv_timeout
-
-```cpp
-DEF_int32(rpc_recv_timeout, 3000, "#2 recv timeout in ms");
-```
-
-- RPC recv timeout in milliseconds.
-
-
-
-### rpc_send_timeout
-
-```cpp
-DEF_int32(rpc_send_timeout, 3000, "#2 send timeout in ms");
-```
-
-- RPC send timeout in milliseconds.
+## Notes
+
+- The RPC protocol header is fixed at 8 bytes, with magic `0x7777`.
+- Requests must contain the `api` field, and it must be a string.
+- The method name format is `ServiceName.method_name`.
+- The built-in method `ping` responds with `{"res":"pong"}`.
+- `rpc_client::call` attempts to connect if not connected; returns directly on failure.
+- `rpc_client` cannot be called by multiple threads at the same time.
+- Copy construction of `rpc_client` only copies host / port, not the connection.
+- When adding a service, duplicate service or method names will cause `log::check` to fail.
+- `flag::parse` is required to start the underlying threads.
+- Users usually inherit from the class generated by `gen`, rather than directly inheriting from `co::rpc_service`.
+- A `.proto` file can contain at most one `service`.

@@ -1,182 +1,98 @@
 ---
-weight: 9
+weight: 8
 title: "Time"
 ---
 
-include: [co/time.h](https://github.com/idealvin/coost/blob/master/include/co/time.h).
-
-
-## epoch time
-
-The EPOCH is a specific time `1970-01-01 00:00:00 UTC`, and the epoch time is the time since the EPOCH. 
-
-
-
-### epoch::ms
+## Header
 
 ```cpp
-int64 ms();
+#include "co/time.h"
 ```
 
-- Return milliseconds since EPOCH.
+`flag::parse` is not required.
 
+`sleep` is in the `time` namespace; the rest are in the `co` namespace.
 
-
-### epoch::us
+## Current Time co::now
 
 ```cpp
-int64 us();
+struct Now {
+    static int64 ns();   // nanoseconds, may overflow in 2262
+    static int64 us();   // microseconds
+    static int64 ms();   // milliseconds
+    static co::string str(const char* fmt="%Y-%m-%d %H:%M:%S");
+};
 ```
 
-- Return microseconds since EPOCH.
+- `ns()` / `us()` / `ms()` return Unix epoch timestamps (UTC).
+- `str()` is based on `strftime` and returns a local time string.
 
-
-
-
-## monotonic time
-
-Monotonic time is a monotonic increasing time, it is implemented as the time since last reboot of system on most platforms. It is generally used for timing and is more stable than system time. 
-
-
-### now::ms
+## Monotonic Clock co::mono_time
 
 ```cpp
-int64 ms();
+struct MonoTime {
+    static int64 ns();
+    static int64 us();
+    static int64 ms();
+};
 ```
 
-- Returns a monotonically increasing timestamp in milliseconds.
-- On mac platform, if the system does not support `CLOCK_MONOTONIC`, `epoch::ms()` will be used instead.
+- Based on `std::chrono::steady_clock`.
+- Monotonically increasing, suitable for measuring time differences.
 
-
-
-### now::us
+## Timer co::timer
 
 ```cpp
-int64 us();
+struct timer {
+    timer();
+    void restart();
+    int64 ns() const;
+    int64 us() const;
+    int64 ms() const;
+};
 ```
 
-- Returns a monotonically increasing timestamp in microseconds.
-- On mac platform, if the system does not support `CLOCK_MONOTONIC`, `epoch::us()` will be used instead.
+- Records the start point on construction.
+- `restart()` resets the start point.
+- `ns()` / `us()` / `ms()` return the elapsed time from the start point to now.
+- Based on `mono_time`.
 
-- Example
+## Sleep time::sleep
 
 ```cpp
-int64 beg = now::us();
-int64 end = now::us();
-LOG << "time used: "<< (end-beg) <<" us";
+void time::sleep(uint32 ms);
 ```
 
+- Unit is milliseconds.
+- Thread-level sleep, blocks the current thread.
+- Cannot be used in a coroutine; use `co::sleep` in coroutines.
 
-
-
-## Time string (now::str)
-
-```cpp
-// fm: time output format
-fastring str(const char* fm="%Y-%m-%d %H:%M:%S");
-```
-
-- This function returns the string form of the current system time in the specified format. It is implemented based on `strftime`.
-
-- Example
+## Example
 
 ```cpp
-fastring s = now::str();     // "2021-07-07 17:07:07"
-fastring s = now::str("%Y"); // "2021"
-```
+#include "co/time.h"
+#include "co/print.h"
 
+int main() {
+    co::println("now.ns() = ", co::now.ns());
+    co::println("now.us() = ", co::now.us());
+    co::println("now.ms() = ", co::now.ms());
+    co::println("now.str() = ", co::now.str());
+    co::println("now.str(%Y%m%d) = ", co::now.str("%Y%m%d"));
 
+    co::println("mono.ns() = ", co::mono_time.ns());
+    co::println("mono.us() = ", co::mono_time.us());
+    co::println("mono.ms() = ", co::mono_time.ms());
 
+    co::timer t;
+    time::sleep(100);
+    co::println("elapsed ns = ", t.ns());
+    co::println("elapsed us = ", t.us());
+    co::println("elapsed ms = ", t.ms());
 
-## sleep
-
-
-### sleep::ms
-
-```cpp
-void ms(uint32 n);
-```
-
-- Sleep for n milliseconds.
-
-
-
-### sleep::sec
-
-```cpp
-void sec(uint32 n);
-```
-
-- Sleep for n seconds.
-
-- Example
-
-```cpp
-sleep::ms(10); // sleep for 10 milliseconds
-sleep::sec(1); // sleep for 1 second
-```
-
-
-
-
-## co::Timer
-
-**co::Timer** is a simple timer based on monotonic time. 
-
-{{< hint warning >}}
-Timer was added to namespace `co` since v3.0.1.
-{{< /hint >}}
-
-
-
-### constructor
-
-```cpp
-Timer();
-```
-
-- Set the start time of the timer, and start timing when the object is created.
-
-
-
-### ms
-
-```cpp
-int64 ms() const;
-```
-
-- Return milliseconds since start of the timing.
-
-
-
-### us
-
-```cpp
-int64 us() const;
-```
-
-- Return microseconds since start of the timing.
-
-
-
-### restart
-
-```cpp
-void restart();
-```
-
-- Restart the timer.
-
-
-
-### Example
-
-```cpp
-co::Timer t;
-sleep::ms(10);
-int64 us = t.us();
-
-t.restart();
-sleep::ms(20);
-int64 ms = t.ms();
+    t.restart();
+    time::sleep(50);
+    co::println("after restart, ms = ", t.ms());
+    return 0;
+}
 ```

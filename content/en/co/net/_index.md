@@ -1,5 +1,5 @@
 ---
 weight: 17
-title: "Network Programming"
+title: "Network"
 bookCollapseSection: true
 ---

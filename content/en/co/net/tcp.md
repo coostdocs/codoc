@@ -1,451 +1,170 @@
 ---
-weight: 5
+weight: 3
 title: "TCP"
 ---
 
-include: [co/tcp.h](https://github.com/idealvin/coost/blob/master/include/co/tcp.h).
-
-
-## tcp::Connection
-
-
-`tcp::Connection` is a simple encapsulation of TCP connection, it is designed for TCP server. When SSL is enabled in a TCP server, `tcp::Connection` will transfer data by SSL. 
-
-
-### Connection::Connection
+## Header
 
 ```cpp
-Connection(int sock);
-Connection(void* ssl);
-Connection(Connection&& c);
+#include "co/tcp.h"
 ```
 
-- The constructor, `Connection` is created by `tcp::Server`, users do not need to create it manually.
-- The first version constructs a normal TCP connection, the second version constructs a TCP connection that support SSL, and the third is a move constructor.
-
-
-
-### Connection::~Connection
+The API is in the `co` namespace, and aliases are also provided:
 
 ```cpp
-Connection::~Connection();
-```
-
-- Destructor, call [close()](#connectionclose) to close the connection.
-
-
-
-### Connection::close
-
-```cpp
-int close(int ms = 0);
-```
-
-- Close the connection. When `ms` > 0, close the connection after a certain delay.
-- Since v2.0.1, this method can be called anywhere(in coroutine or non-coroutine).
-
-
-
-### Connection::recv
-
-```cpp
-int recv(void* buf, int n, int ms=-1);
-```
-
-- Receive data, similar to [co::recv](../sock/#corecv).
-- This method must be called in coroutine.
-- Return >0 on success, <0 on timeout or any error, and 0 will be returned if the peer closed the connection.
-
-
-
-### Connection::recvn
-
-```cpp
-int recvn(void* buf, int n, int ms=-1);
-```
-
-- Receive data of specified length, similar to [co::recvn](../sock/#corecvn).
-- Return `n` on success, <0 on timeout or any error, and 0 will be returned if the peer closed the connection.
-
-
-
-### Connection::reset
-
-```cpp
-int reset(int ms = 0)
-```
-
-- Reset the TCP connection, unlike [close()](#connectionclose), it will not enter the `TIME_WAIT` state. When `ms` > 0, the connection will be reset after a certain delay.
-- This method must be called in the I/O thread (usually a coroutine that performs the I/O operations).
-
-
-
-### Connection::send
-
-```cpp
-int send(const void* buf, int n, int ms=-1);
-```
-
-- Send data, similar to [co::send()](../sock/#cosend).
-- return n on success, <= 0 on timeout or error.
-
-
-
-### Connection::socket
-
-```cpp
-int socket() const;
-```
-
-- Return the internal socket descriptor, -1 will be returned if the connection was closed.
-
-
-
-### Connection::strerror
-
-```cpp
-const char* strerror() const;
-```
-
-- When an error occurs in any method of `Connection`, users can call this method to get the error message.
-
-
-
-
-## tcp::Server
-
-`tcp::Server` is a TCP server based on coroutine. It has the following features:
-
-- Support IPv4 and IPv6.
-- Support SSL (openssl is required).
-- One coroutine for each client connection.
-
-
-### Server::Server
-
-```cpp
-Server();
-```
-
-- The constructor, initialization.
-
-
-
-### Server::conn_num
-
-```cpp
-uint32 conn_num() const;
-```
-
-- Returns number of client connections.
-
-
-
-### Server::on_connection
-
-```cpp
-Server& on_connection(std::function<void(Connection)>&& f);
-Server& on_connection(const std::function<void(Connection)>& f);
-
-template<typename T>
-Server& on_connection(void (T::*f)(Connection), T* o);
-```
-
-- Set a callback for handling connections.
-- In the first 2 versions, the parameter `f` is a function of type `void f(Connection)`, or a function object of type `std::function<void(Connection)>`.
-- In the third version, the parameter `f` is a method in class `T`, and the parameter `o` is a pointer to type `T`.
-- Since v2.0.2, the parameter of `f` is an object of `tcp::Connection`, rather than a pointer, and users do not need to **delete it** any more.
-- When the server receives a connection, it will create a new coroutine and call the callback set by this method in the coroutine to handle the connection.
-
-- Example
-
-```cpp
-void f(tcp::Connection conn);
-
-tcp::Server s;
-s.on_connection(f);
-
-void f(tcp::Connection conn) {
-    while (true) {
-        conn.recv(...);
-        process(...);
-        conn.send(...);
-    }
-    
-    conn.close();
+namespace tcp {
+using client = co::tcp_client;
+using server = co::tcp_server;
 }
 ```
 
+Before use, you need to call `flag::parse(argc, argv);` at the beginning of `main`.
 
-
-### Server::on_exit
+## tcp_client
 
 ```cpp
-Server& on_exit(std::function<void()>&& cb);
+struct tcp_client {
+    tcp_client(const char* server_host, uint16 server_port);
+    tcp_client(const tcp_client& c);
+    ~tcp_client();
+
+    tcp_client(tcp_client&&) = delete;
+    void operator=(const tcp_client& c) = delete;
+    void operator=(tcp_client&& c) = delete;
+
+    bool connected() const;
+    bool connect(int ms);
+    void disconnect();
+    void close();
+
+    int recv(void* buf, int n, int ms=-1);
+    int recvn(void* buf, int n, int ms=-1);
+    int send(const void* buf, int n, int ms=-1);
+};
 ```
 
-- Set a callback which will be called when the server exits.
+- Must be used inside a coroutine.
+- If `server_host` is empty, it defaults to `"127.0.0.1"`.
+- Copy construction only copies host and port; it does not share the connection.
+- The destructor automatically calls `disconnect()`.
+- `connect(ms)`: returns `true` if already connected; on failure it has already called `disconnect()` internally and returns `false`; after success it automatically calls `set_tcp_nodelay`.
+- `disconnect()` / `close()`: equivalent; repeated calls are safe.
+- `recv` / `recvn` / `send`: forward to `co::recv` / `co::recvn` / `co::send`.
 
+{{< hint warning >}}
+tcp_client cannot be used by multiple coroutines at the same time; you can put tcp_client into co::pool for reuse.
+{{< /hint >}}
 
-
-### Server::start
-
-
-```cpp
-void start(const char* ip, int port, const char* key=0, const char* ca=0);
-```
-
-
-- Start the TCP server, this method will not block the current thread.
-- The parameter `ip` is the server ip, which can be an IPv4 or IPv6 address, and the parameter port is the server port. 
-- The parameter `key` is path of a PEM file which stores the SSL private key, and the parameter `ca` is path of a PEM file which stores the SSL certificate. They are NULL by default, and SSL is disabled.
-- Starting from v3.0, the server no longer depends on the `tcp::Server` object after it is started.
-
-- Example
+### Example
 
 ```cpp
-void f(tcp::Connection conn);
-tcp::Server().on_connection(f).start("0.0.0.0", 7788);
-```
-
-
-
-### Server::exit
-
-```cpp
-void exit();
-```
-
-- Added since v2.0.2.
-- Exit the TCP server, close the listening socket, and no longer receive new connections.
-- This method will not close the connections that has been established before.
-- If you need to close the previously established connections after the server exits, you can refer to [test/tcp2.cc](https://github.com/idealvin/cocoyaxi/blob/master/test/so/tcp2.cc) or implementations of `http::Server` and `rpc::Server` in co.
-
-
-
-
-## tcp::Client
-
-`tcp::Client` is a TCP client based on coroutine. It has following features:
-
-- Support IPv4 and IPv6.
-- Support SSL (openssl is required).
-- One client corresponds to one connection.
-- It must be used in coroutine.
-- It is not coroutine-safe, and it cannot be used by multiple coroutines at the same time.
-
-
-
-### Client::Client
-
-```cpp
-Client(const char* ip, int port, bool use_ssl=false);
-Client(const Client& c);
-```
-
-- Constructor. The parameter `ip` is the ip of the server, which can be a domain name, or an IPv4 or IPv6 address; the parameter `port` is the server port; the parameter `use_ssl` indicates whether to enable SSL transmission, the default is false.
-- The second version is the copy constructor, value of ip, port and use_ssl will be copied from another client.
-- **The connection is not established in the constructor.** It is generally recommended to check whether the connection has been established before calling recv, send. If not, call [connect()](#clientconnect) to establish the connection. It is easy to support auto-reconnection in this way.
-
-
-
-### Client::~Client
-
-```cpp
-Client::~Client();
-```
-
-- Destructor, call the [disconnect()](#clientdisconnect) method to close the connection.
-
-
-
-### Client::close
-
-```cpp
-void close();
-```
-
-- Close the connection, the same as [disconnect()](#clientdisconnect).
-
-
-
-### Client::connect
-
-```cpp
-bool connect(int ms);
-```
-
-- Establish a connection, the parameter `ms` is the timeout period in milliseconds.
-- This method must be called in coroutine.
-- This method returns true on success, otherwise it returns false. When it fails, users can call [strerror()](#clientstrerror) to get the error message.
-
-
-
-### Client::connected
-
-```cpp
-bool connected() const;
-```
-
-
-- Determine whether the connection has been established.
-
-
-
-### Client::disconnect
-
-```cpp
-void disconnect();
-```
-
-- Since v2.0.1, it can be called anywhere(in coroutine or non-coroutine).
-- It is safe to call this method multiple times, and it will be called automatically in the destructor.
-
-
-
-### Client::recv
-
-```cpp
-int recv(void* buf, int n, int ms=-1);
-```
-
-- Receive data, similar to [co::recv()](../sock/#corecv).
-- This method must be called in coroutine.
-- Return >0 on success, <0 on timeout or any error, and 0 will be returned if the peer closed the connection.
-
-
-
-### Client::recvn
-
-```cpp
-int recvn(void* buf, int n, int ms=-1);
-```
-
-- Receive data of specified length, similar to [co::recvn()](../sock/#corecvn).
-- This method must be called in coroutine.
-- Return `n` on success, <0 on timeout or any error, and 0 will be returned if the peer closed the connection.
-
-
-
-### Client::send
-
-```cpp
-int send(const void* buf, int n, int ms=-1);
-```
-
-- Send data, similar to [co::send()](../sock/#cosend).
-- This method must be called in coroutine.
-- return `n` on success, <=0 on timeout or error.
-
-
-
-### Client::socket
-
-```cpp
-int socket() const;
-```
-
-- Return the internal socket descriptor.
-- When the connection is not established or the connection has been closed, the return value is -1.
-
-
-
-### Client::strerror
-
-```cpp
-const char* strerror() const;
-```
-
-- When an error occurs in any method of `tcp::Client`, users can call this method to get the error message.
-
-
-
-
-## TCP server example
-
-```cpp
-void on_connection(tcp::Connection conn) {
-    char buf[8] = { 0 };
-
-    while (true) {
-        int r = conn.recv(buf, 8);
-        if (r == 0) {         /* client close the connection */
-            conn.close();
-            break;
-        } else if (r < 0) { /* error */
-            conn.reset(3000);
-            break;
-        } else {
-            LOG << "server recv " << fastring(buf, r);
-            LOG << "server send pong";
-            r = conn.send("pong", 4);
-            if (r <= 0) {
-                LOG << "server send error: " << conn.strerror();
-                conn.reset(3000);
-                break;
-            }
-        }
-    }
-}
-
-tcp::Server s;
-s.on_connection(on_connection);
-s.start("0.0.0.0", 7788);                                    // no ssl
-s.start("0.0.0.0", 7788, "privkey.pem", "certificate.pem");  // use ssl
-```
-
-- The above example implements a simple ping-pong server, when it receives a ping sent by the client, it will reply with a pong.
-
-
-
-
-## TCP client example
-
-```cpp
-bool use_ssl = false;
-std::unique_ptr<tcp::Client> proto;
-
-co::pool pool(
-    []() {return (void*) new tcp::Client(*proto); },
-    [](void* p) {delete (tcp::Client*) p;}
-);
-
-void client_fun() {
-    co::pool_guard<tcp::Client> c(pool);
-    
-    if (!c->connect(3000)) {
-        LOG << "connect failed: "<< c->strerror();
-        return;
-    }
-
-    char buf[8] = {0 };
-
-    while (true) {
-        LOG << "client send ping";
-        int r = c->send("ping", 4);
-        if (r <= 0) {
-            LOG << "client send error: "<< c->strerror();
-            break;
+#include "co/tcp.h"
+#include "co/co.h"
+#include "co/print.h"
+
+int main(int argc, char** argv) {
+    flag::parse(argc, argv);
+
+    go([] {
+        co::tcp_client c("127.0.0.1", 8080);
+        if (!c.connect(3000)) {
+            co::println("connect failed: ", co::strerror());
+            return;
         }
 
-        r = c->recv(buf, 8);
-        if (r < 0) {
-            LOG << "client recv error: "<< c->strerror();
-            break;
-        } else if (r == 0) {
-            LOG << "server close the connection";
-            break;
-        } else {
-            LOG << "client recv "<< fastring(buf, r) <<'\n';
-            co::sleep(3000);
-        }
-    }
-}
+        c.send("hello", 5, 3000);
 
-proto.reset(new tcp::Client("127.0.0.1", 7788, use_ssl));
-for (int i = 0; i <8; ++i) {
-    go(client_fun);
+        char buf[128];
+        int n = c.recv(buf, sizeof(buf), 3000);
+        if (n > 0) co::println("recv: ", co::string(buf, n));
+
+        c.disconnect();
+    });
+
+    co::sleep(5000);
+    return 0;
 }
 ```
 
-- In the above example, we use [co::pool](../../concurrency/coroutine/pool/) to cache client connections, and different coroutines can share connections in the pool.
+## tcp_server
+
+```cpp
+struct tcp_server {
+    tcp_server(const char* ip, uint16 port);
+    ~tcp_server();
+
+    tcp_server(const tcp_server&) = delete;
+    tcp_server(tcp_server&&) = delete;
+    void operator=(const tcp_server&) = delete;
+    void operator=(tcp_server&&) = delete;
+
+    using conn_cb_t = std::function<void(sock_t)>;
+
+    tcp_server& on_connection(conn_cb_t&& cb);
+    tcp_server& on_connection(const conn_cb_t& cb);
+
+    void start();
+    void stop();
+    uint32 conn_num();
+};
+```
+
+- Adopts the one-coroutine-per-connection model.
+- If `ip` is empty, it defaults to `"0.0.0.0"`.
+- `on_connection` must be called before `start()`; it returns `*this` to support chained calls.
+- `start()`: starts a background coroutine for listening; after each successful accept, the callback is executed in an independent coroutine.
+- `stop()`: stops listening; semantically it means "stop accepting new connections", not "gracefully shut down the service".
+- `conn_num()`: the number of connections currently being processed by callbacks; thread-safe.
+
+### Connection Callback
+
+- Each connection executes the callback in an independent coroutine.
+- Before the callback, `keepalive` and `nodelay` are automatically set.
+- **After the callback ends, `tcp_server` does not automatically call `co::close(fd)`**; users must close it themselves in the callback.
+- After the callback ends, `conn_num` is decremented by 1.
+
+### Example
+
+```cpp
+#include "co/tcp.h"
+#include "co/co.h"
+#include "co/print.h"
+
+int main(int argc, char** argv) {
+    flag::parse(argc, argv);
+
+    co::tcp_server s("0.0.0.0", 7777);
+    s.on_connection([](sock_t fd) {
+        co::println("new connection: ", fd);
+
+        char buf[1024];
+        int n = co::recvn(fd, buf, 4);
+        if (n == 4) {
+            uint32 body_len = *(uint32*)buf;
+            co::string body;
+            body.resize(body_len);
+            co::recvn(fd, body.data(), body_len);
+            co::println("body: ", body);
+        }
+
+        co::close(fd);
+    });
+
+    s.start();
+
+    co::sleep(60000);
+
+    s.stop();
+    return 0;
+}
+```
+
+## Notes
+
+- When `tcp_client::connect` fails, it has already called `disconnect()` internally; no manual cleanup is needed.
+- `tcp_client::send` guarantees that all data is sent on success; the state after an error or timeout is undefined.
+- `tcp_server::stop()` only stops listening; it does not close already accepted connections.
+- Users must call `co::close(fd)` themselves in the callback.
+- `conn_num()` reflects the number of connections currently being processed by callbacks, not the number of established connections.
+- When the listening address is a wildcard address (`0.0.0.0` or `::`), `stop()` internally connects to itself using `127.0.0.1` to wake up `accept`.
+- The `tcp_server` destructor calls `stop()` first, then releases resources.

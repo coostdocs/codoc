@@ -1,491 +1,312 @@
 ---
 weight: 4
-title: "flag"
+title: "Configuration"
 ---
 
-include: [co/flag.h](https://github.com/idealvin/coost/blob/master/include/co/flag.h).
-
-
-## Basic concepts
-
-**co.flag** is a command line and config file parsing library. Its principle is very simple, define global variables in code, then parse the command line parameters and/or config file when the program starts, and update the value of these global variables. 
-
-
-
-### flag variable
-
-The global variable defined by macros in `co.flag` are called **flag variable**. For example, the following code defines a flag variable, the variable name is `FLG_x`.
+## Header
 
 ```cpp
-DEF_int32(x, 0, "xxx"); // int32 FLG_x = 0;
+#include <co/flag.h>
 ```
 
-`co.flag` supports 7 types of flag variable:
+The API is in the `flag` namespace.
+
+## Overview
+
+`flag` provides command-line argument and configuration file parsing functionality. All component configuration items in coost are defined through flags.
+
+- Defining a flag defines a global variable; the variable name is `FLG_<name>`;
+- Supports both command-line arguments and configuration files;
+- The command line supports `-help` to print help information, `-mkconf` to generate a configuration file, and `-version` to display the program version;
+
+## Defining Flags
+
+### DEF Macros
 
 ```cpp
-bool, int32, int64, uint32, uint64, double, string
+DEF_bool(name, value, help, ...);
+DEF_int32(name, value, help, ...);
+DEF_int64(name, value, help, ...);
+DEF_uint32(name, value, help, ...);
+DEF_uint64(name, value, help, ...);
+DEF_double(name, value, help, ...);
+DEF_string(name, value, help, ...);
 ```
 
-Every flag variable has a default value, and a new value can be passed to it from command-line or config file. Take the previously `FLG_x` as an example, we can use `-x=23` in command line, or `x = 23` in the config file, to set a new value for it.
+After definition, access it through a global variable, such as `FLG_name`.
 
+Type correspondence:
 
+| Macro | Type | Internal Identifier |
+|---|---|---|
+| `DEF_bool` | `bool` | `'b'` |
+| `DEF_int32` | `int32` | `'i'` |
+| `DEF_int64` | `int64` | `'I'` |
+| `DEF_uint32` | `uint32` | `'u'` |
+| `DEF_uint64` | `uint64` | `'U'` |
+| `DEF_double` | `double` | `'d'` |
+| `DEF_string` | `co::string&` | `'s'` |
 
-### command line flag
+Example:
+```cpp
+// Define a global bool variable; the variable name is FLG_debug
+DEF_bool(debug, false, "debug mode");
+```
 
-Command line parameters appear in the form of `-x=y`, where `x` is called a **command line flag** (hereinafter referred to as flag). The flag `x` in command line corresponds to the global variable `FLG_x` in the code, and `-x=y` in command line is equivalent to setting the value of `FLG_x` to `y`. 
+### DEC Macros
 
-`co.flag` is designed to be very flexible:
+```cpp
+DEC_bool(name);
+DEC_int32(name);
+DEC_int64(name);
+DEC_uint32(name);
+DEC_uint64(name);
+DEC_double(name);
+DEC_string(name);
+```
 
-- `-x=y` can omit the preceding `-`, abbreviated as `x=y`.
-- `-x=y` can also be written as `-x y`.
-- `x=y` can be preceded by any number of `-`.
-- For bool type flags, `-b=true` can be abbreviated as `-b`.
+Used for cross-file declarations; the type must match `DEF_xxx`.
 
-- Example
+### Aliases
+
+Flags support aliases; aliases can be used on the command line or in configuration files.
+
+The last variadic parameter of `DEF_xxx` can specify at most one alias:
+
+```cpp
+// d is an alias
+DEF_bool(debug, false, "debug mode", d);
+```
+
+Aliases are displayed in the help information, for example `-debug,d`.
+
+## Parsing Arguments
+
+```cpp
+co::vector<co::string> parse(int argc, char** argv, bool command_line_only=false);
+```
+
+- Parses command-line arguments and the configuration file, and updates flag values.
+- The return value contains all non-flag arguments;
+- When `command_line_only == true`, only command-line arguments are parsed;
+- Usually called at the beginning of `main`;
+- On error, prints information and exits the program.
+
+## Command-Line Arguments
+
+Two forms are supported:
 
 ```bash
-# b, i, s are all flags, xx is not a flag
-./exe -b -i=32 -s=hello xx
+-name=value
+-name value
 ```
 
+`-` can be one or more; `-debug` and `--debug` are equivalent.
 
+### bool Type
 
+```bash
+-debug          # Equivalent to -debug=true
+-debug=true
+-debug=false
+```
 
-## APIs
+### Integer Units
 
-### flag::parse
+Integer types support the units `k, m, g, t, p`, case-insensitive, `1k = 1024`.
+
+```bash
+-co_stack_size=2m   # 2 * 1024 * 1024
+```
+
+### Single-Letter Flag Shorthand Syntax
+
+Single-letter flags support the following two shorthands (command line only):
+
+- Multiple single-letter bool flags can be combined: for example, if x, y, and z are all bool flags, `-xyz` can set all three to true.
+- A single-letter integer flag can be written together with its value: for example, `-n8` is equivalent to `-n=8`.
+
+## Configuration File
+
+By default, the first non-flag argument on the command line (whose name must end with `.conf`) is used as the configuration file:
+
+```bash
+./xx xx.conf
+```
+
+Configuration file format:
+
+```ini
+# Comment
+debug = true
+threads = 8
+port = 8080
+name = "my app"
+n = 8k   # 8192 
+```
+
+- `#` indicates a comment;
+- Blank lines are supported;
+- Leading or trailing spaces on a line are allowed;
+- The key is not prefixed with `--`;
+- Spaces are allowed before and after `=`;
+- If a string has leading or trailing spaces, it needs to be quoted; both single and double quotes are supported;
+- Strings support common escape characters; see `co::string::unescape` for details;
+- bool supports `true/false` and `1/0`; all other values are treated as `false`;
+- Integers support the units `k, m, g, t, p`, case-insensitive;
+- If an undefined flag appears in the configuration file, a warning line is printed to the terminal, but the program does not exit;
+- Flag names are case-sensitive.
+
+## Command-Line vs. Configuration File Priority
+
+- When both command-line arguments and a configuration file are present, command-line arguments override values in the configuration file;
+- A `.conf` passed on the command line overrides the default path set by `set_config_path`.
+
+## Internal Flags
+
+The flag component internally defines three bool flags:
 
 ```cpp
-co::vector<fastring> parse(int argc, char** argv);
-void parse(const fastring& path);
+DEF_bool(help, false, s_help);
+DEF_bool(version, false, s_version);
+DEF_bool(mkconf, false, s_mkconf);
 ```
 
-- Added in v3.0.1.
-- The first parse function, parse the command line parameters and config file, and update value of the flag variables. It usually needs to be called once at the beginning of the main function. Generally speaking, it does the following steps:
-  - Preprocess the command line parameters, the value of `FLG_config` may be updated then.
-  - If `FLG_config` is not empty, parse the config file specified by it, and update value of the flag variables.
-  - Parse other command line parameters and update value of the flag variables.
-  - If `FLG_mkconf` is true, generate a config file and terminate the program.
-  - If `FLG_daemon` is true, run the program as a daemon (for Linux only).
-  - When any error occurs, print the error message and terminate the program immediately.
-  - If no error occurs, return the non-flag list. For example, when executing `./exe x y`, this function will return `["x", "y"]`.
+### -help
 
-- The second parse function, parses the config file and updates value of the flag variables. The parameter `path` is the path of the config file. When any error occurs, print the error message and terminate the program.
+Prints help information.
 
+```bash
+./xx -help
+```
+
+Example help information format:
+
+```text
+usage:  ./xx [xx.conf] [-flag [value]] [-flag=value]...
+
+flags:  -name[,alias]  type  comments  (default value)
+  -help       b  show help information  (false)
+  -version,v  b  show version information  (false)
+  -mkconf     b  generate configuration file  (false)
+
+  -boo        b  bool flag  (false)
+  ...
+```
+
+If the user includes `co/log.h, co/co.h, co/rpc.h`, flags defined internally by coost will also appear in the help information.
+
+### -version
+
+Displays the program version. You need to call `flag::set_program_version` before `flag::parse` to set the version number. If not set, the version information is empty.
+
+```bash
+./xx -version
+```
+
+### -mkconf
+
+Generates a configuration file:
+
+```bash
+./xx -mkconf
+```
+
+- Generates the configuration file in the directory where the command is executed;
+- File name rule: the executable file name with `.exe` removed, plus `.conf`;
+- Contains all user flags as well as flags from the coost components used;
+- If you do not want a flag to appear in the configuration file, you can use `flag::hide()` to hide the flag.
+
+## Runtime API
+
+```cpp
+// Add an alias; @new_name must have static lifetime
+// If @new_name is empty, remove the existing alias
+void flag::alias(const char* name, const char* new_name);
+
+// Set the default configuration path
+void flag::set_config_path(const char* path);
+
+// Set the program version
+void flag::set_program_version(const char* ver);
+
+// Hide a flag so that it does not appear in help information or the configuration file generated by -mkconf
+void flag::hide(const char* name);
+
+// Opposite of hide
+void flag::unhide(const char* name);
+
+// Set the value of a flag; returns false on error and prints an error message to the terminal
+bool flag::set_value(const char* flag_name, const char* value);
+
+// Register a callback to be executed after flag::parse finishes parsing command-line arguments
+void flag::run_after_parse(void(*cb)());
+
+// Register a callback to be executed before flag::parse parses command-line arguments
+void flag::run_before_parse(void(*cb)());
+```
 
 {{< hint warning >}}
-**flag::init**  
-Since v3.0.1，`flag::init()` has been marked as deprecated, please use `flag::parse()` instead.
+The above APIs are not thread-safe and **need to be called before `flag::parse`**.
 {{< /hint >}}
 
+- `alias` adds at most one alias.
+- After `set_config_path` sets the default configuration path, you do not need to pass a configuration file on the command line; `parse` will parse the configuration file from the default path.
+- In `set_value`, `value` is in string form and is parsed internally according to the flag type; an error will not cause the program to exit;
 
-- Example
+Example:
 
 ```cpp
-#include "co/flag.h"
+flag::alias("version", "v");
+flag::set_value("debug", "true");
+```
+
+## Thread Safety
+
+A flag is essentially a global variable or object. If multiple threads access or modify `FLG_xxx`, the user needs to ensure concurrency safety themselves.
+
+## Example
+
+```cpp
+#include <co/log.h> // Already includes co/flag.h
+
+DEF_bool(debug, false, "enable debug mode");
+DEF_int32(threads, 4, "number of threads");
+DEF_uint32(port, 8080, "server port");
+DEF_string(name, "coost", "app name", n); // n is an alias
 
 int main(int argc, char** argv) {
-    flag::parse(argc, argv);
-}
-```
+    // Set the program version number
+    flag::set_program_version("1.0.0");
 
-
-
-### flag::set_value
-
-```cpp
-fastring set_value(const fastring& name, const fastring& value)
-```
-
-- Added in v3.0. Set value of a flag variable, `name` is the flag name.
-- This function is not thread-safe and usually needs to be called at the beginning of the main function.
-
-
-- Example
-
-```cpp
-DEF_bool(b, false, "");
-DEF_int32(i, 0, "");
-DEF_string(s, "", "");
-
-int main(int argc, char** argv) {
-    flag::set_value("b", "true"); // FLG_b -> true
-    flag::set_value("i", "23");   // FLG_i -> 23
-    flag::set_value("s", "xx");   // FLG_s -> "xx"
-    flag::parse(argc, argv);
-}
-```
-
-
-
-### flag::alias
-
-```cpp
-bool alias(const char* name, const char* new_name);
-```
-
-- Added in v3.0. Add an alias to a flag, in **command line or config file** you can replace the original name with the alias.
-
-- This function is not thread safe and needs to be called before `flag::parse()`.
-
-
-- Example
-
-```cpp
-DEF_bool(all, false, "");
-
-int main(int argc, char** argv) {
-     flag::alias("all", "a");
-     flag::parse(argc, argv);
-}
-```
-
-
-
-## Use flag variable in the code
-
-
-### Define a flag variable
-
-```cpp
-DEF_bool(name, value, help, ...)
-DEF_int32(name, value, help, ...)
-DEF_int64(name, value, help, ...)
-DEF_uint32(name, value, help, ...)
-DEF_uint64(name, value, help, ...)
-DEF_double(name, value, help, ...)
-DEF_string(name, value, help, ...)
-```
-
-- The above 7 macros are used to define 7 different types of flag variables.
-- The parameter `name` is the flag name, the corresponding global variable name is `FLG_name`, the parameter `value` is the default value, and the parameter `help` is comment for the flag.
-- A flag variable is a global variable and generally should not be defined in the header file.
-- The name of the flag variable is unique, and we cannot define two flag variables with the same name.
-- The flag variable is generally defined outside the namespace, otherwise it may be not possible to use FLG_name to access the flag variable.
-
-
-- Example
-
-```cpp
-DEF_bool(b, false, "comments"); // bool FLG_b = false;
-DEF_int32(i32, 32, "comments"); // int32 FLG_i32 = 32;
-DEF_int64(i64, 64, "comments"); // int64 FLG_i64 = 64;
-DEF_uint32(u32, 0, "comments"); // uint32 FLG_u32 = 0;
-DEF_uint64(u64, 0, "comments"); // uint64 FLG_u64 = 0;
-DEF_double(d, 2.0, "comments"); // double FLG_d = 2.0;
-DEF_string(s, "x", "comments"); // fastring& FLG_s = ...;
-```
-
-
-{{< hint info >}}
-Since v3.0.1, `DEF_string` actually defines a reference to `fastring`. 
-{{< /hint >}}
-
-
-
-### Add alias for a flag
-
-- Added in v3.0, when defining a flag variable, you can add any number of aliases to the flag.
-- In command line or config file, alias can be used instead of the original name.
-
-
-- Example
-
-```cpp
-DEF_bool(debug, false, "");         // no alias
-DEF_bool(debug, false, "", d);      // d is an alias of debug
-DEF_bool(debug, false, "", d, dbg); // 2 aliases
-```
-
-
-
-### Declare the flag variable
-
-```cpp
-DEC_bool(name)
-DEC_int32(name)
-DEC_int64(name)
-DEC_uint32(name)
-DEC_uint64(name)
-DEC_double(name)
-DEC_string(name)
-```
-
-- The 7 macros above are used to declare 7 different types of flag variables.
-- The parameter `name` is the flag name, and the corresponding global variable name is `FLG_name`.
-- A flag variable can be defined only once, but it can be declared multiple times, which can be declared wherever needed.
-- The flag variable is generally declared outside the namespace, otherwise it may be not possible to use FLG_name to access the flag variable.
-
-
-- Example
-
-```cpp
-DEC_bool(b);     // extern bool FLG_b;
-DEC_int32(i32);  // extern int32 FLG_i32;
-DEC_int64(i64);  // extern int64 FLG_i64;
-DEC_uint32(u32); // extern uint32 FLG_u32;
-DEC_uint64(u64); // extern uint64 FLG_u64;
-DEC_double(d);   // extern double FLG_d;
-DEC_string(s);   // extern fastring& FLG_s;
-```
-
-
-
-### Use the flag variable
-
-Once a flag variable is defined or declared, we can use it the same as an ordinary variable.
-
-```cpp
-#include "co/flag.h"
-
-DEC_bool(b);
-DEF_string(s, "hello", "xxx");
-
-int main(int argc, char** argv) {
-    flag::parse(argc, argv);
+    // Built-in flag of the logging component; also output logs to the terminal
+    flag::set_value("also_log2console", "true");
     
-    if (!FLG_b) std::cout << "b is false" << std::endl;
-    FLG_s += " world";
-    std::cout << FLG_s << std::endl;
-    
+    // Optional: set the default configuration file path
+    // flag::set_config_path("my.conf");
+
+    auto non_flags = flag::parse(argc, argv);
+
+    log::info("debug=", FLG_debug);
+    log::info("threads=", FLG_threads);
+    log::info("port=", FLG_port);
+    log::info("name=", FLG_name);
+
+    for (auto& s : non_flags) {
+        log::info("non-flag: ", s);
+    }
+
     return 0;
 }
 ```
 
-
-
-
-## Use flag in command line
-
-
-### Set value of flags
-
-Suppose the following flags are defined in the program:
-
-```cpp
-DEF_bool(x, false, "bool x");
-DEF_bool(y, false, "bool y");
-DEF_int32(i, -32, "int32");
-DEF_uint64(u, 64, "uint64");
-DEF_string(s, "nice", "string");
-```
-
-When the program starts, we can modify value of the flag variables through command line parameters:
+Run:
 
 ```bash
-# -x=y, x=y, -x y, the three are equivalent
-./xx -i=8 u=88 -s=xxx
-./xx -i 8 -u 88 -s "hello world"
-./xx -i8       # -i=8, only for single-letter named integer flags
-
-# When a bool type is set to true, the value can be omitted
-./xx -x        # -x=true
-
-# Multiple single-letter named bool flags can be combined and set to true
-./xx -xy       # -x=true -y=true
-
-# Integer type flags can have units k, m, g, t, p, not case sensitive
-./xx -i -4k    # i=-4096
-
-# Integer type flags can pass octal or hexadecimal numbers
-./xx i=032     # i=26 octal
-./xx u=0xff    # u=255 hexadecimal
-```
-
-
-
-### Show Help Information
-
-`co.flag` supports using `--help` command to print the help information of the program:
-
-```bash
-$ ./xx --help
-usage:  $exe [-flag] [value]
-        $exe -x -i 8k -s ok        # x=true, i=8192, s="ok"
-        $exe --                    # print all flags
-        $exe -mkconf               # generate config file
-        $exe -conf xx.conf         # run with config file
-
-flags:
-    -n  int32
-        type: int32       default: 0
-        from: test/flag.cc
-    -s  string
-        type: string      default: "hello world"
-        from: test/flag.cc
-```
-
-
-
-### List all flags
-
-`co.flag` provides `--` command to list all the flags defined in the program:
-
-```bash
-$ ./xx --
-flags:
-    -boo  bool flag
-        type: bool        default: false
-        from: test/flag.cc
-    -co_sched_num  number of coroutine schedulers, default: os::cpunum()
-        type: uint32      default: os::cpunum()
-        from: src/co/sched.cc
-```
-
-
-
-### Show version of the program
-
-- `version` is a flag defined inside coost. You can use the `-version` command to print version information.
-- `version` is empty by default, its value should be set before calling `flag::parse()`.
-
-
-- Example
-
-```cpp
-#include "co/flag.h"
-
-int main(int argc, char** argv) {
-     FLG_version = "v3.0.0";
-     flag::parse(argc, argv);
-     return 0;
-}
-```
-
-```bash
-$ ./xx -version
-v3.0.0
-```
-
-
-
-
-## config file
-
-
-### config file format
-
-The config file format of `co.flag` is flexible:
-
-- One config item per line, each config item corresponds to a flag, and the form is unified as `x = y`, which looks clear at a glance.
-- `#` or `//` are for comments.
-- `#` or `//` in quotation marks are not comments.
-- Ignore the blank characters at the beginning or end of the line.
-- Blank characters can be added before or after the `=` sign.
-- `\` can be used to continue a line to avoid too long a line.
-- The string does not support escaping to avoid ambiguity.
-- The string can be enclosed in double quotes, single quotes or 3 back quotes.
-
-
-- Sample config file
-
-```yaml
-   # config file: xx.conf
-     boo = true                 # bool type
-
-     s =                        # empty string
-     s = hello \
-         world                  # s = "helloworld"
-     s = "http://github.com"    # # or // in quotation marks are not comments
-     s = "I'm ok"               # enclose the string in double quotes
-     s ='how are "U"'           # enclose the string in single quotes
-     s = ```I'm "ok"```         # enclose the string in 3 back quotes
-
-     i32 = 4k                   # 4096, integers can have units k, m, g, t, p, not case sensitive
-     i32 = 032                  # octal, i32 = 26
-     i32 = 0xff                 # hexadecimal, i32 = 255
-     pi = 3.14159               # double type
-```
-
-
-
-### Generate config file
-
-- `mkconf` is a flag defined internally in coost, which is a switch for automatically generating config file.
-- You can use `-mkconf` to generate a config file in command line.
-
-```bash
-./xx -mkconf            # Generate xx.conf
-./xx -mkconf -x u=88    # Custom config item value
-```
-
-
-
-### Adjust the order of config items
-
-In the automatically generated config file, the config items are sorted by flag level, file name, and code line number. If the user wants some config items to be ranked higher, the flag level can be set to a smaller value, otherwise, the flag level can be set to a larger value. 
-
-When defining a flag, you can use `#n` at the beginning of the comment to specify the flag level, **n must be an integer between 0 and 9**. If the comment is not empty, there must be a space after n. When not specified, the default flag level is 5.
-
-```cpp
-DEF_bool(x, false, "comments");    // The default level is 5
-DEF_bool(y, false, "#3");          // The level is 3, and the comment is empty
-DEF_bool(z, false, "#3 comments"); // The level is 3
-```
-
-
-
-### Prohibit config items from being generated in the config file
-
-Flags whose comments start with `.`, are **hidden flags**, which will not be present in the config file, but can be found with the `--` command in command line. A flag with an empty comment is completely invisible and will neither be generated in the config file nor be found with the `--` command.
-
-```cpp
-DEF_bool(x, false, ".say something here");
-DEF_string(s, "good", "");
-```
-
-
-
-### Specify the config file when the program starts
-
-- `config` is a flag defined internally in coost, which is the path of the config file. It has an alias `conf`.
-- You can use `-config` to specify the config file in command line.
-- Another way, you can modify the value of `FLG_config` to specify the config file, before calling `flag::parse()`.
-
-```bash
-./xx -config xx.conf
-./xx -conf xx.conf
-
-# If the config file name ends with .conf or config, 
-# and it is the first non-flag parameter in command line, 
-# -config can be omitted.
-./xx xx.conf
-./xx xx.conf -x
-```
-
-
-
-
-## Custom help information
-
-- `help` is a flag defined in coost, which stores the help information of the program. This information can be seen with the command `--help` in command line.
-- `FLG_help` is empty by default, and the default help information provided by coost is used.
-- You can modify the value of `FLG_help` before calling `flag::parse()` to customize the help information.
-
-
-- Example
-
-```cpp
-#include "co/flag.h"
-
-int main(int argc, char** argv) {
-    FLG_help << "usage:\n"
-             << "\t./xx -ip 127.0.0.1 -port 7777\n";
-    flag::parse(argc, argv);
-    return 0;
-}
-```
-
-
-
-
-## Run program as a daemon
-
-- `daemon` is a flag defined in coost. If it is true, the program will run as a daemon. It only works on Linux platform.
-- You can use `-daemon` in command line to make the program run in the background as a daemon.
-
-- Example
-
-```bash
-./xx -daemon
+./app
+./app -debug -threads=8 -port 8080 -name=myapp
+./app -help
+./app -version
+./app -mkconf
+./app app.conf
 ```

@@ -1,478 +1,146 @@
 ---
-weight: 2
+weight: 1
 title: "Atomic Operations"
 ---
 
-include: [co/atomic.h](https://github.com/idealvin/coost/tree/master/include/co/atomic.h).
+## Header
 
+```cpp
+#include "co/atomic.h"
+```
+
+The API is in the `co` namespace.
 
 ## Memory Order
 
-Since v3.0, co has added a support for memory order. The six memory orders in co are defined as follows:
-
 ```cpp
-enum memory_order_t {
-    mo_relaxed,
-    mo_consume,
-    mo_acquire,
-    mo_release,
-    mo_acq_rel,
-    mo_seq_cst,
-};
+using memorder_t = std::memory_order;
+constexpr memorder_t mo_relaxed = std::memory_order_relaxed;
+constexpr memorder_t mo_consume = std::memory_order_consume;
+constexpr memorder_t mo_acquire = std::memory_order_acquire;
+constexpr memorder_t mo_release = std::memory_order_release;
+constexpr memorder_t mo_acq_rel = std::memory_order_acq_rel;
+constexpr memorder_t mo_seq_cst = std::memory_order_seq_cst;
 ```
 
-The default memory order of atomic operations in co is `mo_seq_cst`.
-
-
-
-
-## APIs removed since v3.0
-
-- **atomic_get**, use `atomic_load` instead.
-- **atomic_set**, use `atomic_store` instead.
-- **atomic_reset**, use `atomic_store(&x, 0)` instead.
-
-
-
-
-## load & store
-
-
-### atomic_load
+## Load and Store
 
 ```cpp
 template<typename T>
-inline T atomic_load(const T* p, memory_order_t mo = mo_seq_cst);
+T atomic_load(const T* p, memorder_t mo = mo_seq_cst);
+
+template<typename T, typename V>
+void atomic_store(T* p, V v, memorder_t mo = mo_seq_cst);
 ```
 
-- This function gets the value of the variable pointed to by p, T is any built-in type (including pointer type) with a length of 1, 2, 4, 8 bytes.
+- `atomic_load` supports: `mo_relaxed`, `mo_consume`, `mo_acquire`, `mo_seq_cst`.
+- `atomic_store` supports: `mo_relaxed`, `mo_release`, `mo_seq_cst`.
 
-- `mo` can be any of mo_relaxed, mo_consume, mo_acquire, mo_seq_cst.
-
-
-- Example
+Example:
 
 ```cpp
-int i = 7;
-int r = atomic_load(&i); // r = 7
-int x = atomic_load(&i, mo_relaxed);
+int i = 0;
+co::atomic_store(&i, 3);      // i -> 3
+int x = co::atomic_load(&i);  // x -> 3
 ```
 
-
-
-### atomic_store
+## Exchange
 
 ```cpp
 template<typename T, typename V>
-inline void atomic_store(T* p, V v, memory_order_t mo = mo_seq_cst);
+T atomic_swap(T* p, V v, memorder_t mo = mo_seq_cst);
+
+template<typename T, typename O, typename V>
+T atomic_compare_swap(
+    T* p, O o, V v,
+    memorder_t smo = mo_seq_cst, memorder_t fmo = mo_seq_cst
+);
+
+template<typename T, typename O, typename V>
+T atomic_cas(
+    T* p, O o, V v,
+    memorder_t smo = mo_seq_cst, memorder_t fmo = mo_seq_cst
+);
+
+template<typename T, typename O, typename V>
+bool atomic_bool_cas(
+    T* p, O o, V v,
+    memorder_t smo = mo_seq_cst, memorder_t fmo = mo_seq_cst
+);
 ```
 
-- This function sets the value pointed to by p to v, T is any built-in type (including pointer type) with a length of 1, 2, 4, 8 bytes, and V is any type that can be converted to type of T.
+- `atomic_swap` returns the old value and supports all memory orders.
+- `atomic_cas` is equivalent to `atomic_compare_swap`; it performs the swap only when `*p == o`, and returns the old value.
+- `atomic_bool_cas` is similar to `atomic_cas`; it returns true on success and false on failure.
+- In CAS operations, `smo` is the memory order on success and supports all memory orders; `fmo` is the memory order on failure, cannot be `mo_release` or `mo_acq_rel`, and cannot be stronger than `smo`.
 
-- `mo` can be any of mo_relaxed, mo_release, mo_seq_cst.
-
-
-- Example
-
-```cpp
-int i = 7;
-atomic_store(&i, 3); // i -> 3
-atomic_store(&i, 3, mo_release);
-```
-
-
-
-
-## Swap operations
-
-
-### atomic_swap
-
-```cpp
-template<typename T, typename V>
-inline T atomic_swap(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
-
-- Atomic swap operation, T is any built-in type (including pointer type) with a length of 1, 2, 4, 8 bytes, and V is any type that can be converted to type of T.
-- This function exchanges the value pointed to by p and v, and returns the value before the exchange.
-
-- `mo` can be any type.
-
-
-- Example
+Example:
 
 ```cpp
 bool b = false;
+bool o = co::atomic_swap(&b, true); // b -> true, o -> false
+
 int i = 0;
+int r = co::atomic_cas(&i, 1, 2);   // i unchanged, r -> 0
+r = co::atomic_cas(&i, 0, 2);       // i -> 2, r -> 0
+
 void* p = 0;
-bool x = atomic_swap(&b, true);      // b -> true, x = false
-int r = atomic_swap(&i, 1);          // i -> 1, r = 0
-void* q = atomic_swap(&p, (void*)8); // p -> 8, q = 0
+bool x = co::atomic_bool_cas(&p, 0, (void*)8);  // p -> 8, x -> true
 ```
 
-
-
-### atomic_cas
+## Add and Subtract
 
 ```cpp
-template<typename T, typename O, typename V>
-inline T atomic_cas(
-    T* p, O o, V v,
-    memory_order_t smo = mo_seq_cst,
-    memory_order_t fmo = mo_seq_cst
-);
- 
-template <typename T, typename O, typename V>
-inline T atomic_compare_swap(
-    T* p, O o, V v,
-    memory_order_t smo = mo_seq_cst,
-    memory_order_t fmo = mo_seq_cst
-);
-```
+template<typename T, typename V>
+T atomic_add(T* p, V v, memorder_t mo = mo_seq_cst);
 
+template<typename T, typename V>
+T atomic_sub(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- Atomic swap operation, T is any built-in type (including pointer type) with a length of 1, 2, 4, 8 bytes, O and V are any types that can be converted to type of T.
-- This function exchanges with v only when the value pointed to by p is equal to o.
-- This function returns the value before the exchange operation.
-
-
-- Example
-
-```cpp
-bool b = false;
-int i = 0;
-void* p = 0;
-bool x = atomic_cas(&b, false, true);  // b -> true, x = false
-int r = atomic_cas(&i, 1, 2);          // No swap, i remains unchanged, r = 0
-void* q = atomic_cas(&p, 0, (void*)8); // p -> 8, q = 0
-```
-
-
-
-### atomic_bool_cas
-
-```cpp
-template<typename T, typename O, typename V>
-inline bool atomic_bool_cas(
-    T* p, O o, V v,
-    memory_order_t smo = mo_seq_cst,
-    memory_order_t fmo = mo_seq_cst
-);
-```
-
-- Like the [atomic_cas](#atomic_cas), but returns true if the swap operation was successful, otherwise returns false.
-
-
-
-
-## Arithmetic operations
-
-
-### atomic_inc
-
-```cpp
 template<typename T>
-inline T atomic_inc(T* p, memory_order_t mo = mo_seq_cst);
-```
+T atomic_inc(T* p, memorder_t mo = mo_seq_cst);
 
-- Atomic increment, T is any integer type with a length of 1, 2, 4, 8 bytes, and the parameter p is a pointer of type T.
-- This function performs an increment operation on the integer pointed to by p and returns the result after increment.
-
-
-- Example
-
-```cpp
-int i = 0;
-uint64 u = 0;
-int r = atomic_inc(&i);    // i -> 1, r = 1
-uint64 x = atomic_inc(&u); // u -> 1, x = 1
-```
-
-
-
-### atomic_fetch_inc
-
-```cpp
 template<typename T>
-inline T atomic_fetch_inc(T* p, memory_order_t mo = mo_seq_cst);
-```
+T atomic_dec(T* p, memorder_t mo = mo_seq_cst);
 
-- The same as [atomic_inc](#atomic_inc), but returns the value before increment.
+template<typename T, typename V>
+T atomic_fetch_add(T* p, V v, memorder_t mo = mo_seq_cst);
 
+template<typename T, typename V>
+T atomic_fetch_sub(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- Example
-
-```cpp
-int i = 0;
-uint64 u = 0;
-int r = atomic_fetch_inc(&i);    // i -> 1, r = 0
-uint64 x = atomic_fetch_inc(&u); // u -> 1, x = 0
-```
-
-
-
-### atomic_dec
-
-```cpp
 template<typename T>
-inline T atomic_dec(T* p, memory_order_t mo = mo_seq_cst);
-```
+T atomic_fetch_inc(T* p, memorder_t mo = mo_seq_cst);
 
-- Atomic decrement, T is any integer type with a length of 1, 2, 4, 8 bytes, and the parameter p is a pointer of type T.
-
-- This function decrements the integer pointed to by p and returns the decremented result.
-
-
-- Example
-
-```cpp
-int i = 1;
-uint64 u = 1;
-int r = atomic_dec(&i);    // i -> 0, r = 0
-uint64 x = atomic_dec(&u); // u -> 0, x = 0
-```
-
-
-
-### atomic_fetch_dec
-
-```cpp
 template<typename T>
-inline T atomic_fetch_dec(T* p, memory_order_t mo = mo_seq_cst);
+T atomic_fetch_dec(T* p, memorder_t mo = mo_seq_cst);
 ```
 
-- The same as [atomic_dec](#atomic_dec), but returns the value before decrement.
+- `inc` adds 1, `dec` subtracts 1.
+- The fetch versions return the old value; the non-fetch versions return the new value.
+- Supports all memory orders.
 
-
-- Example
-
-```cpp
-int i = 1;
-uint64 u = 1;
-int r = atomic_fetch_dec(&i);    // i -> 0, r = 1
-uint64 x = atomic_fetch_dec(&u); // u -> 0, x = 1
-```
-
-
-
-### atomic_add
+## Bitwise Operations
 
 ```cpp
 template<typename T, typename V>
-inline T atomic_add(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
+T atomic_or(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- Atomic addition, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
-
-- This function adds the value v to the integer pointed to by p, and returns the result after adding v.
-
-
-- Example
-
-```cpp
-int i = 0;
-uint64 u = 0;
-int r = atomic_add(&i, 1);    // i -> 1, r = 1
-uint64 x = atomic_add(&u, 1); // u -> 1, x = 1
-```
-
-
-
-### atomic_fetch_add
-
-```cpp
 template<typename T, typename V>
-inline T atomic_fetch_add(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
+T atomic_and(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- The same as [atomic_add](#atomic_add), but returns the value before adding v.
-
-
-- Example
-
-```cpp
-int i = 0;
-uint64 u = 0;
-int r = atomic_fetch_add(&i, 1);    // i -> 1, r = 0
-uint64 x = atomic_fetch_add(&u, 1); // u -> 1, x = 0
-```
-
-
-
-### atomic_sub
-
-```cpp
 template<typename T, typename V>
-inline T atomic_sub(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
+T atomic_xor(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- Atomic subtraction, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
-
-- This function subtracts value v from the integer pointed to by p, and returns the result of subtracting v.
-
-
-- Example
-
-```cpp
-int i = 1;
-uint64 u = 1;
-int r = atomic_sub(&i, 1);    // i -> 0, r = 0
-uint64 x = atomic_sub(&u, 1); // u -> 0, x = 0
-```
-
-
-
-### atomic_fetch_sub
-
-```cpp
 template<typename T, typename V>
-inline T atomic_fetch_sub(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
+T atomic_fetch_or(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- The same as [atomic_sub](#atomic_sub), but returns the value before subtracting v.
-
-
-- Example
-
-```cpp
-int i = 1;
-uint64 u = 1;
-int r = atomic_fetch_sub(&i, 1);    // i -> 0, r = 1
-uint64 x = atomic_fetch_sub(&u, 1); // u -> 0, x = 1
-```
-
-
-
-
-## Bit operation
-
-
-### atomic_or
-
-```cpp
 template<typename T, typename V>
-inline T atomic_or(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
+T atomic_fetch_and(T* p, V v, memorder_t mo = mo_seq_cst);
 
-- Atomic bitwise OR operation, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
-
-- This function performs bitwise OR operation on the integer pointed to by p and v, and returns the result of the operation.
-
-
-- Example
-
-```cpp
-int i = 5;
-uint64 u = 5;
-int r = atomic_or(&i, 3);    // i |= 3, i -> 7, r = 7
-uint64 x = atomic_or(&u, 3); // u |= 3, u -> 7, x = 7
-```
-
-
-
-### atomic_fetch_or
-
-```cpp
 template<typename T, typename V>
-inline T atomic_fetch_or(T* p, V v, memory_order_t mo = mo_seq_cst);
+T atomic_fetch_xor(T* p, V v, memorder_t mo = mo_seq_cst);
 ```
 
-- The same as [atomic_or](#atomic_or), but returns the value before the bitwise OR operation.
-
-
-- Example
-
-```cpp
-int i = 5;
-uint64 u = 5;
-int r = atomic_fetch_or(&i, 3);    // i |= 3, i -> 7, r = 5
-uint64 x = atomic_fetch_or(&u, 3); // u |= 3, u -> 7, x = 5
-```
-
-
-
-### atomic_and
-
-```cpp
-template<typename T, typename V>
-inline T atomic_and(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
-
-- Atomic bitwise AND operation, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
-
-- This function performs bitwise AND operation on the integer pointed to by p and v, and returns the result after the operation.
-
-
-- Example
-
-```cpp
-int i = 5;
-uint64 u = 5;
-int r = atomic_and(&i, 3);    // i &= 3, i -> 1, r = 1
-uint64 x = atomic_and(&u, 3); // u &= 3, u -> 1, x = 1
-```
-
-
-
-### atomic_fetch_and
-
-```cpp
-template<typename T, typename V>
-inline T atomic_fetch_and(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
-
-- The same as [atomic_and](#atomic_and), but returns the value before the bitwise AND operation.
-
-
-- Example
-
-```cpp
-int i = 5;
-uint64 u = 5;
-int r = atomic_fetch_and(&i, 3);    // i &= 3, i -> 1, r = 5
-uint64 x = atomic_fetch_and(&u, 3); // u &= 3, u -> 1, x = 5
-```
-
-
-
-### atomic_xor
-
-```cpp
-template<typename T, typename V>
-inline T atomic_xor(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
-
-- Atomic bitwise XOR operation, T is any integer type with a length of 1, 2, 4, 8 bytes, V is any integer type, and the parameter p is a pointer of type T.
-
-- This function performs a bitwise XOR operation on the integer pointed to by p and v, and returns the result of the operation.
-
-
-- Example
-
-```cpp
-int i = 5;
-uint64 u = 5;
-int r = atomic_xor(&i, 3);    // i ^= 3, i -> 6, r = 6
-uint64 x = atomic_xor(&u, 3); // u ^= 3, u -> 6, x = 6
-```
-
-
-
-### atomic_fetch_xor
-
-```cpp
-template<typename T, typename V>
-inline T atomic_fetch_xor(T* p, V v, memory_order_t mo = mo_seq_cst);
-```
-
-- The same as [atomic_xor](#atomic_xor), but returns the value before the bitwise XOR operation.
-
-
-- Example
-
-```cpp
-int i = 5;
-uint64 u = 5;
-int r = atomic_fetch_xor(&i, 3);    // i ^= 3, i -> 6, r = 5
-uint64 x = atomic_fetch_xor(&u, 3); // u ^= 3, u -> 6, x = 5
-```
+- The fetch versions return the old value; the non-fetch versions return the new value.
+- Supports all memory orders.

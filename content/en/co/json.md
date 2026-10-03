@@ -3,342 +3,140 @@ weight: 8
 title: "JSON"
 ---
 
-include: [co/json.h](https://github.com/idealvin/coost/blob/master/include/co/json.h).
-
-
-**co.json** is a JSON library similar to [rapidjson](https://github.com/Tencent/rapidjson). Compared with rapidjson, it has better performance and is easier to use. 
-
-
-## Basic concepts
-
-[JSON](https://www.json.org/json-en.html) is a simple data format that supports two data structures:
-
-- A collection consisting of a series of **key/value** pairs. This type of structure is called **object**, which corresponds to struct, map, etc, in programming languages.
-- A list composed of a series of **value**, this kind of structure is called **array**, which corresponds to vector, list, etc, in programming languages.
-
-In the above, the key is a string, and the value is generally called **JSON value**, which can be any of object, array, number, string, bool(false, true), or null. number is an integer or a floating-point number, and most implementations will distinguish integers from floating-point numbers. 
-
-Object is enclosed by a pair of braces, array is enclosed by a pair of square brackets, they look like this:
+## Header
 
 ```cpp
-{"a":1, "b":false, "s":"xxx"}
-[1, 2, 3]
+#include "co/json.h"
 ```
 
-By definition, object and array can be nested, which can represent complex data structures such as trees. 
+The API is in the `json` namespace.
 
+## json::any
 
+`json::any` represents any JSON value. Its type can be null, bool, int, double, string, array, or object.
 
-
-## global
-
-### json::array
+### Construction and Copying
 
 ```cpp
-Json array();
+any();                    // null
+any(decltype(nullptr));   // null
+any(any&& v);             // move
+any(any& v);              // move (non-const)
+
+any(const any&) = delete;
+void operator=(const any&) = delete;
+
+any& operator=(any&& v);  // move
+any& operator=(any& v);   // move
+
+any dup() const;          // explicit deep copy
+
+any(bool v);
+any(double v);
+any(int64 v);
+any(int32 v);
+any(uint32 v);
+any(uint64 v);
+any(const void* p, size_t n); // initialize as string type
+any(const char* s);
+any(const co::string& s);
+any(const std::string& s);
+any(std::initializer_list<any> v);
 ```
 
-- This function is in namespace json, it returns an empty array.
+- Copy construction and copy assignment are disabled.
+- Move is supported; after moving, the source object becomes null.
+- `dup()` recursively performs a deep copy.
+- Integers are uniformly stored as `int64`.
 
-
-
-### json::object
-
-```cpp
-Json object();
-```
-
-- This function is in namespace json, it returns an empty object.
-
-
-
-### json::parse
+Example:
 
 ```cpp
-Json parse(const char* s, size_t n);
-Json parse(const char* s);
-Json parse(const fastring& s);
-Json parse(const std::string& s);
-```
-
-- Parse Json from a JSON string.
-- This function is not a method in the Json class, but a function defined in `namespace json`.
-- This function returns a Json object, when the parsing failed, it returns null.
-
-
-
-
-## co::Json
-
-### constructor
-
-```cpp
- 1. Json() noexcept;
- 2. Json(decltype(nullptr)) noexcept;
-
- 3. Json(Json&& v) noexcept;
- 4. Json(Json& v) noexcept;
-    Json(const Json& v) = delete;
-
- 5. Json(bool v);
- 6. Json(double v);
- 7. Json(int64 v);
- 8. Json(int32 v);
- 9. Json(uint32 v);
-10. Json(uint64 v);
-
-11. Json(const void* p, size_t n);
-12. Json(const char* s);
-13. Json(const fastring& s);
-14. Json(const std::string& s);
-
-15. Json(std::initializer_list<Json> v);
-```
-
-- 1-2, construct a null object.
-- 3-4, move constructor and copy constructor, **both implement a move semantic**, the parameter `v` will become a null object after the construction.
-- 5, construct a JSON object of bool type.
-- 6, construct a JSON object of double type.
-- 7-10, construct a JSON object of integer type.
-- 11-14, construct a JSON object of string type.
-- 15, construct a JSON object of object or array type from a initialization list.
-
-
-- Example
-
-```cpp
-co::Json a;          // null
-co::Json b(nullptr); // null
-co::Json c = false;  // bool
-co::Json d = 3.14;   // double
-co::Json e = 23;     // integer
-co::Json f = "xx";   // string
-
-co::Json g = {1, 2, 3};  // g -> [1, 2, 3]
-co::Json h = {"a", "b"}; // h -> ["a", "b"]
-
-co::Json i = {           // i -> { "a": "b" }
+json::any a;               // null
+json::any b(nullptr);      // null
+json::any c(false);        // bool
+json::any d(3.14);         // double
+json::any e(23);           // integer
+json::any f("xx");         // string
+json::any g = {1, 2, 3};   // [1, 2, 3]
+json::any h = {"a", "b"};  // ["a", "b"]
+json::any i = {            // { "a": "b" }
     {"a", "b"}
-};
-
-co::Json j = {           // j -> {"a": 1, "b": [1,2,3]}
+}; 
+json::any j = {            // {"a": 1, "b": [1,2,3]}
     {"a", 1},
     {"b", {1, 2, 3}},
 };
 
-co::Json x(i);            // i -> null
-co::Json y(std::move(j)); // j -> null
+json::any x(h);            // h -> null
+json::any y(std::move(i)); // i -> null
+y = j;                     // j -> null
 ```
 
-
-
-### operator=
+### Type Query and Value Retrieval
 
 ```cpp
-Json& operator=(Json&& v);
-Json& operator=(Json& v);
-void operator=(const Json&) = delete;
-```
-
-- Assignment, the 2 methods above are equal, `v` is moved to the calling Json object, and **becomes a null object after the operation**.
-
-
-
-### dup
-
-```cpp
-Json dup() const;
-```
-
-- Return a deep copy of a JSON object.
-
-
-- 示例
-
-```cpp
-co::Json x = {1, 2, 3}; // x -> [1,2,3]
-co::Json y, z;
-y = x;       // x -> null, y -> [1,2,3]
-z = y.dup(); // y:[1,2,3], z -> [1,2,3]
-```
-
-
-
-
-### ———————————
-### is_null
-
-```cpp
-bool is_null() const;
-```
-
-- Determine whether the Json is null.
-
-
-
-### is_bool
-
-```cpp
-bool is_bool() const;
-```
-
-- Determine whether the Json is bool type.
-
-
-
-### is_int
-
-```cpp
-bool is_int() const;
-```
-
-- Determine whether the Json is integer type.
-
-
-
-### is_double
-
-```cpp
+int  type()      const;
+bool is_null()   const;
+bool is_bool()   const;
+bool is_int()    const;
 bool is_double() const;
-```
-
-- Determine whether the Json is double type.
-
-
-
-### is_string
-
-```cpp
 bool is_string() const;
-```
-
-- Determine whether the Json is string type.
-
-
-
-### is_array
-
-```cpp
-bool is_array() const;
-```
-
-- Determine whether the Json is array type.
-
-
-
-### is_object
-
-```cpp
+bool is_array()  const;
 bool is_object() const;
+
+bool        as_bool()   const;
+int64       as_int64()  const;
+int32       as_int32()  const;
+int         as_int()    const;
+double      as_double() const;
+const char* as_c_str()  const;
+co::string  as_string() const;
 ```
 
-- Determine whether the Json is object type.
+If the JSON is not of the corresponding type, `as_xxx()` will attempt type conversion:
 
+- `as_bool()`: non-zero is true; the strings `"true"` or `"1"` are true; everything else is false.
+- `as_int64()`: strings use [co::stoi64](../string/#string-to-number).
+- `as_double()`: strings use [co::stod](../string/#string-to-number).
+- `as_c_str()`: returns `""` for non-string types.
+- `as_string()`: returns `""` for null, and returns `str()` for non-string types.
 
-
-
-### ———————————
-### as_bool
+### Access and Modification
 
 ```cpp
-bool as_bool() const;
+any& get() const;
+any& get(uint32 i) const;
+any& get(int i) const;
+any& get(const char* key) const;
+
+template<typename T, typename ...X>
+any& get(T&& v, X&& ... x) const;
+
+template<typename T>
+any& set(T&& v);
+
+template<typename A, typename B, typename ...X>
+any& set(A&& a, B&& b, X&& ... x);
+
+any& operator[](uint32 i) noexcept;
+any& operator[](int i) noexcept;
+const any& operator[](uint32 i) const noexcept;
+const any& operator[](int i) const noexcept;
+any& operator[](const char* key) noexcept;
+const any& operator[](const char* key) const noexcept;
 ```
 
-- Get value of bool type.
-- For int or double types, returns false if the value is 0, otherwise returns true.
-- For string type, returns true if the value is `"true"` or `"1"`, otherwise returns false.
-- For other non-bool types, return false.
+- `get` is read-only; if out of bounds or the key does not exist, it returns a reference to an internal null object.
+- `set` creates the value if it does not exist; the last parameter is the value, and the remaining parameters are indices or keys.
+- `operator[]`:
+  - The const version is read-only and is equivalent to `get(i)` / `get(key)`;
+  - The non-const version creates the value if it does not exist; if the current type does not match, it first resets it to an array or object.
 
-
-
-### as_int
-
-```cpp
-int as_int() const;
-int32 as_int32() const;
-int64 as_int64() const;
-```
-
-- Get value of integer type.
-- For bool, double or string types, the result is automatically converted to an integer.
-- For other non-integer types, 0 is returned.
-
-
-
-### as_double
+Example:
 
 ```cpp
-double as_double() const;
-```
-
-- Get value of double type. Return 0 if the Json object calling this method is not double type.
-- Get value of double type.
-- For bool, int or string types, the result is automatically converted to double type.
-- For other non-double types, 0 is returned.
-
-
-
-### as_string
-
-```cpp
-fastring as_string() const;
-```
-
-- Get value of string type, return fastring.
-- For non-string types, this method is equal to [str()](#str), and the result will be automatically converted to string type.
-
-
-
-### as_c_str
-
-```cpp
-const char* as_c_str() const;
-```
-
-- Returns a null-terminated C-style string, [string_size()](#string_size) can be called to get its length.
-- For non-string types, return an empty string.
-
-
-
-### get
-
-```cpp
-1. Json& get(uint32 i) const;
-2. Json& get(int i) const;
-3. Json& get(const char* key) const;
-
-4. template <class T,  class ...X>
-   inline Json& get(T&& v, X&& ... x) const;
-```
-
-- Get JSON object according to index or key. **This method is a read-only operation and will not modify the JSON object that calls this method**.
-- 1-2, get the i-th element of the array object. If the JSON object that calls this method is not of type array, or `i` exceeds the range of the array, the returned result will refer to a null object.
-- 3, get the JSON value corresponding to `key`, if the JSON object called this method is not of type object, or `key` does not exist, the returned result will refer to a null object.
-- 4, can take any number of parameters, each parameter is an index or a key. When it encounters the first invalid index or non-existing key, it returns immediately, and the return result will refer to a null object.
-
-
-
-### set
-
-```cpp
-template <class T>
-inline Json& set(T&& v) {
-    return *this = Json(std::forward<T>(v));
-}
-
-template <class A, class B,  class ...X>
-inline Json& set(A&& a, B&& b, X&& ... x);
-```
-
-- Set the value of the JSON object.
-- The last parameter of `set` is the value to be set, other parameters are index or key.
-
-
-
-### Example
-
-```cpp
-co::Json r = {
+json::any r = {
     { "a", 7 },
     { "b", false },
     { "c", { 1, 2, 3 } },
@@ -353,207 +151,92 @@ r.get("c", 0).as_int(); // 1
 r.get("c", 1).as_int(); // 2
 
 // x -> {"a":1,"b":[0,1,2],"c":{"d":["oo"]}}
-co::Json x;
+json::any x;
 x.set("a", 1);
-x.set("b", co::Json({0,1,2}));
+x.set("b", json::any({0,1,2}));
 x.set("c", "d", 0, "oo");
 ```
 
-
-
-
-### ———————————
-### operator==
+### Addition and Deletion
 
 ```cpp
-bool operator==(bool v) const;
-bool operator==(double v) const;
-bool operator==(int64 v) const;
-bool operator==(int v) const;
-bool operator==(uint32 v) const;
-bool operator==(uint64 v) const;
-bool operator==(const char* v) const;
-bool operator==(const fastring& v) const;
-bool operator==(const std::string& v) const;
-```
+any& add_member(const char* key, any&& v);
+any& add_member(const char* key, any& v);
+any& push_back(any&& v);
+any& push_back(any& v);
 
-- Check if the value of the Json object is equal to `v`.
-- If the type of the Json object is different from `v`, return false directly.
-
-
-
-### operator!=
-
-```cpp
-bool operator!=(bool v) const;
-bool operator!=(double v) const;
-bool operator!=(int64 v) const;
-bool operator!=(int v) const;
-bool operator!=(uint32 v) const;
-bool operator!=(uint64 v) const;
-bool operator!=(const char* v) const;
-bool operator!=(const fastring& v) const;
-bool operator!=(const std::string& v) const;
-```
-
-- Check if the value of the Json object is not equal to `v`.
-- If the type of the Json object is different from `v`, return true directly.
-
-
-
-### Example
-
-```cpp
-co::Json x = {
-    {"a", 3},
-    {"b", false},
-    {"s", "xx"},
-};
-
-x == 7;          // false
-x["a"] == 3;     // true
-x["b"] == false; // true
-x["s"] == "xx";  // true
-```
-
-
-
-
-### ———————————
-### add_member
-
-```cpp
-Json& add_member(const char* key, Json&& v);
-Json& add_member(const char* key, Json& v);
-```
-
-- Add a key-value pair to a Json of object type (non-object Json automatically becomes object after calling this method).
-- This method will reserve the order in which keys were added, and keys may appear repeatedly.
-- The parameter key is a C string ending in `'\0'`, and the parameter v is the value.
-- **`v` is moved and becomes null after this operation**.
-- **NOTE**: for performance reasons, it is required that the key cannot contain double quotes.
-
-
-- Example
-
-```cpp
-co::Json r;
-r.add_member("a", 1);    // r -> {"a":1}
-r.add_member("d", 3.3);  // r -> {"a":1, "d":3.3}
-r.add_member("s", "xx"); // r -> {"a":1, "d":3.3, "s":"xx"}
-
-co::Json x;
-x.add_member("xx", r);                            // r -> null
-r.add_member("o", co::Json().add_member("x", 3)); // r -> {"o":{"x":3}}
-co::Json().add_member("o", 1).add_member("k", 2); // -> {"o":1,"k":2}
-```
-
-
-
-### erase
-
-```cpp
-void erase(uint32 i);
+void remove(uint32 i); // move the last element to i, O(1), reorders
+void remove(int i);
+void remove(const char* key);
+void erase(uint32 i);  // shift forward, O(n), preserves order
 void erase(int i);
 void erase(const char* key);
 ```
 
-- The first two, erase the ith element from an array.
-- The third, erase the element by `key` from an object.
+- `add_member` adds a key-value pair to an object (if it is not an object, it is first reset to an object); duplicate keys are allowed.
+- `push_back` adds an element to the end of an array (if it is not an array, it is first reset to an array).
+- The parameter `v` uses move semantics; after the call, `v` becomes null.
+- `remove` and `erase` delete elements from an array or object.
+- `remove` is `O(1)` and may reorder elements; `erase` is `O(n)` and moves elements to preserve order.
 
-
-
-### push_back
-
-```cpp
-Json& push_back(Json&& v);
-Json& push_back(Json& v);
-```
-
-- Add elements to an array (non-array Json automatically becomes an array after calling this method).
-- **`v` is moved and becomes null after this operation**.
-
-
-- Example
+Example:
 
 ```cpp
-co::Json r;
-r.push_back(1);    // r -> [1]
-r.push_back(3.3);  // r -> [1, 3.3]
-r.push_back("xx"); // r -> [1, 3.3, "xx"]
+json::any r;
+r.add_member("i", 1);    // r -> {"i":1}
+r.add_member("d", 3.3);  // r -> {"i":1, "d":3.3}
+r.add_member("s", "xx"); // r -> {"i":1, "d":3.3, "s":"xx"}
 
-co::Json x;
-x.push_back(r);  // r -> null, x -> [[1, 3.3, "xx"]]
-r.push_back(co::Json().push_back(1).push_back(2)); // r -> [[1,2]]
+json::any x;
+x.add_member("xx", r);                             // r -> null
+r.add_member("o", json::any().add_member("x", 3)); // r -> {"o":{"x":3}}
+
+json::any c;
+c.push_back(1).push_back(2);  // c -> [1,2]
+
+json::any d;
+d.push_back(c);  // c -> null, d -> [[1, 2]]
 ```
 
-
-
-### remove
+### Serialization
 
 ```cpp
-void remove(uint32 i);
-void remove(int i);
-void remove(const char* key);
+co::string str(int mdp=16)    const;  // compact
+co::string dbg(int mdp=16)    const;  // truncates long strings (>512 bytes)
+co::string pretty(int mdp=16) const;  // indents by 4 spaces
 ```
 
-- The first two, remove the ith element from an array.
-- The third, remove the element by `key` from an object.
-- The last element will be moved to the position where the element was removed.
+- `mdp`: maximum number of significant decimal places for floating-point numbers; default is 16.
 
-
-
-
-### reset
-
-````cpp
-void reset();
-````
-
-- Reset the Json object to null.
-
-
-
-### swap
-
-````cpp
-void swap(Json& v) noexcept;
-void swap(Json&& v) noexcept;
-````
-
-- Swap the contents of two Json objects.
-
-
-
-
-### ———————————
-### operator[]
+Example:
 
 ```cpp
-Json& operator[](uint32 i) const;
-Json& operator[](int i) const;
-Json& operator[](const char* key) const;
+#include "co/json.h"
+#include "co/print.h"
+
+int main() {
+    json::any x;
+    x.add_member("name", "coost");
+    x.add_member("version", 4);
+    co::println("str:    ", x.str());
+    co::println("pretty:\n", x.pretty());
+    return 0;
+}
 ```
 
-- Overload `operator[]`, get the elements in the Json by index or key.
-- 1-2, for array type, get the i-th element of the array object, i must be within the size range of the array.
-- 3, for object type, when the key does not exist, a null object will be inserted into the Json.
-- **In general, it is recommended to replace this operation with the read-only `get()` method whenever possible.**
-
-
-- Example
+### Size
 
 ```cpp
-co::Json r = {
-    { "a", 7 },
-    { "x", { 1, 2, 3 } },
-};
-
-r["a"].as_int();    // 7
-r["x"][0].as_int(); // 1
+uint32 size() const;
+bool   empty() const;
+uint32 array_size() const;
+uint32 object_size() const;
+uint32 string_size() const;
 ```
 
-
+- `size()`: number of array elements, number of object key-value pairs, string length, otherwise 0.
+- `empty()` is equivalent to `size() == 0`.
+- `array_size()` / `object_size()` / `string_size()` return the length only for the corresponding type, otherwise 0.
 
 ### has_member
 
@@ -561,311 +244,157 @@ r["x"][0].as_int(); // 1
 bool has_member(const char* key) const;
 ```
 
-- Determine whether there is an element corresponding to key in Json.
-- Return false if the Json calling this method is not object type.
-
-
-- Example
-
-```cpp
-co::Json r = {{"a", 1}};
-r.has_member("a"); // true
-r.has_member("x"); // false
-```
-
-
-
-### size
-
-```cpp
-uint32 size() const;
-```
-
-- If Json is object or array, this method returns the number of elements.
-- If Json is string type, this method returns the length of the string.
-- For all other types, this method returns 0.
-
-
-- Example
-
-```cpp
-co::Json r = {
-    {"x", 1},
-    {"s", "hello"},
-    {"a", {1, 2, 3}},
-};
-
-r.size();      // 3
-r["x"].size(); // 0
-r["s"].size(); // 5
-r["a"].size(); // 3
-```
-
-
-
-### empty
-
-```cpp
-bool empty() const;
-```
-
-- Check whether the Json is empty, which is equal to `size() == 0`.
-
-
-
-### string_size
-
-```cpp
-uint32 string_size() const;
-```
-
-- Return the length of the string type. Return 0 if the Json calling this method is not string type.
-
-
-
-### array_size
-
-```cpp
-uint32 array_size() const;
-```
-
-- Return the number of elements of array type. Return 0 if the Json calling this method is not array type.
-
-
-
-### object_size
-
-```cpp
-uint32 object_size() const;
-```
-
-- Return the number of elements of object type. Return 0 if the Json calling this method is not object type.
-
-
-
-
-### ———————————
-### str
-
-```cpp
-fastream& str(fastream& s, int mdp=16) const;
-fastring& str(fastring& s, int mdp=16) const;
-fastring str(int mdp=16) const;
-```
-
-- Convert Json to a string.
-- The 1st version appends the JSON string to a fastream, and the return value is the same as the parameter s.
-- The 2nd version appends the JSON string to a fastring, and the return value is the same as the parameter s.
-- The 3rd version returns a JSON string.
-- The parameter `mdp` is short for `max decimal places`, which means the maximum number of decimal places for float point numbers.
-
-
-
-### pretty
-
-```cpp
-fastream& pretty(fastream& s, int mdp=16) const;
-fastring& pretty(fastring& s, int mdp=16) const;
-fastring pretty(int mdp=16) const;
-```
-
-- Like the str(), but convert Json to a more beautiful JSON string.
-
-
-
-### dbg
-
-```cpp
-fastream& dbg(fastream& s, int mdp=16) const;
-fastring& dbg(fastring& s, int mdp=16) const;
-fastring dbg(int mdp=16) const;
-```
-
-- Convert Json to a debug string, like `str()`, but will truncate string type to the first 32 bytes if its length exceeds 512 bytes.
-- This method is generally used to print logs. In some cases, the Json object may contain a long string, such as the base64 encoding of a picture. At such cases, use `dbg()` instead of `str()` to avoid printing too many significant logs.
-
-
-
-### parse_from
-
-```cpp
-bool parse_from(const char* s, size_t n);
-bool parse_from(const char* s);
-bool parse_from(const fastring& s);
-bool parse_from(const std::string& s);
-```
-
-- Parse Json from a JSON string.
-- In the first version, s is not required to end with `'\0'`.
-- When the parsing is successful, it returns true, otherwise it returns false.
-- When the parsing fails, the calling Json becomes null.
-
-
-
-### Example
-
-```cpp
-co::Json r = {
-    { "a", {1,2,3} }
-};
-
-fastring s = r.str();    // s -> {"a":[1,2,3]}
-fastring p = r.pretty(); 
-LOG << r.dbg();          // print json debug string
-LOG << r;                // the same as above, but is  more efficient
-
-co::Json x;
-x.parse_from(s);
-x.parse_from(p);
-
-co::Json v = json::parse(s);
-```
-
-
-
-
-### ———————————
-### begin
-
-```cpp
-iterator begin() const;
-```
-
-- Returns the beginning iterator.
-- The Json calling this method must be array, object or null.
-- When the Json is empty, the return value is equal to `end()`.
-- If the Json calling this method is not array or object type, the return value is equal to [end()](#end).
-
-
-
-### end
-
-```cpp
-const iterator::End& end() const;
-```
-
-- Returns a fake end iterator.
-- The return value is actually not an iterator object, but a iterator can be compared with it. If an iterator is equal to `end()`, it means that there is no more element.
-
-
+- Determines whether `key` exists; returns false for non-object types.
 
 ### iterator
 
-#### operator==
-
 ```cpp
-bool operator==(const End&) const;
+struct iterator {
+    bool operator!=(_End) const;
+    bool operator==(_End) const;
+    iterator& operator++();
+    const char* key() const;
+    any& value() const;
+    any& operator*() const;
+};
+
+iterator begin() const;
+const iterator::_End end() const;
 ```
 
-- Determine whether a iterator is equal to `End`, End is the fake end iterator.
+- array: `operator*` returns the element.
+- object: `key()` returns the key, and `value()` returns the value.
+- Postfix `++` is not supported.
 
+{{< hint warning >}}
+For an object iterator, `operator*` is not allowed.
+{{< /hint >}}
 
-#### operator!=
-
-```cpp
-bool operator!=(const End&) const;
-```
-
-- Determine if a iterator is not equal to `End`, End is the fake end iterator.
-
-
-#### operator++
+Example:
 
 ```cpp
-iterator& operator++();
-```
+#include "co/json.h"
+#include "co/print.h"
 
-- The prefix operator++.
+int main() {
+    // Use iterator to traverse object
+    json::any x;
+    x.add_member("a", 1);
+    x.add_member("b", 2);
+    for (auto it = x.begin(); it != x.end(); ++it) {
+        co::println(it.key(), " = ", it.value().as_int());
+    }
 
+    // Use iterator to traverse array
+    json::any y;
+    y.push_back(1).push_back(2);
+    for (auto it = y.bengin(); it != y.end(); ++it) {
+        co::println(*it);
+    }
 
-#### operator*
+    // Use index to traverse array
+    for (uint32 i = 0; i < y.array_size(); ++i) {
+        co::println(y[i]);
+    }
 
-```cpp
-Json& operator*() const;
-```
-
-- Overload `operator*`, this method **only applies to iterator of array type**.
-- When Json is an array, the iterator points to the elements in the array.
-
-
-#### key
-
-```cpp
-const char* key() const;
-```
-
-- This method **only applies to iterator of object type**.
-- When Json is an object, the iterator points to the key-value pair in the object, and this method returns the key.
-
-
-#### value
-
-```cpp
-Json& value() const;
-```
-
-- This method **only applies to iterator of object type**.
-- When Json is an object, the iterator points to the key-value pair in the object, and this method returns the value.
-
-
-
-### Traversing the Json
-
-co.json supports traversing a Json of type array or object by iterator:
-
-```cpp
-// {"i":7, "s":"xx", "a":[123, true, "nice"]}
-co::Json r = {
-    {"i", 7},
-    {"s", "xx"},
-    {"a", {1, 2, 3}},
-}
-
-// object
-for (auto it = r.begin(); it != r.end(); ++it) {
-    LOG << it.key() << ": " << it.value();
-}
-
-// array
-co::Json& a = r["a"];
-for (auto it = a.begin(); it != a.end(); ++it) {
-    LOG << (*it);
+    return 0;
 }
 ```
 
-
-
-
-## Performance tips
-
-Some users may add members in the following way:
+## Parsing
 
 ```cpp
-co::Json r;
+json::any json::parse(const char* s, size_t n);
+json::any json::parse(const char* s);
+json::any json::parse(const co::string& s);
+json::any json::parse(const std::string& s);
+```
+
+- Parses a string into a JSON object; returns null on failure.
+
+Example:
+
+```cpp
+#include "co/json.h"
+#include "co/print.h"
+
+int main() {
+    const char* s = R"({"name":"coost","version":4,"tags":["cpp","coroutine"]})";
+    json::any x = json::parse(s);
+
+    co::println("name:    ", x["name"].as_c_str());
+    co::println("version: ", x["version"].as_int());
+
+    auto& tags = x.get("tags");
+    for (uint32 i = 0; i < tags.array_size(); ++i) {
+        co::println("tag[", i, "] = ", tags[i].as_c_str());
+    }
+    return 0;
+}
+```
+
+## Quickly Create array or object
+
+```cpp
+json::any json::array();  // returns an empty array
+json::any json::object(); // returns an empty object
+json::any json::array(std::initializer_list<any> v);
+json::any json::object(std::initializer_list<any> v);
+```
+
+Example:
+
+```cpp
+json::any a = json::array({1,2,3});
+json::any o = json::object({
+    {"a", 1},
+    {"s", "hello world"},
+});
+```
+
+## Print JSON to Terminal or Logs
+
+coost overloads the following operator, so `json::any` can be printed directly in `co::print` or logs.
+
+```cpp
+co::string& operator<<(co::string& s, const json::any& x) noexcept;
+```
+
+Example:
+
+```cpp
+json::any o = json::object({
+    {"a", 1},
+    {"s", "hello world"},
+});
+
+co::println("o: ", o);
+log::info("o: ", o);
+```
+
+## Performance Optimization Suggestions
+
+Some users like to add elements in the following way:
+
+```cpp
+json::any r;
 r["a"] = 1;
 r["s"] = "hello world";
 ```
 
-Although the above code works, the efficiency may be not so good. The `operator[]` will first look up the key, which may be slow. It is generally recommended to use **add_member()** instead:
+This works, but it is **not efficient**. `operator[]` first searches for the key; if found, it updates the value; if not found, it inserts a new element. It is recommended to use the **add_member()** method instead:
 
 ```cpp
-co::Json r;
+json::any r;
 r.add_member("a", 1);
 r.add_member("s", "hello world");
 ```
 
-Or construct a Json like this:
+Or construct it like this:
 
 ```cpp
-co::Json r = {
+json::any r = {
     {"a", 1},
     {"s", "hello world"},
 };
-```
-
-For read-only operations, it is recommended to replace `operator[]` with [get()](#get), which has no side effects.
-
-```cpp
-co::Json r = {{"a", 1}};
-r.get("a").as_int(); // 1
 ```

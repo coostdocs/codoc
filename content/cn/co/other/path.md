@@ -1,6 +1,6 @@
 ---
 weight: 10
-title: "文件路径(path)"
+title: "文件路径"
 ---
 
 

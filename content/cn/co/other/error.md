@@ -3,27 +3,35 @@ weight: 2
 title: "错误"
 ---
 
-include: [co/error.h](https://github.com/idealvin/coost/blob/master/include/co/error.h).
+
+## 头文件
+
+```cpp
+#include "co/error.h"
+```
+
+API 在 `co` 命名空间。
 
 
 ## co::error
 
 ```cpp
-1. int error();
-2. void error(int e);
+int error();
+void error(int e);
 ```
 
-- 1, 返回当前的错误码。
-- 2, 将当前错误码设置为 `e`。
-
+- `error()` 返回当前错误码。
+- `error(e)` 设置当前错误码为 `e`。
+- 线程安全。
 
 
 ## co::strerror
 
 ```cpp
-1. const char* strerror(int e);
-2. const char* strerror();
+const char* strerror(int e);
+const char* strerror();
 ```
 
-- 1, 获取错误码 `e` 的描述信息，线程安全。
-- 2, 获取当前错误码的描述信息，线程安全。
+- 返回 `e` 或当前错误码对应的描述信息。
+- 线程安全。
+- 返回的字符串不可长时间保存。

@@ -3,23 +3,29 @@ weight: 2
 title: "defer"
 ---
 
-include: [co/defer.h](https://github.com/idealvin/coost/blob/master/include/co/defer.h).
+
+## 头文件
+
+```cpp
+#include "co/defer.h"
+```
 
 
 ## defer
 
-**defer** 是 coost 提供的一个宏，它实现了类似 golang 中 defer 的功能。defer 的参数可以是一条或多条语句。
+- **defer** 宏实现类似 golang 中 defer 的功能。
+- defer 参数可以是一条或多条语句。
 
 ```cpp
 void f() {
-    void* p = malloc(32);
-    defer(free(p));
+    void* p = co::alloc(32);
+    defer(co::free(p, 32));
 
     defer(
-        std::cout << "111" << std::endl;
-        std::cout << "222" << std::endl;
+        co::println("111");
+        co::println("222");
     );
-    std::cout << "333" << std::endl;
+    co::println("333");
 }
 ```
 

@@ -4,513 +4,127 @@ title: "STL"
 ---
 
 
-include: [co/stl.h](https://github.com/idealvin/coost/blob/master/include/co/stl.h).
-
-
-## 常用容器
-
-下表中，左边 coost 中的容器与右边相应的 std 版本是等价的，仅内部的内存分配器不同。
-
-| coost | std |
-|------|------|
-| co::deque | std::deque |
-| co::list | std::list |
-| co::map | std::map |
-| co::set | std::set |
-| co::multimap | std::multimap |
-| co::multiset | std::multiset |
-| co::hash_map | std::unordered_map |
-| co::hash_set | std::unordered_set |
-
-{{< hint warning >}}
-当 key 为 `const char*` 类型(即 C 风格字符串)时，`co::map`, `co::set`, `co::multimap`, `co::multiset`, `co::hash_map`, `co::hash_set` 会根据字符串内容比较 key 及计算 key 的 hash 值。
-{{< /hint >}}
-
-
-
-
-## co::lru_map
+## 头文件
 
 ```cpp
-template<typename K, typename V>
-class lru_map;
+#include "co/stl.h"
 ```
 
-`co::lru_map` 是基于 LRU (least recently used) 策略实现的 map，当 map 中元素数量达到上限时，优先替换掉最近最少使用的数据。它基于 `co::hash_map` 与 `co::list` 实现，内部元素是无序的。
+API 在 `co` 命名空间。
 
 
+## 概述
 
-### constructor
+- 提供标准容器别名，allocator 换成 `co::stl_allocator`。
+- 提供容器格式化输出。
+- `co::vector` 已在 `co/string.h` 中定义，`stl.h` 不重复定义。
+
+
+## 比较器与哈希
 
 ```cpp
-1. lru_map();
-2. explicit lru_map(size_t capacity);
+template<class T> struct co::less;
+template<class T> struct co::greater;
+template<class T> struct co::hash;
+namespace co::xx { template<class T> struct eq; }
 ```
 
-- 1, 默认构造函数，使用 1024 作为最大容量。
-- 2, 使用参数 `capacity` 作为最大容量。
+- 对 `const char*` 特化，按字符串内容比较 / 哈希。
+- `co::less<const char*>`、`co::greater<const char*>` 用 `strcmp`。
+- `co::hash<const char*>` 用 `co::murmur_hash`。
+- `co::xx::eq<const char*>` 用 `strcmp` 判等。
+- `const char*` 不能为 `nullptr`。
+- 容器内部只保存指针，用户需保证 key 生命周期长于容器。
 
 
-
-### begin
+## 容器别名
 
 ```cpp
-iterator begin() const;
+template<class T, class Alloc = co::stl_allocator<T>>
+using deque = std::deque<T, Alloc>;
+
+template<class T, class Compare = less<T>>
+using priority_queue = std::priority_queue<T, co::vector<T>, Compare>;
+
+template<class T, class Alloc = co::stl_allocator<T>>
+using list = std::list<T, Alloc>;
+
+template<class K, class V, class Compare = less<K>,
+         class Alloc = co::stl_allocator<std::pair<const K, V>>>
+using map = std::map<K, V, Compare, Alloc>;
+
+template<class K, class V, class Compare = less<K>,
+         class Alloc = co::stl_allocator<std::pair<const K, V>>>
+using multimap = std::multimap<K, V, Compare, Alloc>;
+
+template<class K, class Compare = less<K>, class Alloc = co::stl_allocator<K>>
+using set = std::set<K, Compare, Alloc>;
+
+template<class K, class Compare = less<K>, class Alloc = co::stl_allocator<K>>
+using multiset = std::multiset<K, Compare, Alloc>;
+
+template<class K, class V, class Hash = hash<K>, class Pred = xx::eq<K>,
+         class Alloc = co::stl_allocator<std::pair<const K, V>>>
+using hash_map = std::unordered_map<K, V, Hash, Pred, Alloc>;
+
+template<class K, class Hash = hash<K>, class Pred = xx::eq<K>,
+         class Alloc = co::stl_allocator<K>>
+using hash_set = std::unordered_set<K, Hash, Pred, Alloc>;
 ```
 
-- 返回指向第一个元素的 iterator，当 lru_map 为空时，返回值与 [end()](#lru_mapend) 相等。
+- `map` / `set` 默认比较器为 `co::less`，`const char*` key 按内容排序。
+- `hash_map` / `hash_set` 默认哈希为 `co::hash`，相等为 `co::xx::eq`。
 
 
+## 格式化输出
 
-### clear
+用户直接使用：
 
 ```cpp
-void clear();
+co::string s;
+s << container;
+
+co::print(container);
+log::info(container);
 ```
 
-- 清空 lru_map 内的元素，size 会变成 0，容量保持不变。
+输出格式：
+- 字符串：`const char*`、`co::string`、`std::string`，加双引号并转义。
+- `std::pair<K,V>`：格式 `first:second`。
+- 序列容器：`[a,b,c]`，支持 `vector`、`deque`、`priority_queue`、`list`。
+- 集合容器：`{a,b,c}`，支持 `set`、`hash_set`。
+- 映射容器：`{k1:v1,k2:v2}`，支持 `map`、`hash_map`。
+- 空容器：序列输出 `[]`，集合/映射输出 `{}`。
+- 支持嵌套容器。
 
 
-
-### empty
-
-```cpp
-bool empty() const;
-```
-
-- 判断 lru_map 是否为空。
-
-
-
-### end
+## 示例
 
 ```cpp
-iterator end() const;
-```
+#include "co/stl.h"
+#include "co/print.h"
 
-- 返回指向最后一个元素的下一个位置的 iterator，它本身并不指向任何元素。
+int main() {
+    co::vector<int> v = {1, 2, 3};
+    co::println("v = ", v);
 
+    co::map<co::string, int> m;
+    m["a"] = 1;
+    m["b"] = 2;
+    co::println("m = ", m);
 
+    co::hash_map<co::string, int> hm;
+    hm["x"] = 10;
+    co::println("hm = ", hm);
 
-### erase
+    co::set<int> s = {3, 1, 2};
+    co::println("s = ", s);
 
-```cpp
-void erase(iterator it);
-void erase(const key_type& key);
-```
+    std::pair<int, co::string> p{1, "one"};
+    co::println("p = ", p);
 
-- 通过 iterator 或 key 删除元素。
-
-
-
-### find
-
-```cpp
-iterator find(const key_type& key)
-```
-
-- 查找 `key` 对应的元素。
-
-
-
-### insert
-
-```cpp
-template<typename Key, typename Val>
-void insert(Key&& key, Val&& value);
-```
-
-- 插入元素，仅当 key 不存在时，才会插入新元素。若 key 已经存在，则不会进行任何操作。
-- 插入元素时，若元素数量已经达到最大容量，则会删除最近最少访问的元素。
-
-
-
-### size
-
-```cpp
-size_t size() const;
-```
-
-- 返回 lru_map 中的元素个数。
-
-
-
-### swap
-
-```cpp
-void swap(lru_map& x) noexcept;
-void swap(lru_map&& x) noexcept;
-```
-
-- 交换两个 lru_map 的内容，此操作仅交换内部指针、大小、容量等信息。
-
-
-
-### 代码示例
-
-```cpp
-co::lru_map<int, int> m(128); // capacity: 128
-
-auto it = m.find(1);
-if (it == m.end()) {
-    m.insert(1, 23);
-} else {
-    it->second = 23;
+    co::vector<co::vector<int>> vv = {{1, 2}, {3, 4}};
+    co::println("vv = ", vv);
+    return 0;
 }
-
-m.erase(it);  // erase by iterator
-m.erase(1);   // erase by key
-m.clear();    // clear the map
 ```
-
-
-
-
-## co::vector
-
-C++ 标准库中 `std::vector<bool>` 是个不太明智的设计，为此，coost 单独实现了 `co::vector`。
-
-
-### constructor
-
-```cpp
-1. constexpr vector() noexcept;
-2. explicit vector(size_t cap);
-3. vector(const vector& x);
-4. vector(vector&& x) noexcept;
-5. vector(std::initializer_list<T> x);
-6. vector(T* p, size_t n);
-
-7. template<typename It>
-   vector(It beg, It end);
-
-8. template<typename X>
-   vector(size_t n, X&& x);
-```
-
-- 1, 默认构造函数，构造一个空的 vector，size 与 capacity 均为 0。
-- 2, **构造一个空的 vector**，capacity 为 `cap`。
-- 3, 拷贝构造函数。
-- 4, 移动构造函数，构造完后，`x` 变成空对象。
-- 5, 用初始化列表构造 vector 对象，`T` 是 vector 中元素的类型。
-- 6, 用数组构造 vector 对象，`p` 指向数组第一个元素，`n` 是数组长度。
-- 7, 用 `[beg, end)` 范围内的元素构造 vector 对象。
-- 8, 有两种情况：`X` 不是 int 或元素类型 `T` 是 int 时，vector 初始化为 `n` 个 `x`；`X` 是 int 且元素类型 `T` 不是 int 时，vector 初始化为 `n` 个 `T` 类型的默认值。
-
-{{< hint warning >}}
-构造函数 2 与 `std::vector` 中相应版本的行为是不同的，若要构建 `n` 个默认值构成的 vector，可以使用构造函数 8(第 2 个参数传 0)：
-```cpp
-co::vector<fastring> v(32, 0);
-```
-{{< /hint >}}
-
-- 示例
-
-```cpp
-co::vector<int> a(32);         // size: 0, capacity: 32
-co::vector<int> b = { 1, 2 };  // [1,2]
-co::vector<int> v(8, 0);       // 包含 8 个 0
-co::vector<fastring> s(8, 0);  // 包含 8 个空的 fastring 对象
-```
-
-
-
-### destructor
-
-```cpp
-~vector();
-```
-
-- 释放内存，析构后 vector 变为空对象。
-
-
-
-### operator=
-
-```cpp
-1. vector& operator=(const vector& x);
-2. vector& operator=(vector&& x);
-3. vector& operator=(std::initializer_list<T> x);
-```
-
-- 赋值操作。
-
-- 示例
-
-```cpp
-co::vector<int> v;
-v = { 1, 2, 3 };
-
-co::vector<int> x;
-x = v;
-x = std::move(v);
-```
-
-
-
-### ———————————
-### back
-
-```cpp
-T& back();
-const T& back() const;
-```
-
-- 返回 vector 中最后一个元素的引用。
-
-{{< hint warning >}}
-若 vector 为空，调用此方法会导致未定义的行为。
-{{< /hint >}}
-
-
-
-### front
-
-```cpp
-T& front();
-const T& front() const;
-```
-
-- 返回 vector 第一个元素的引用。
-
-{{< hint warning >}}
-若 vector 为空，调用此方法会导致未定义的行为。
-{{< /hint >}}
-
-
-
-### operator[]
-
-```cpp
-T& operator[](size_t n);
-const T& operator[](size_t n) const;
-```
-
-- 返回 vector 中第 `n` 个元素的引用。
-
-{{< hint warning >}}
-若 `n` 超出合理的范围，调用此方法会导致未定义的行为。
-{{< /hint >}}
-
-
-
-### ———————————
-### begin
-
-```cpp
-iterator begin() const noexcept;
-```
-
-- 返回指向第一个元素的 iterator。
-
-
-
-### end
-
-```cpp
-iterator end() const noexcept;
-```
-
-- 返回 end iterator。
-
-
-
-### ———————————
-### capacity
-
-```cpp
-size_t capacity() const noexcept;
-```
-
-- 返回 vector 的容量。
-
-
-
-### data
-
-```cpp
-T* data() const noexcept;
-```
-
-- 返回指向 vector 内部元素的指针。
-
-
-
-### empty
-
-```cpp
-bool empty() const noexcept;
-```
-
-- 判断 vector 是否为空。
-
-
-
-### size
-
-```cpp
-size_t size() const noexcept;
-```
-
-- 返回 vector 中元素个数。
-
-
-
-### ———————————
-### clear
-
-```cpp
-void clear();
-```
-
-- 清空 vector，size 变为 0，capacity 不变。
-
-
-
-### reserve
-
-```cpp
-void reserve(size_t n);
-```
-
-- 调整 vector 的容量，确保容量至少是 `n`。
-- 当 `n` 小于原来的容量时，则保持容量不变。
-
-
-
-### reset
-
-```cpp
-void reset();
-```
-
-- 销毁 vector 中所有元素，并释放内存。
-
-
-
-### resize
-
-```cpp
-void resize(size_t n);
-```
-
-- 将 vector 的 size 调整为 `n`。
-- 当 `n` 大于原来的 size 时，用默认元素值填充扩展的部分。
-
-
-
-### swap
-
-```cpp
-void swap(vector& x) noexcept;
-void swap(vector&& x) noexcept;
-```
-
-- 交换两个 vector，仅交换内部指针、容量、大小。
-
-
-
-### ———————————
-### append
-
-```cpp
-1. void append(const T& x);
-2. void append(T&& x);
-3. void append(size_t n, const T& x);
-4. void append(const T* p, size_t n);
-5. void append(const vector& x);
-6. void append(vector&& x);
-
-7. template<typename It>
-   void append(It beg, It end);
-```
-
-- 添加元素到 vector 尾部。
-- 1-2, 追加单个元素。
-- 3, 追加 `n` 个元素 `x`。
-- 4, 追加数组，`n` 是数组长度。
-- 5-6, 追加 vector `x` 中的所有元素。
-- 7, 追加 `[beg, end)` 范围内的元素。
-
-- 示例
-
-```cpp
-int a[4] = { 1, 2, 3, 4 };
-co::vector<int> v;
-v.append(7);
-v.append(v);
-v.append(a, 4);
-```
-
-
-
-### emplace_back
-
-```cpp
-template<typename ... X>
-void emplace_back(X&& ... x);
-```
-
-- 在 vector 尾部插入新元素，该元素由参数 `x...` 构建。
-
-- 示例
-
-```cpp
-co::vector<fastring> v;
-v.emplace_back(4, 'x'); // append("xxxx")
-```
-
-
-
-### push_back
-
-```cpp
-void push_back(const T& x);
-void push_back(T&& x);
-```
-
-- 添加元素 `x` 到 vector 尾部。
-
-
-
-### pop_back
-
-```cpp
-T pop_back();
-```
-
-- 取出并返回 vector 尾部的元素。
-
-{{< hint warning >}}
-若 vector 为空，调用此方法会导致未定义的行为。
-{{< /hint >}}
-
-
-
-### remove
-
-```cpp
-void remove(size_t n);
-```
-
-- 删除第 `n` 个元素，并将最后一个元素移动到所删除元素的位置。
-
-- 示例
-
-```cpp
-co::vector<int> v = { 1, 2, 3, 4 };
-v.remove(1);  // v -> [1, 4, 3]
-v.remove(2);  // v -> [1, 4]
-```
-
-
-
-### remove_back
-
-```cpp
-void remove_back();
-```
-
-- 删除 vector 尾部的元素，vector 为空时不进行任何操作。
-
-

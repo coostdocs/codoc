@@ -1,142 +1,154 @@
 ---
-weight: 11
+weight: 10
 title: "文件路径(path)"
 ---
 
-include: [co/path.h](https://github.com/idealvin/coost/blob/master/include/co/path.h).
 
-
-## path
-
-此部分功能移植于 [golang](https://github.com/golang/go/blob/master/src/path/path.go)，路径分隔符必须为 `/`。
-
-
-
-### path::clean
+## 头文件
 
 ```cpp
-fastring clean(const char* s, size_t n);
-fastring clean(const char* s);
-fastring clean(const fastring& s);
+#include "co/path.h"
 ```
 
-- 返回路径的最短等价形式，路径中连续的分隔符会被清除掉。
+API 在 `path` 命名空间，不是 `co`。
 
-- 示例
+移植自 Go 的 `path` 包，路径分隔符固定为 `/`。
+
+
+## 概述
+
+- `clean`：返回最短等价路径。
+- `join`：连接多个路径元素。
+- `split`：按最后一个 `/` 拆成 dir 和 file。
+- `dir`：返回目录部分。
+- `base`：返回最后一段。
+- `ext`：返回扩展名。
+
+所有返回 `co::string` 的函数都有三个重载：`(const char*, size_t)`、`(const char*)`、`(const co::string&)`。
+
+
+## clean
 
 ```cpp
-path::clean("");            // "."
-path::clean("./x//y/");     // "x/y"
-path::clean("./x/..");      // "."
-path::clean("./x/../..");   // ".."
+co::string path::clean(const char* s, size_t n);
 ```
 
-
-
-### path::join
+返回最短等价路径。
 
 ```cpp
-template<typename ...S>
-inline fastring join(S&&... s);
-```
-
-- 将任意数量的字符串拼接成一个完整的路径，返回 [path::clean](#pathclean) 处理后的结果。
-- 参数中的空字符串将会被忽略。
-
-- 示例
-
-```cpp
-path::join("", "");         // ""
-path::join("x", "y", "z");  // "x/y/z"
-path::join("/x/", "y");     // "/x/y"
+path::clean("")           // -> "."
+path::clean(".//x/")      // -> "x"
+path::clean("./x/../..")  // -> ".."
+path::clean("/x/../..")   // -> "/"
+path::clean("x//y//z")    // -> "x/y/z"
 ```
 
 
-
-### path::split
+## join
 
 ```cpp
-std::pair<fastring, fastring> split(const char* s, size_t n);
-std::pair<fastring, fastring> split(const char* s);
-std::pair<fastring, fastring> split(const fastring& s);
+template<typename ...X>
+co::string path::join(X&&... x);
 ```
 
-- 将路径切分为 dir, file 两部分，若路径中不含分隔符，则 dir 部分为空。
-- 返回结果满足性质 `path = dir + file`。
-
-- 示例
+连接任意数量的路径元素，结果会被 `clean`，空元素忽略。
 
 ```cpp
-path::split("/");     // -> { "/", "" }
-path::split("/a");    // -> { "/", "a" }
-path::split("/a/");   // -> { "/a/", "" }
-path::split("/a/b");  // -> { "/a/", "b" }
+path::join("", "")       // -> ""
+path::join("/x", "y")    // -> "/x/y"
+path::join("/x/", "y")   // -> "/x/y"
 ```
 
 
-
-### path::dir
+## split
 
 ```cpp
-fastring dir(const char* s, size_t n);
-fastring dir(const char* s);
-fastring dir(const fastring& s);
+std::pair<co::string, co::string> path::split(const char* s, size_t n);
 ```
 
-- 返回路径的目录部分，返回值是 [path::clean](#pathclean) 处理后的结果。
-
-- 示例
+按最后一个 `/` 拆成 dir 和 file，满足 `path = dir + file`。
 
 ```cpp
-path::dir("a");      // "."
-path::dir("a/");     // "a"
-path::dir("/");      // "/"
-path::dir("/a");     // "/";
-path::dir("/a/");    // "/a";
+path::split("/a/")   // -> <"/a/", "">
+path::split("/a/b")  // -> <"/a/", "b">
 ```
 
 
-
-### path::base
+## dir
 
 ```cpp
-fastring base(const char* s, size_t n);
-fastring base(const char* s);
-fastring base(const fastring& s);
+co::string path::dir(const char* s, size_t n);
 ```
 
-- 返回路径最后的一个元素。
-- s 是空字符串时，返回 "."。
-- s 中字符全是 `/` 时，返回 "/"。
-- 其他情况，先将 s 末尾的 `/` 去掉。
-
-- 示例
+返回目录部分，结果会被 `clean`。
 
 ```cpp
-path::base("");      // "."
-path::base("/");     // "/"
-path::base("/a/");   // "a"
-path::base("/a");    // "a"
-path::base("/a/b");  // "b"
+path::dir("")     // -> "."
+path::dir("a")    // -> "."
+path::dir("/a")   // -> "/"
+path::dir("/a/")  // -> "/a"
 ```
 
 
-
-### path::ext
-
-```cpp
-fastring ext(const char* s, size_t n);
-fastring ext(const char* s);
-fastring ext(const fastring& s);
-```
-
-- 返回路径中的文件扩展名。
-
-- 示例
+## base
 
 ```cpp
-path::ext("/a.c");   // ".c"
-path::ext("a/b");    // ""
-path::ext("/a.c/");  // ""
-path::ext("a.");     // "."
+co::string path::base(const char* s, size_t n);
 ```
+
+返回最后一段，先去尾部斜杠。
+
+```cpp
+path::base("")       // -> "."
+path::base("/a/b")   // -> "b"
+path::base("/a/b/")  // -> "b"
+```
+
+路径全为斜杠时返回 `"/"`。
+
+
+## ext
+
+```cpp
+co::string path::ext(const char* s, size_t n);
+```
+
+返回文件扩展名（含 `.`）。
+
+```cpp
+path::ext("x/x.c")  // -> ".c"
+path::ext("a/b")    // -> ""
+path::ext("/b.c/")  // -> ""
+path::ext("a.")     // -> "."
+```
+
+
+## 示例
+
+```cpp
+#include "co/path.h"
+#include "co/print.h"
+
+int main() {
+    co::println(path::clean("./x/../.."));       // ..
+    co::println(path::join("/x/", "y", "z"));    // /x/y/z
+
+    auto p = path::split("/a/b");
+    co::println(p.first, " | ", p.second);       // /a/ | b
+
+    co::println(path::dir("/a/b"));              // /a
+    co::println(path::base("/a/b/"));            // b
+    co::println(path::ext("x/x.c"));             // .c
+    return 0;
+}
+```
+
+## 注意事项
+
+- 路径分隔符固定为 `/`，不区分平台。
+- `clean` 是其它函数的基础，结果都经过清理。
+- `join` 忽略空元素。
+- `split` 结果满足 `path = dir + file`。
+- `base("")` 和 `dir("")` 返回 `"."`。
+- 路径全为斜杠时 `base` 返回 `"/"`。
+- `ext` 返回含 `.` 的扩展名，无扩展名返回 `""`。

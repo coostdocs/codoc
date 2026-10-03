@@ -1,115 +1,104 @@
 ---
-weight: 13
+weight: 12
 title: "操作系统"
 ---
 
-include: [co/os.h](https://github.com/idealvin/coost/blob/master/include/co/os.h).
 
-
-## os
-
-
-### os::cpunum
+## 头文件
 
 ```cpp
-int cpunum();
+#include "co/os.h"
 ```
 
-- 返回系统 CPU 核数。
+API 在命名空间 `os`，无需 `flag::parse`。
 
 
-
-### os::cwd
+## 环境变量
 
 ```cpp
-fastring cwd();
+co::string os::env(const char* name);
+bool       os::env(const char* name, const char* value);
 ```
 
-- 返回当前工作目录。
-- 在 windows 平台，返回值中的 `\` 会转换成 `/`。
+- `env(name)`：获取环境变量值，不存在返回空字符串。
+- `env(name, value)`：设置环境变量值，`value` 为 `nullptr` 或空字符串时删除该变量，成功返回 `true`。
+- 值不做 UTF-8 转码。
 
 
-
-### os::daemon
+## 路径
 
 ```cpp
-void daemon();
+co::string os::homedir();  // 当前用户 home 目录
+co::string os::cwd();      // 当前工作目录
+co::string os::exepath();  // 可执行文件路径
+co::string os::exedir();   // 可执行文件所在目录
+co::string os::exename();  // 可执行文件名
 ```
 
-- 将当前进程放到后台运行，**仅支持 linux 平台**。
+- 失败返回空字符串。
+- Windows 上返回 UTF-8，与 `fs` 一致。
+- `exename()` 含扩展名。
 
 
-
-### os::env
+## 进程与硬件
 
 ```cpp
-1. fastring env(const char* name);
-2. bool env(const char* name, const char* value);
+int    os::pid();
+int    os::cpunum();
+size_t os::pagesize();
 ```
 
-- 1, 获取系统环境变量的值，参数 name 是环境变量名。
-- 2, v2.0.2 新增，设置环境变量的值，成功时返回 true，否则返回 false。
+- `pid()`：当前进程 id。
+- `cpunum()`：逻辑 CPU 核数。
+- `pagesize()`：页大小（字节）。
 
 
-
-### os::exename
-
-```cpp
-fastring exename();
-```
-
-- 返回当前进程名，不含路径。
-
-
-
-### os::exepath
-
-```cpp
-fastring exepath();
-```
-
-- 返回当前进程的完整路径。
-- 在 windows 平台，返回值中的 `\` 会转换成 `/`。
-
-
-
-### os::homedir
-
-```cpp
-fastring homedir();
-```
-
-- 返回当前用户的 home 目录。
-- 在 windows 平台，返回值中的 `\` 会转换成 `/`。
-
-
-
-### os::pid
-
-```cpp
-int pid();
-```
-
-- 返回当前进程的 id。
-
-
-
-### os::signal
+## 信号
 
 ```cpp
 typedef void (*sig_handler_t)(int);
-sig_handler_t signal(int sig, sig_handler_t handler, int flag=0);
+
+sig_handler_t os::signal(int sig, sig_handler_t handler, int flag=0);
 ```
 
-- 设置信号处理函数，参数 sig 是信号值，参数 flag 是 `SA_RESTART`，`SA_ONSTACK` 等选项的组合。
-- 参数 flag 仅适用于 linux/mac 平台，windows 平台会忽略此参数。
-- 此函数返回旧的信号处理函数。
+- 只是 `::signal` 的简单包装。
+- 返回旧的处理函数。
+- Windows 上不支持 `flag`。
 
-- 示例
+
+## 执行命令
 
 ```cpp
-void f(int);
-os::signal(SIGINT, f);         // user defined handler
-os::signal(SIGABRT, SIG_DFL);  // default handler
-os::signal(SIGPIPE, SIG_IGN);  // ignore SIGPIPE
+bool os::system(const char* cmd);
+```
+
+- 无 `std::string` 重载，需先 `.c_str()`。
+- 非 Windows 基于 `popen` / `pclose`，输出直接到终端。
+- 返回 `bool`，表示命令是否执行成功。
+
+
+## 示例
+
+```cpp
+#include "co/os.h"
+#include "co/print.h"
+
+int main() {
+    co::println("homedir = ", os::homedir());
+    co::println("cwd     = ", os::cwd());
+    co::println("exepath = ", os::exepath());
+    co::println("pid     = ", os::pid());
+    co::println("cpunum  = ", os::cpunum());
+    co::println("page    = ", os::pagesize());
+
+    co::println("PATH = ", os::env("PATH"));
+
+    os::env("MY_VAR", "hello");
+    co::println("MY_VAR = ", os::env("MY_VAR"));
+
+    os::env("MY_VAR", nullptr);
+
+    os::system("echo hello coost");
+    return 0;
+}
 ```

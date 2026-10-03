@@ -3,55 +3,76 @@ weight: 7
 title: "随机值"
 ---
 
-include: [co/rand.h](https://github.com/idealvin/coost/blob/master/include/co/rand.h).
 
-
-### 随机数(co::rand)
+## 头文件
 
 ```cpp
-1. uint32 rand();
-2. uint32 rand(uint32& seed);
+#include "co/rand.h"
 ```
 
-- 1, 返回一个 1 到 2G-2 之间的随机数，线程安全。
-- 2, 返回一个 1 到 2G-2 之间的随机数，需要用户指定种子数 `seed`，**种子数必须在 1 到 2G-2 之间**，此函数会更新 `seed` 的值，非线程安全。
+API 在 `co` 命名空间，无需 `flag::parse`。
 
-{{< hint info >}}
-可以用 1 中的返回值初始化 2 中的种子数。
-{{< /hint >}}
 
-- 示例
+## 接口
 
 ```cpp
-uint32 x = co::rand();
-uint32 y = co::rand();
+// 线程安全，返回 0 < x < 2^31-1
+uint32 co::rand();
 
-uint32 seed = co::rand();
-uint32 u = co::rand(seed);
-uint32 v = co::rand(seed);
+// seed 必须在 (0, 2^31-1)，调用后更新为返回值
+uint32 co::rand(uint32& seed);
+
+// 线程安全，返回 64 位随机数
+uint64 co::rand64();
+
+// splitmix64，seed 可为 0，调用后更新
+uint64 co::rand64(uint64& seed);
+
+// 写随机字符到 buf，末尾不添加 '\0'
+void co::randchars(void* buf, size_t bufsize);
+
+// 返回长度 n 的随机字符串，默认 15，线程安全
+co::string co::randstr(uint32 n=15);
+
+// 使用指定字符集，支持 "0-9"、"a-f" 等范围
+co::string co::randstr(const char* charset, uint32 n);
 ```
 
+- `rand()` / `rand64()` / `randstr()` 线程安全，内部使用 thread_local 状态。
+- `rand(seed)` 的 seed 不能为 0，否则后续返回值恒为 0；也不能为 `2^31-1`。
+- `rand64(seed)` 对 seed 初值无要求。
+- `randchars` 默认字符集：`a-z`、`A-Z`、`0-9`、`_`、`-`，共 64 个字符。
+- `randstr(charset, n)` 支持范围缩写，如 `"0-9"`、`"a-f"`、`"0-9A-Za-z"`。
+- 带 seed 的版本线程安全取决于调用方对 seed 的使用。
 
 
-### 随机字符串(co::randstr)
-
-```cpp
-1. fastring randstr(int n=15);
-2. fastring randstr(const char* s, int n);
-```
-
-- 1, 返回一个长度为 n(默认为15) 的随机字符串，线程安全。
-- 2, 返回一个长度为 n、由字符串 s 中的字符构成的随机字符串，s 中可以使用类似 `0-9`, `a-z` 的缩写，s 展开后的长度不能超过 255，线程安全。
-
-{{< hint info >}}
-randstr 基于 [nanoid](https://github.com/ai/nanoid) 算法实现，返回的随机字符串足够长时，一般也可以用作唯一 id。
-{{< /hint >}}
-
-- 示例
+## 示例
 
 ```cpp
-fastring s = co::randstr();
-s = co::randstr(8);
-s = co::randstr("0123456789", 6);
-s = co::randstr("0-9a-f", 8); // 长度为8的16进制字符串
+#include "co/rand.h"
+#include "co/print.h"
+
+int main() {
+    co::println("rand()   = ", co::rand());
+    co::println("rand64() = ", co::rand64());
+
+    uint32 seed = 12345;
+    co::println("rand(seed) = ", co::rand(seed));
+    co::println("seed = ", seed);
+
+    uint64 seed64 = 0;
+    co::println("rand64(seed) = ", co::rand64(seed64));
+    co::println("seed64 = ", seed64);
+
+    co::println("randstr()        = ", co::randstr());
+    co::println("randstr(8)       = ", co::randstr(8));
+    co::println("randstr(0-9, 8)  = ", co::randstr("0-9", 8));
+    co::println("randstr(0-9a-f)  = ", co::randstr("0-9a-f", 8));
+
+    char buf[9];
+    co::randchars(buf, 8);
+    buf[8] = '\0';
+    co::println("randchars = ", buf);
+    return 0;
+}
 ```

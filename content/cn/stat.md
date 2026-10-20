@@ -1,6 +1,7 @@
 ---
 title: "站点统计"
 bookHidden: true
+disable_comments: true
 ---
 
 ## 全站访问统计

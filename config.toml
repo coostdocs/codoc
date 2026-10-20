@@ -119,3 +119,4 @@ enableGitInfo = true
   highlightjsVersion = "11.1.0"
   highlightjsLang = ["cpp", "bash", "lua", "yaml"]
   highlightjsTheme = "github"
+  enableBusuanzi = true
